@@ -1,0 +1,12 @@
+{
+  "site": "mytek",
+  "shop": "mytek",
+  "scraped_at": "2026-05-22T14:54:26.373215",
+  "total_products": 21052,
+  "scrape_stats": {
+    "total_attempted": 21052,
+    "successful": 21052,
+    "failed": 0
+  },
+  "failed_details": []
+}

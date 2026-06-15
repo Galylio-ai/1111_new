@@ -1,0 +1,25 @@
+{
+  "site": "mytek",
+  "shop": "mytek",
+  "scraped_at": "2026-05-22T13:55:10.193548",
+  "duration_seconds": 324.7470359802246,
+  "total_products": 21052,
+  "status": "ok",
+  "scrape_stats": {
+    "site": "mytek",
+    "start_time": "2026-05-22T13:49:26.857533",
+    "end_time": "",
+    "duration_seconds": 0,
+    "total_categories": 837,
+    "categories_scraped": 837,
+    "categories_skipped": 0,
+    "categories_failed": 0,
+    "total_products": 21052,
+    "total_pages": 1069,
+    "retries_total": 6,
+    "workers_used": 16,
+    "errors": [],
+    "skipped": []
+  },
+  "failed_categories": []
+}

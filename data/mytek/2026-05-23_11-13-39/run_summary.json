@@ -1,0 +1,9 @@
+{
+  "site": "mytek",
+  "success": false,
+  "status": "failed",
+  "error": "Page.goto: Timeout 60000ms exceeded.\nCall log:\n  - navigating to \"https://www.mytek.tn/\", waiting until \"networkidle\"\n",
+  "stats": null,
+  "output_path": null,
+  "duration_seconds": 0
+}

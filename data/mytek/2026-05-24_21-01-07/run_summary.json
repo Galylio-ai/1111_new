@@ -1,0 +1,25 @@
+{
+  "site": "mytek",
+  "success": true,
+  "status": "degraded",
+  "error": null,
+  "stats": {
+    "site": "mytek",
+    "start_time": "2026-05-24T21:01:07.093404",
+    "end_time": "",
+    "duration_seconds": 0,
+    "total_categories": 0,
+    "categories_scraped": 0,
+    "categories_skipped": 0,
+    "categories_failed": 0,
+    "total_products": 0,
+    "total_pages": 0,
+    "retries_total": 0,
+    "workers_used": 16,
+    "errors": [],
+    "skipped": [],
+    "details_scraped": 0
+  },
+  "output_path": "/home/ubuntu/scraping/data/mytek/2026-05-24_21-01-07/products.json",
+  "duration_seconds": 18.084748029708862
+}
