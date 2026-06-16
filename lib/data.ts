@@ -270,12 +270,12 @@ export const categories: Category[] = [
 ];
 
 export const distributionEnseignes = [
-  { name: "Aziza", price: "127.840", diff: "Meilleur prix", best: true, color: "bg-red-500" },
-  { name: "Carrefour Market", price: "129.950", diff: "+2.110 DT", color: "bg-orange-500" },
-  { name: "MG", price: "131.240", diff: "+3.400 DT", color: "bg-emerald-500" },
-  { name: "Carrefour", price: "131.570", diff: "+3.730 DT", color: "bg-blue-500" },
-  { name: "Monoprix", price: "133.800", diff: "+5.960 DT", color: "bg-rose-500" },
-  { name: "Géant", price: "136.210", diff: "+8.370 DT", color: "bg-yellow-500" },
+  { name: "Aziza", price: "127 940", diff: "Meilleur prix", best: true, logo: { bg: "bg-green-600", text: "✓", textColor: "text-white" } },
+  { name: "Carrefour Market", price: "129 950", diff: "+2.110 DT", logo: { bg: "bg-red-600", text: "C", textColor: "text-white" } },
+  { name: "MG", price: "131 240", diff: "+3.400 DT", logo: { bg: "bg-red-700", text: "MG", textColor: "text-white" } },
+  { name: "Carrefour", price: "131 570", diff: "+3.730 DT", logo: { bg: "bg-red-600", text: "C", textColor: "text-white" } },
+  { name: "Monoprix", price: "133 800", diff: "+5.960 DT", logo: { bg: "bg-red-800", text: "M", textColor: "text-white" } },
+  { name: "Géant", price: "136 210", diff: "+8.370 DT", logo: { bg: "bg-red-600", text: "G", textColor: "text-white" } },
 ];
 
 export const veilleProducts = [
