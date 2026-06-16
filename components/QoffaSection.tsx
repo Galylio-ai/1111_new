@@ -1,6 +1,7 @@
 "use client";
 import { ChefHat, TrendingUp, Trophy, Users } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { classementEnseignes, qoffaWeekData, recettes } from "@/lib/data";
 import { SparkArea } from "./charts/SparkArea";
 
@@ -23,7 +24,7 @@ export function QoffaSection() {
               className="h-40 w-40 md:h-48 md:w-48 animate-couffin-swing object-contain drop-shadow-[0_8px_20px_rgba(212,175,55,0.35)]"
             />
           </div>
-          <button className="btn-primary mt-3 w-full">Voir toutes les recettes</button>
+          <Link href="/qoffa" className="btn-primary mt-3 w-full">Voir toutes les recettes</Link>
         </div>
 
         {/* RECETTES POPULAIRES */}
@@ -100,12 +101,12 @@ export function QoffaSection() {
             ))}
           </ul>
 
-          <a
+          <Link
             className="relative mt-3 inline-flex items-center gap-1 text-xs font-semibold text-brand-gold transition hover:gap-2 hover:underline"
-            href="#"
+            href="/qoffa"
           >
             Voir toutes les recettes →
-          </a>
+          </Link>
         </div>
 
         {/* COÛT MOYEN DU PANIER */}
@@ -140,9 +141,9 @@ export function QoffaSection() {
               </li>
             ))}
           </ul>
-          <a className="mt-3 inline-block text-xs font-medium text-brand-gold hover:underline" href="#">
+          <Link className="mt-3 inline-block text-xs font-medium text-brand-gold hover:underline" href="/magasins">
             Voir le classement complet
-          </a>
+          </Link>
         </div>
       </div>
     </section>

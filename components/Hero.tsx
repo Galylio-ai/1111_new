@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { AlertTriangle, BarChart3, Coins, Flame, Search, TrendingUp } from "lucide-react";
+import Link from "next/link";
 import { SparkArea } from "./charts/SparkArea";
 
 const initialIndexData = [
@@ -82,14 +83,14 @@ export function Hero() {
                   className="min-w-0 flex-1 bg-transparent px-1 sm:px-2 py-2 text-xs sm:text-sm text-white placeholder:text-white/40 focus:outline-none"
                   placeholder="Rechercher un produit, marque…"
                 />
-                <button className="btn-gold whitespace-nowrap px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm">Rechercher</button>
+                <Link href="/comparateur" className="btn-gold whitespace-nowrap px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm">Rechercher</Link>
               </div>
 
               <div className="mt-3 flex flex-wrap justify-center gap-1.5 sm:gap-2 md:justify-start">
                 {tags.map((t) => (
-                  <button key={t} className="chip">
+                  <Link key={t} href="/comparateur" className="chip">
                     {t}
-                  </button>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -103,9 +104,9 @@ export function Hero() {
               <TrendingUp className="h-4 w-4 text-brand-gold" />
               <span className="section-title">Indice du marché ✦</span>
             </div>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-medium text-emerald-300">
+            <Link href="/indice" className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-medium text-emerald-300 transition hover:border-emerald-400/60">
               <span className="live-dot" /> En temps réel
-            </span>
+            </Link>
           </div>
 
           <div className="mt-3 flex items-end gap-3">
@@ -138,6 +139,10 @@ export function Hero() {
               </div>
             ))}
           </div>
+
+          <Link href="/indice" className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-brand-gold transition hover:gap-2 hover:underline">
+            Voir l'indice détaillé →
+          </Link>
         </div>
       </div>
     </section>

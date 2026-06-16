@@ -1,5 +1,6 @@
 "use client";
-import { AlertTriangle, Eye, Flame, PackagePlus, Pencil, ShieldAlert, Sparkles } from "lucide-react";
+import { AlertTriangle, Eye, Flame, PackagePlus, Pencil } from "lucide-react";
+import Link from "next/link";
 
 export function Observatoire() {
   return (
@@ -46,10 +47,13 @@ export function Observatoire() {
               tone="blue"
             />
           </div>
+          <Link href="/observatoire" className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-brand-gold transition hover:gap-2 hover:underline">
+            Explorer l'observatoire →
+          </Link>
         </div>
 
-        <a
-          href="#"
+        <Link
+          href="/promotions"
           className="group relative block overflow-hidden rounded-2xl border border-red-500/40 shadow-card transition hover:border-red-400/70 hover:shadow-[0_0_32px_-8px_rgba(239,68,68,0.55)]"
         >
           <img
@@ -68,7 +72,7 @@ export function Observatoire() {
 
           {/* Hover shimmer sweep */}
           <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-1000 group-hover:translate-x-full" />
-        </a>
+        </Link>
       </div>
     </section>
   );

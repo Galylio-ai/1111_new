@@ -2,6 +2,7 @@
 import { ChevronLeft, ChevronRight, Flame, Star } from "lucide-react";
 import { useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { topOffers } from "@/lib/data";
 
 export function TopOffers() {
@@ -21,9 +22,9 @@ export function TopOffers() {
           <h2 className="section-title">TOP OFFRES DU MOMENT</h2>
           <span className="text-brand-gold">✦</span>
         </div>
-        <a className="text-xs font-medium text-white/70 hover:text-brand-gold" href="#">
-          Voir toutes les offres
-        </a>
+        <Link className="text-xs font-medium text-white/70 transition hover:text-brand-gold" href="/promotions">
+          Voir toutes les offres →
+        </Link>
       </div>
 
       <div className="relative">

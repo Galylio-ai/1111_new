@@ -1,5 +1,6 @@
 "use client";
 import { AlertTriangle, Snowflake } from "lucide-react";
+import Link from "next/link";
 import { MultiLine } from "./charts/MultiLine";
 import { acChartData, acPromos } from "@/lib/data";
 
@@ -22,7 +23,7 @@ export function AcBarometer() {
             />
           </div>
           <div className="mt-2 text-xs text-white/70">Suivi prix & promos en temps réel</div>
-          <button className="btn-gold mt-3 w-full">Voir les offres</button>
+          <Link href="/barometres" className="btn-gold mt-3 w-full">Voir les offres</Link>
         </div>
 
         {/* Stats column */}
@@ -48,9 +49,9 @@ export function AcBarometer() {
               </li>
             ))}
           </ul>
-          <a className="mt-2 inline-block text-xs font-medium text-brand-gold hover:underline" href="#">
+          <Link className="mt-2 inline-block text-xs font-medium text-brand-gold hover:underline" href="/barometres">
             Voir toutes les offres
-          </a>
+          </Link>
         </div>
 
         {/* Chart */}

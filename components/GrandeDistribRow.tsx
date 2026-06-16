@@ -1,5 +1,6 @@
 "use client";
 import { ArrowDownRight, Bell, ShieldAlert, TrendingDown, TrendingUp } from "lucide-react";
+import Link from "next/link";
 import { distributionEnseignes, veilleProducts } from "@/lib/data";
 
 export function GrandeDistribRow() {
@@ -67,9 +68,9 @@ export function GrandeDistribRow() {
               </ul>
 
               {/* Button */}
-              <button className="mt-4 w-full rounded-xl bg-brand-gold py-2.5 text-sm font-black text-black hover:bg-brand-gold/90 transition">
+              <Link href="/grande-distribution" className="mt-4 block w-full rounded-xl bg-brand-gold py-2.5 text-center text-sm font-black text-black hover:bg-brand-gold/90 transition">
                 Comparer Mon Panier
-              </button>
+              </Link>
             </div>
 
             {/* RIGHT — basket image + economy box */}
@@ -132,9 +133,9 @@ export function GrandeDistribRow() {
               </li>
             ))}
           </ul>
-          <button className="mt-3 w-full rounded-lg border border-bg-border bg-bg-800/70 py-2 text-xs font-medium text-white/80 hover:bg-bg-700">
+          <Link href="/veille" className="mt-3 block w-full rounded-lg border border-bg-border bg-bg-800/70 py-2 text-center text-xs font-medium text-white/80 hover:bg-bg-700">
             Voir tous mes produits
-          </button>
+          </Link>
         </div>
 
         {/* ALERTE PRIX */}
@@ -237,10 +238,10 @@ export function GrandeDistribRow() {
 
           {/* Actions */}
           <div className="relative mt-auto pt-3">
-            <button className="btn-primary w-full">Voir l'offre</button>
-            <button className="mt-1.5 w-full rounded-lg py-1.5 text-xs font-medium text-white/60 hover:text-white">
+            <Link href="/alertes" className="btn-primary w-full">Voir l'offre</Link>
+            <Link href="/alertes" className="mt-1.5 block w-full rounded-lg py-1.5 text-center text-xs font-medium text-white/60 hover:text-white">
               Me rappeler plus tard
-            </button>
+            </Link>
           </div>
         </div>
 
@@ -290,7 +291,6 @@ export function GrandeDistribRow() {
           {/* ILLOGIQUE! button */}
           <div className="relative px-5 pb-5 mt-auto pt-6">
             <button className="flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-b from-red-900/80 to-red-950/90 border border-red-700/50 py-3.5 shadow-[0_0_24px_-4px_rgba(239,68,68,0.5)] hover:shadow-[0_0_32px_-4px_rgba(239,68,68,0.7)] transition">
-              {/* Warning triangle icon */}
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-red-600 shadow-md">
                 <ShieldAlert className="h-4 w-4 text-white" />
               </span>
