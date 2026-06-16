@@ -1,15 +1,8 @@
 "use client";
 import { Bell, ChevronDown, Flame, Globe, Heart, Search, ShieldCheck, Sparkles, TrendingUp, User } from "lucide-react";
-import { useState } from "react";
-
-const navItems = [
-  { fr: "Catégories", ar: "الفئات", caret: true },
-  { fr: "Comparateur", ar: "مقارنة الأسعار" },
-  { fr: "Qoffa Tounsi", ar: "قفة التونسي" },
-  { fr: "IA Prédictive", ar: "الذكاء الاصطناعي" },
-  { fr: "Magasins", ar: "المتاجر" },
-  { fr: "Promotions", ar: "العروض" },
-];
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { navLinks } from "@/lib/nav";
 
 const tickerItems = [
   { icon: TrendingUp, label: "Indice marché", value: "108.7", trend: "+1.2%", trendUp: true },
@@ -19,7 +12,7 @@ const tickerItems = [
 ];
 
 export function Header() {
-  const [active, setActive] = useState("Qoffa Tounsi");
+  const pathname = usePathname();
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/5 bg-bg-900/75 backdrop-blur-xl supports-[backdrop-filter]:bg-bg-900/60">
@@ -60,7 +53,7 @@ export function Header() {
       {/* Main bar */}
       <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-2 px-3 py-2.5 sm:gap-4 sm:px-4 sm:py-3">
         {/* Logo */}
-        <a href="#" className="group flex min-w-0 items-center gap-2 shrink-0 sm:gap-3">
+        <Link href="/" className="group flex min-w-0 items-center gap-2 shrink-0 sm:gap-3">
           <div className="relative">
             {/* glow */}
             <div className="absolute inset-0 -z-10 rounded-full bg-brand-red/30 blur-xl transition group-hover:bg-brand-red/50" />
@@ -92,16 +85,16 @@ export function Header() {
               <span className="text-brand-gold/70">IA</span>
             </div>
           </div>
-        </a>
+        </Link>
 
         {/* Nav */}
         <nav className="hidden lg:flex items-center gap-0.5 rounded-2xl border border-white/5 bg-white/[0.02] p-1">
-          {navItems.map((n) => {
-            const isActive = active === n.fr;
+          {navLinks.map((n) => {
+            const isActive = pathname === n.href || pathname.startsWith(n.href + "/");
             return (
-              <button
-                key={n.fr}
-                onClick={() => setActive(n.fr)}
+              <Link
+                key={n.href}
+                href={n.href}
                 className={`group relative flex flex-col items-center rounded-xl px-3 py-1.5 transition ${
                   isActive
                     ? "bg-gradient-to-b from-white/10 to-white/[0.04] text-white shadow-inner ring-1 ring-white/10"
@@ -122,7 +115,7 @@ export function Header() {
                 {isActive && (
                   <span className="absolute -bottom-[5px] left-1/2 h-1 w-8 -translate-x-1/2 rounded-full bg-gradient-to-r from-brand-red via-brand-gold to-brand-red shadow-[0_0_8px_rgba(246,196,83,0.6)]" />
                 )}
-              </button>
+              </Link>
             );
           })}
         </nav>

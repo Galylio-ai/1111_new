@@ -1,5 +1,6 @@
 "use client";
 import { ArrowDownRight, ArrowUpRight, Bell, ShoppingBasket, ShoppingCart, Sparkles, TrendingDown, TrendingUp, Trophy } from "lucide-react";
+import Link from "next/link";
 import { distributionEnseignes, veilleProducts } from "@/lib/data";
 import { SparkArea } from "./charts/SparkArea";
 
@@ -115,7 +116,7 @@ export function GrandeDistribRow() {
                 </div>
                 <div className="text-[11px] text-white/60">vs l'enseigne la plus chère</div>
               </div>
-              <button className="btn-primary shrink-0 whitespace-nowrap">Comparer mon panier</button>
+              <Link href="/grande-distribution" className="btn-primary shrink-0 whitespace-nowrap">Comparer mon panier</Link>
             </div>
           </div>
         </div>
@@ -164,9 +165,9 @@ export function GrandeDistribRow() {
               </li>
             ))}
           </ul>
-          <button className="mt-3 w-full rounded-lg border border-bg-border bg-bg-800/70 py-2 text-xs font-medium text-white/80 hover:bg-bg-700">
+          <Link href="/veille" className="mt-3 block w-full rounded-lg border border-bg-border bg-bg-800/70 py-2 text-center text-xs font-medium text-white/80 hover:bg-bg-700">
             Voir tous mes produits
-          </button>
+          </Link>
         </div>
 
         {/* ALERTE PRIX */}
@@ -269,10 +270,10 @@ export function GrandeDistribRow() {
 
           {/* Actions */}
           <div className="relative mt-auto pt-3">
-            <button className="btn-primary w-full">Voir l'offre</button>
-            <button className="mt-1.5 w-full rounded-lg py-1.5 text-xs font-medium text-white/60 hover:text-white">
+            <Link href="/alertes" className="btn-primary w-full">Voir l'offre</Link>
+            <Link href="/alertes" className="mt-1.5 block w-full rounded-lg py-1.5 text-center text-xs font-medium text-white/60 hover:text-white">
               Me rappeler plus tard
-            </button>
+            </Link>
           </div>
         </div>
 
@@ -371,10 +372,10 @@ export function GrandeDistribRow() {
 
           {/* Actions */}
           <div className="relative mt-auto pt-3">
-            <button className="btn-primary w-full">Acheter maintenant</button>
-            <button className="mt-1.5 w-full rounded-lg py-1.5 text-xs font-medium text-white/60 hover:text-white">
+            <Link href="/ia-predictive" className="btn-primary w-full">Acheter maintenant</Link>
+            <Link href="/ia-predictive" className="mt-1.5 block w-full rounded-lg py-1.5 text-center text-xs font-medium text-white/60 hover:text-white">
               Me rappeler plus tard
-            </button>
+            </Link>
           </div>
         </div>
       </div>

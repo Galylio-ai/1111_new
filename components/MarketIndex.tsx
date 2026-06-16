@@ -1,5 +1,6 @@
 "use client";
 import { Activity, Flame, Rocket, ShieldAlert, Tag, TrendingDown, TrendingUp } from "lucide-react";
+import Link from "next/link";
 import { categoryBarometres } from "@/lib/data";
 import { SparkArea } from "./charts/SparkArea";
 
@@ -81,9 +82,9 @@ export function MarketIndex() {
               </div>
             </div>
           </div>
-          <a className="shrink-0 self-end rounded-lg border border-brand-gold/30 bg-brand-gold/10 px-3 py-1.5 text-xs font-semibold text-brand-gold transition hover:bg-brand-gold/20 sm:self-auto" href="#">
+          <Link className="shrink-0 self-end rounded-lg border border-brand-gold/30 bg-brand-gold/10 px-3 py-1.5 text-xs font-semibold text-brand-gold transition hover:bg-brand-gold/20 sm:self-auto" href="/indice">
             Voir tous les indices →
-          </a>
+          </Link>
         </div>
 
         <div className="relative grid grid-cols-1 gap-3 lg:grid-cols-[2fr_1fr]">
@@ -150,9 +151,9 @@ export function MarketIndex() {
       <div className="mt-5">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="section-title">Baromètres par catégorie</h2>
-          <a className="text-xs font-medium text-brand-gold hover:underline" href="#">
+          <Link className="text-xs font-medium text-brand-gold hover:underline" href="/barometres">
             Voir tous les baromètres
-          </a>
+          </Link>
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {categoryBarometres.map((c) => (
@@ -179,9 +180,9 @@ export function MarketIndex() {
                   </li>
                 ))}
               </ul>
-              <a className="mt-2 inline-block text-[11px] font-medium text-brand-gold hover:underline" href="#">
+              <Link className="mt-2 inline-block text-[11px] font-medium text-brand-gold hover:underline" href="/barometres">
                 Voir le baromètre
-              </a>
+              </Link>
             </div>
           ))}
         </div>

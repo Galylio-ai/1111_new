@@ -1,5 +1,6 @@
 "use client";
 import { Bot, TrendingDown } from "lucide-react";
+import Link from "next/link";
 import { MultiLine } from "./charts/MultiLine";
 import { iaPredictiveData, watchProducts } from "@/lib/data";
 
@@ -73,9 +74,9 @@ export function IaPredictive() {
               </li>
             ))}
           </ul>
-          <a className="mt-3 inline-block text-xs font-medium text-brand-gold hover:underline" href="#">
+          <Link className="mt-3 inline-block text-xs font-medium text-brand-gold hover:underline" href="/ia-predictive">
             Voir tous les produits
-          </a>
+          </Link>
         </div>
       </div>
     </section>

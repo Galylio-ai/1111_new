@@ -163,3 +163,20 @@ body {
   transform: translateY(-6px) scale(1.12) rotate(0deg);
   transition: transform 0.25s ease;
 }
+
+/* On-load entrance reveal — robust (CSS auto-plays, always ends visible) */
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.reveal-up {
+  animation: reveal-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-up,
+  .cat-anim,
+  .mascot-anim,
+  .animate-float,
+  .spark-path { animation: none !important; }
+}
