@@ -56,7 +56,7 @@ export function Hero() {
     <section className="mx-auto max-w-[1600px] px-3 pt-4 sm:px-4 sm:pt-6">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.15fr_1fr] lg:gap-5">
         {/* Left: mascot + headline + search */}
-        <div className="relative overflow-hidden rounded-2xl border border-bg-border bg-gradient-to-br from-bg-700 to-bg-800 p-4 sm:p-6 md:p-8">
+        <div className="relative overflow-hidden rounded-2xl border border-bg-border bg-gradient-to-br from-slate-50 to-white p-4 sm:p-6 md:p-8 dark:from-bg-700 dark:to-bg-800">
           <div className="absolute -left-6 -bottom-6 h-48 w-48 rounded-full bg-brand-red/15 blur-3xl" />
           <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-brand-gold/10 blur-3xl" />
           <div className="relative flex flex-col items-center gap-4 sm:gap-5 md:flex-row md:items-center md:text-left">
@@ -64,23 +64,23 @@ export function Hero() {
               <Mascot />
             </div>
             <div className="flex-1 text-center md:text-left">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black leading-[1.05] tracking-tight text-white">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black leading-[1.05] tracking-tight text-slate-900 dark:text-white">
                 VÉRIFIEZ AVANT D'ACHETER,
                 <br />
                 <span className="gradient-text-gold">ÉCONOMISEZ PLUS !</span>
               </h1>
-              <p className="mt-2 font-arabic text-center md:text-right text-lg sm:text-xl text-white/90" dir="rtl">
+              <p className="mt-2 font-arabic text-center md:text-right text-lg sm:text-xl text-slate-700 dark:text-white/90" dir="rtl">
                 ثبت قبل ما تشري، وفر أكثر ! 😎
               </p>
-              <p className="mt-3 text-xs sm:text-sm text-white/70">
-                Comparez plus de <span className="text-white font-semibold">250 000 produits</span>,
+              <p className="mt-3 text-xs sm:text-sm text-slate-600 dark:text-white/70">
+                Comparez plus de <span className="text-slate-900 font-semibold dark:text-white">250 000 produits</span>,
                 surveillez les prix, détectez les vraies promotions et économisez sur tous vos achats.
               </p>
 
-              <div className="mt-4 flex items-center gap-1.5 sm:gap-2 rounded-2xl border border-bg-border bg-bg-900/60 p-1.5 shadow-inner">
-                <Search className="ml-1 sm:ml-2 h-4 w-4 sm:h-5 sm:w-5 shrink-0 text-white/50" />
+              <div className="mt-4 flex items-center gap-1.5 sm:gap-2 rounded-2xl border border-slate-300 bg-white p-1.5 shadow-inner dark:border-bg-border dark:bg-bg-900">
+                <Search className="ml-1 sm:ml-2 h-4 w-4 sm:h-5 sm:w-5 shrink-0 text-slate-400 dark:text-white/50" />
                 <input
-                  className="min-w-0 flex-1 bg-transparent px-1 sm:px-2 py-2 text-xs sm:text-sm text-white placeholder:text-white/40 focus:outline-none"
+                  className="min-w-0 flex-1 bg-transparent px-1 sm:px-2 py-2 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder:text-white/40"
                   placeholder="Rechercher un produit, marque…"
                 />
                 <Link href="/comparateur" className="btn-gold whitespace-nowrap px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm">Rechercher</Link>
@@ -104,20 +104,20 @@ export function Hero() {
               <TrendingUp className="h-4 w-4 text-brand-gold" />
               <span className="section-title">Indice du marché ✦</span>
             </div>
-            <Link href="/indice" className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-medium text-emerald-300 transition hover:border-emerald-400/60">
+            <Link href="/indice" className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700 transition hover:border-emerald-400/60 dark:text-emerald-300">
               <span className="live-dot" /> En temps réel
             </Link>
           </div>
 
           <div className="mt-3 flex items-end gap-3">
-            <div className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-white tabular-nums transition-all duration-500">
+            <div className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-slate-900 tabular-nums transition-all duration-500 dark:text-white">
               {current.toFixed(1)}
             </div>
             <div className="mb-2 flex flex-col text-sm">
-              <span className={`font-bold tabular-nums transition-colors duration-500 ${up ? "text-emerald-400" : "text-red-400"}`}>
+              <span className={`font-bold tabular-nums transition-colors duration-500 ${up ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
                 {up ? "▲" : "▼"} {up ? "+" : ""}{change}%
               </span>
-              <span className="text-xs text-white/50">vs hier</span>
+              <span className="text-xs text-slate-500 dark:text-white/50">vs hier</span>
             </div>
           </div>
 
@@ -129,13 +129,13 @@ export function Hero() {
             {stats.map((s) => (
               <div
                 key={s.label}
-                className="rounded-xl border border-bg-border bg-bg-800/70 p-3 hover:border-white/15 transition"
+                className="rounded-xl border border-slate-200 bg-slate-50 p-3 hover:border-slate-300 transition dark:border-bg-border dark:bg-bg-800 dark:hover:border-white/15"
               >
                 <div className={`flex items-center justify-between ${s.color}`}>
                   <span className="text-xl font-extrabold tabular-nums">{s.value}</span>
                   <s.icon className="h-4 w-4 opacity-80" />
                 </div>
-                <div className="mt-1 text-[11px] leading-tight text-white/60">{s.label}</div>
+                <div className="mt-1 text-[11px] leading-tight text-slate-600 dark:text-white/60">{s.label}</div>
               </div>
             ))}
           </div>

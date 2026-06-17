@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -9,11 +10,11 @@ const config: Config = {
     extend: {
       colors: {
         bg: {
-          900: "#0a0e1a",
-          800: "#0f1422",
-          700: "#141b2d",
-          card: "#161d30",
-          border: "#222b44",
+          900: "var(--bg-900)",
+          800: "var(--bg-800)",
+          700: "var(--bg-700)",
+          card: "var(--bg-card)",
+          border: "var(--bg-border)",
         },
         brand: {
           red: "#e11d2d",
@@ -31,7 +32,7 @@ const config: Config = {
       },
       boxShadow: {
         glow: "0 0 24px rgba(225, 29, 45, 0.25)",
-        card: "0 2px 16px rgba(0,0,0,0.35)",
+        card: "0 2px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.06)",
       },
       animation: {
         "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",

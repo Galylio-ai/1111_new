@@ -36,42 +36,42 @@ export default function AlertesPage() {
                   <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-brand-red">
                     <Bell className="h-3.5 w-3.5" /> Alerte prix
                   </span>
-                  <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">● Live</span>
+                  <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-300">● Live</span>
                 </div>
 
-                <div className="relative mt-3 flex items-center gap-3 rounded-xl border border-white/5 bg-bg-800/50 p-2.5">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-white/10 to-white/[0.03] text-2xl ring-1 ring-white/5">{a.emoji}</div>
+                <div className="relative mt-3 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-2.5 dark:border-white/5 dark:bg-bg-800">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-slate-200 text-2xl ring-1 ring-slate-300 dark:bg-white/10 dark:ring-white/5">{a.emoji}</div>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-semibold text-white">{a.name}</div>
-                    <div className="truncate text-[11px] text-white/50">{a.sub}</div>
+                    <div className="truncate text-sm font-semibold text-slate-900 dark:text-white">{a.name}</div>
+                    <div className="truncate text-[11px] text-slate-500 dark:text-white/50">{a.sub}</div>
                   </div>
                 </div>
 
                 <div className="relative mt-3">
-                  <div className="text-[10px] font-semibold uppercase tracking-wider text-white/40">Prix actuel</div>
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-white/40">Prix actuel</div>
                   <div className="mt-0.5 flex items-baseline gap-2">
-                    <span className="text-3xl font-black tabular-nums text-white">{a.price}</span>
+                    <span className="text-3xl font-black tabular-nums text-slate-900 dark:text-white">{a.price}</span>
                     <span className="text-sm font-bold text-brand-gold">DT</span>
-                    <span className="ml-auto inline-flex items-center gap-0.5 rounded-md bg-emerald-500/15 px-1.5 py-0.5 text-[11px] font-bold text-emerald-300">
+                    <span className="ml-auto inline-flex items-center gap-0.5 rounded-md bg-emerald-500/15 px-1.5 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-300">
                       <ArrowDownRight className="h-3 w-3" /> {a.drop}
                     </span>
                   </div>
-                  <div className="text-[11px] text-white/50">
+                  <div className="text-[11px] text-slate-500 dark:text-white/50">
                     Ancien : <span className="line-through">{a.old} DT</span>
-                    <span className="mx-1.5 text-white/20">·</span>
-                    <span className="text-emerald-300">Économie {a.save}</span>
+                    <span className="mx-1.5 text-slate-300 dark:text-white/20">·</span>
+                    <span className="text-emerald-600 dark:text-emerald-300">Économie {a.save}</span>
                   </div>
                 </div>
 
-                <div className="relative mt-3 flex items-center justify-between rounded-xl border border-white/5 bg-bg-800/70 p-2 text-sm">
+                <div className="relative mt-3 flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-2 text-sm dark:border-white/5 dark:bg-bg-800">
                   <span className="flex items-center gap-2">
                     <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-red-700 text-xs font-black text-white ring-1 ring-white/10">{a.store.charAt(0)}</span>
                     <span className="leading-tight">
-                      <span className="block text-sm font-semibold text-white">{a.store}</span>
-                      <span className="flex items-center gap-1 text-[10px] text-white/50"><MapPin className="h-2.5 w-2.5" /> {a.dist}</span>
+                      <span className="block text-sm font-semibold text-slate-900 dark:text-white">{a.store}</span>
+                      <span className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-white/50"><MapPin className="h-2.5 w-2.5" /> {a.dist}</span>
                     </span>
                   </span>
-                  <span className="text-[10px] text-white/40">{a.time}</span>
+                  <span className="text-[10px] text-slate-400 dark:text-white/40">{a.time}</span>
                 </div>
 
                 <div className="relative mt-auto pt-3">

@@ -42,14 +42,14 @@ export default function QoffaPage() {
             </div>
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
               {panier.map((p) => (
-                <div key={p.name} className="rounded-xl border border-white/5 bg-bg-800/50 p-3 transition hover:border-white/15">
+                <div key={p.name} className="rounded-xl border border-slate-200 bg-slate-50 p-3 transition hover:border-slate-300 dark:border-white/5 dark:bg-bg-800 dark:hover:border-white/15">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-white">{p.name}</span>
-                    <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] text-white/50">×{p.qty}</span>
+                    <span className="text-sm font-semibold text-slate-900 dark:text-white">{p.name}</span>
+                    <span className="rounded-md bg-slate-200 px-1.5 py-0.5 text-[10px] text-slate-500 dark:bg-white/5 dark:text-white/50">×{p.qty}</span>
                   </div>
                   <div className="mt-2 flex items-end justify-between">
-                    <span className="text-lg font-extrabold tabular-nums text-white">{p.price} <span className="text-[10px] font-normal text-white/40">DT</span></span>
-                    <span className={`inline-flex items-center gap-0.5 text-xs font-semibold ${p.up ? "text-red-300" : "text-emerald-300"}`}>
+                    <span className="text-lg font-extrabold tabular-nums text-slate-900 dark:text-white">{p.price} <span className="text-[10px] font-normal text-slate-400 dark:text-white/40">DT</span></span>
+                    <span className={`inline-flex items-center gap-0.5 text-xs font-semibold ${p.up ? "text-red-500 dark:text-red-300" : "text-emerald-600 dark:text-emerald-300"}`}>
                       {p.up ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                       {p.change}
                     </span>

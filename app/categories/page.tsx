@@ -40,24 +40,24 @@ export default function CategoriesPage() {
               <Reveal key={c.id} delay={i * 0.05}>
                 <Link
                   href="/comparateur"
-                  className="card group relative flex h-full items-center gap-4 overflow-hidden p-4 transition hover:-translate-y-1 hover:border-white/20 hover:shadow-[0_0_30px_-10px_rgba(246,196,83,0.4)]"
+                  className="card group relative flex h-full items-center gap-4 overflow-hidden p-4 transition hover:-translate-y-1 hover:border-slate-300 hover:shadow-[0_0_30px_-10px_rgba(246,196,83,0.4)] dark:hover:border-white/20"
                 >
                   <div className={`cat-anim relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-bg-800 ring-2 ring-inset ${c.ring}`} style={{ animationDelay: `${i * 80}ms, ${600 + i * 80}ms` }}>
                     <Image src={c.image} alt={c.fr} fill sizes="80px" className="object-cover transition group-hover:scale-110" unoptimized />
                     <span className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-t from-black/40 via-transparent to-white/10" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-base font-bold text-white">{c.fr}</div>
-                    <div className="font-arabic text-xs text-white/45" dir="rtl">{c.ar}</div>
+                    <div className="text-base font-bold text-slate-900 dark:text-white">{c.fr}</div>
+                    <div className="font-arabic text-xs text-slate-400 dark:text-white/45" dir="rtl">{c.ar}</div>
                     <div className="mt-2 flex items-center gap-2 text-[11px]">
-                      <span className="text-white/55">{m?.count} produits</span>
-                      <span className="text-white/20">·</span>
-                      <span className={m?.up ? "font-semibold text-red-300" : "font-semibold text-emerald-300"}>
+                      <span className="text-slate-500 dark:text-white/55">{m?.count} produits</span>
+                      <span className="text-slate-300 dark:text-white/20">·</span>
+                      <span className={m?.up ? "font-semibold text-red-500 dark:text-red-300" : "font-semibold text-emerald-600 dark:text-emerald-300"}>
                         Indice {m?.index} {m?.up ? "▲" : "▼"}
                       </span>
                     </div>
                   </div>
-                  <ArrowRight className="h-4 w-4 shrink-0 text-white/30 transition group-hover:translate-x-1 group-hover:text-brand-gold" />
+                  <ArrowRight className="h-4 w-4 shrink-0 text-slate-300 transition group-hover:translate-x-1 group-hover:text-brand-gold dark:text-white/30" />
                 </Link>
               </Reveal>
             );

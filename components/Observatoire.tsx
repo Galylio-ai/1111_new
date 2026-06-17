@@ -14,10 +14,10 @@ export function Observatoire() {
               </span>
               <div>
                 <div className="section-title">Observatoire du marché</div>
-                <div className="text-[11px] text-white/60">Données collectées aujourd'hui</div>
+                <div className="text-[11px] text-slate-500 dark:text-white/60">Données collectées aujourd'hui</div>
               </div>
             </div>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-300">
               <span className="live-dot" /> Live
             </span>
           </div>
@@ -80,25 +80,25 @@ export function Observatoire() {
 
 const tonePalette = {
   emerald: {
-    text: "text-emerald-300",
+    text: "text-emerald-600 dark:text-emerald-300",
     iconBg: "bg-emerald-500/15 ring-emerald-500/30",
     cardRing: "hover:border-emerald-500/30",
     glow: "from-emerald-500/10",
   },
   red: {
-    text: "text-red-300",
+    text: "text-red-500 dark:text-red-300",
     iconBg: "bg-red-500/15 ring-red-500/30",
     cardRing: "hover:border-red-500/30",
     glow: "from-red-500/10",
   },
   orange: {
-    text: "text-orange-300",
+    text: "text-orange-600 dark:text-orange-300",
     iconBg: "bg-orange-500/15 ring-orange-500/30",
     cardRing: "hover:border-orange-500/30",
     glow: "from-orange-500/10",
   },
   blue: {
-    text: "text-blue-300",
+    text: "text-blue-600 dark:text-blue-300",
     iconBg: "bg-blue-500/15 ring-blue-500/30",
     cardRing: "hover:border-blue-500/30",
     glow: "from-blue-500/10",
@@ -119,7 +119,7 @@ function Cell({
   const t = tonePalette[tone];
   return (
     <div
-      className={`relative overflow-hidden rounded-xl border border-bg-border bg-bg-800/60 p-3 transition ${t.cardRing}`}
+      className={`relative overflow-hidden rounded-xl border border-bg-border bg-bg-700 p-3 transition dark:bg-bg-800 ${t.cardRing}`}
     >
       <div
         className={`pointer-events-none absolute -right-6 -top-6 h-16 w-16 rounded-full bg-gradient-to-br ${t.glow} to-transparent blur-2xl`}
@@ -130,7 +130,7 @@ function Cell({
         </span>
         <span className={`text-xl font-extrabold tabular-nums ${t.text}`}>{value}</span>
       </div>
-      <div className="relative mt-1.5 text-[11px] leading-tight text-white/65">{label}</div>
+      <div className="relative mt-1.5 text-[11px] leading-tight text-slate-500 dark:text-white/65">{label}</div>
     </div>
   );
 }

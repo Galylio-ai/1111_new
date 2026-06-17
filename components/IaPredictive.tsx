@@ -14,11 +14,11 @@ export function IaPredictive() {
             <Bot className="h-4 w-4 text-brand-blue" />
             <span className="section-title">IA Prédictive</span>
           </div>
-          <div className="mt-2 text-sm font-semibold text-white">Acheter maintenant</div>
-          <div className="text-sm text-white/80">ou attendre ?</div>
-          <div className="font-arabic text-xs text-white/40" dir="rtl">اشري ولا استني</div>
+          <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">Acheter maintenant</div>
+          <div className="text-sm text-slate-600 dark:text-white/80">ou attendre ?</div>
+          <div className="font-arabic text-xs text-slate-400 dark:text-white/40" dir="rtl">اشري ولا استني</div>
 
-          <p className="mt-3 text-[11px] leading-snug text-white/60">
+          <p className="mt-3 text-[11px] leading-snug text-slate-500 dark:text-white/60">
             Notre IA analyse l'historique des prix et prédit l'évolution future avec une haute précision.
           </p>
 
@@ -26,7 +26,7 @@ export function IaPredictive() {
             <button className="rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-600">
               Acheter maintenant
             </button>
-            <button className="rounded-lg border border-bg-border bg-bg-800 px-3 py-2 text-xs font-semibold text-white/80 hover:bg-bg-700">
+            <button className="rounded-lg border border-bg-border bg-bg-700 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-bg-800 dark:bg-bg-800 dark:text-white/80 dark:hover:bg-bg-700">
               Attendre
             </button>
           </div>
@@ -34,14 +34,14 @@ export function IaPredictive() {
 
         {/* Confiance card */}
         <div className="card card-pad text-center">
-          <div className="text-[11px] uppercase tracking-wider text-white/50">Probabilité d'augmentation</div>
+          <div className="text-[11px] uppercase tracking-wider text-slate-500 dark:text-white/50">Probabilité d'augmentation</div>
           <div className="mt-1 text-4xl font-black text-brand-gold">+4.6%</div>
-          <div className="text-[11px] text-white/60">dans les 15 prochains jours</div>
+          <div className="text-[11px] text-slate-500 dark:text-white/60">dans les 15 prochains jours</div>
 
           <div className="mt-4">
-            <div className="text-[11px] uppercase tracking-wider text-white/50">Confiance IA</div>
-            <div className="text-4xl font-black text-emerald-400">91.8%</div>
-            <div className="text-[11px] text-emerald-300">élevée</div>
+            <div className="text-[11px] uppercase tracking-wider text-slate-500 dark:text-white/50">Confiance IA</div>
+            <div className="text-4xl font-black text-emerald-600 dark:text-emerald-400">91.8%</div>
+            <div className="text-[11px] text-emerald-600 dark:text-emerald-300">élevée</div>
           </div>
         </div>
 
@@ -65,10 +65,10 @@ export function IaPredictive() {
             {watchProducts.map((w) => (
               <li
                 key={w.name}
-                className="flex items-center justify-between rounded-lg border border-bg-border bg-bg-800/60 p-2 text-sm"
+                className="flex items-center justify-between rounded-lg border border-bg-border bg-bg-700 p-2 text-sm dark:bg-bg-800"
               >
-                <span className="text-white/90">{w.name}</span>
-                <span className="inline-flex items-center gap-1 text-emerald-400 text-xs">
+                <span className="text-slate-800 dark:text-white/90">{w.name}</span>
+                <span className="inline-flex items-center gap-1 text-emerald-600 text-xs dark:text-emerald-400">
                   <TrendingDown className="h-3 w-3" /> {w.change}
                 </span>
               </li>

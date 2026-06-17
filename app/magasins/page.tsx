@@ -28,7 +28,6 @@ export default function MagasinsPage() {
         { label: "Note moyenne", value: "4.6/5", tone: "emerald" },
       ]}
     >
-      {/* Store cards */}
       <section className="mx-auto mt-6 max-w-[1600px] px-3 sm:px-4">
         <Reveal>
           <h2 className="section-title mb-3">Enseignes populaires</h2>
@@ -36,28 +35,28 @@ export default function MagasinsPage() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {stores.map((s, i) => (
             <Reveal key={s.name} delay={i * 0.05}>
-              <div className="card group relative h-full overflow-hidden p-4 transition hover:-translate-y-1 hover:border-white/20 hover:shadow-[0_0_30px_-10px_rgba(225,29,45,0.5)]">
+              <div className="card group relative h-full overflow-hidden p-4 transition hover:-translate-y-1 hover:border-slate-300 hover:shadow-[0_0_30px_-10px_rgba(225,29,45,0.5)] dark:hover:border-white/20">
                 <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-brand-gold/10 blur-2xl" />
                 <div className="relative flex items-center gap-3">
                   <span className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${s.color} text-lg font-black text-white ring-1 ring-white/10`}>
                     {s.name.charAt(0)}
                   </span>
                   <div className="min-w-0">
-                    <div className="truncate text-base font-bold text-white">{s.name}</div>
+                    <div className="truncate text-base font-bold text-slate-900 dark:text-white">{s.name}</div>
                     <div className="inline-flex items-center gap-0.5 text-xs text-brand-gold">
                       <Star className="h-3 w-3 fill-current" /> {s.rating}
                     </div>
                   </div>
                 </div>
-                <div className="relative mt-3 text-[11px] text-white/55">{s.cat}</div>
-                <div className="relative mt-3 flex items-center justify-between rounded-xl border border-white/5 bg-bg-800/50 px-3 py-2">
+                <div className="relative mt-3 text-[11px] text-slate-500 dark:text-white/55">{s.cat}</div>
+                <div className="relative mt-3 flex items-center justify-between rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 dark:border-white/5 dark:bg-bg-800">
                   <div>
-                    <div className="text-[10px] uppercase tracking-wider text-white/40">Produits</div>
-                    <div className="text-sm font-bold tabular-nums text-white">{s.products}</div>
+                    <div className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-white/40">Produits</div>
+                    <div className="text-sm font-bold tabular-nums text-slate-900 dark:text-white">{s.products}</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-[10px] uppercase tracking-wider text-white/40">Indice prix</div>
-                    <div className={`inline-flex items-center gap-0.5 text-sm font-bold tabular-nums ${s.up ? "text-red-300" : "text-emerald-300"}`}>
+                    <div className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-white/40">Indice prix</div>
+                    <div className={`inline-flex items-center gap-0.5 text-sm font-bold tabular-nums ${s.up ? "text-red-500 dark:text-red-300" : "text-emerald-600 dark:text-emerald-300"}`}>
                       {s.up ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
                       {s.index}
                     </div>
@@ -69,7 +68,6 @@ export default function MagasinsPage() {
         </div>
       </section>
 
-      {/* Ranking by cheapest basket */}
       <section className="mx-auto mt-6 max-w-[1600px] px-3 sm:px-4">
         <Reveal>
           <div className="card card-pad">
@@ -82,19 +80,19 @@ export default function MagasinsPage() {
                 <li
                   key={e.name}
                   className={`grid grid-cols-[40px_1fr_auto] items-center gap-2 rounded-xl px-3 py-2.5 text-sm transition ${
-                    e.best ? "bg-gradient-to-r from-brand-red/15 via-brand-red/5 to-transparent ring-1 ring-brand-red/30" : "border border-white/5 bg-bg-800/40 hover:bg-bg-800/70"
+                    e.best ? "bg-gradient-to-r from-brand-red/15 via-brand-red/5 to-transparent ring-1 ring-brand-red/30" : "border border-slate-200 bg-slate-50 hover:bg-slate-100 dark:border-white/5 dark:bg-bg-800 dark:hover:bg-bg-700"
                   }`}
                 >
                   <span className="flex items-center justify-center">
-                    {e.best ? <Trophy className="h-4 w-4 text-brand-gold" /> : <span className="text-xs font-bold text-white/40">{idx + 1}</span>}
+                    {e.best ? <Trophy className="h-4 w-4 text-brand-gold" /> : <span className="text-xs font-bold text-slate-400 dark:text-white/40">{idx + 1}</span>}
                   </span>
                   <span className="flex items-center gap-2">
-                    <span className={`h-2.5 w-2.5 rounded-full ${e.color}`} />
-                    <span className={e.best ? "font-bold text-brand-red" : "text-white/90"}>{e.name}</span>
+                    <span className={`h-2.5 w-2.5 rounded-full ${e.logo.bg}`} />
+                    <span className={e.best ? "font-bold text-brand-red" : "text-slate-800 dark:text-white/90"}>{e.name}</span>
                   </span>
                   <span className="text-right">
-                    <span className="font-extrabold tabular-nums text-white">{e.price} <span className="text-[10px] font-normal text-white/40">DT</span></span>
-                    <span className={`ml-3 text-xs tabular-nums ${e.best ? "text-brand-gold" : "text-red-300"}`}>{e.diff}</span>
+                    <span className="font-extrabold tabular-nums text-slate-900 dark:text-white">{e.price} <span className="text-[10px] font-normal text-slate-400 dark:text-white/40">DT</span></span>
+                    <span className={`ml-3 text-xs tabular-nums ${e.best ? "text-brand-gold" : "text-red-500 dark:text-red-300"}`}>{e.diff}</span>
                   </span>
                 </li>
               ))}

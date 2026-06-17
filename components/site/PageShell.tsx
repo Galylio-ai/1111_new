@@ -38,9 +38,9 @@ export type Chip = { label: string; value: string; tone?: "gold" | "red" | "emer
 
 const toneMap: Record<NonNullable<Chip["tone"]>, string> = {
   gold: "text-brand-gold border-brand-gold/25 bg-brand-gold/10",
-  red: "text-red-300 border-red-500/25 bg-red-500/10",
-  emerald: "text-emerald-300 border-emerald-500/25 bg-emerald-500/10",
-  blue: "text-blue-300 border-blue-500/25 bg-blue-500/10",
+  red: "text-red-600 border-red-500/25 bg-red-500/10 dark:text-red-300",
+  emerald: "text-emerald-600 border-emerald-500/25 bg-emerald-500/10 dark:text-emerald-300",
+  blue: "text-blue-600 border-blue-500/25 bg-blue-500/10 dark:text-blue-300",
 };
 
 export function PageShell({
@@ -69,7 +69,7 @@ export function PageShell({
 
       <section className="mx-auto max-w-[1600px] px-3 pt-5 sm:px-4">
         {/* Breadcrumb */}
-        <nav className="reveal-up mb-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/40">
+        <nav className="reveal-up mb-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-white/40">
           <Link href="/" className="transition hover:text-brand-gold">Accueil</Link>
           <ChevronRight className="h-3 w-3 opacity-60" />
           <span className="text-brand-gold">{title}</span>
@@ -91,19 +91,19 @@ export function PageShell({
               </span>
 
               <div className="min-w-0">
-                <h1 className="text-2xl font-black leading-[1.05] tracking-tight text-white sm:text-3xl md:text-4xl">
+                <h1 className="text-2xl font-black leading-[1.05] tracking-tight text-slate-900 sm:text-3xl md:text-4xl dark:text-white">
                   {title} {accent && <span className="gradient-text-gold">{accent}</span>}
                   {live && (
-                    <span className="ml-2 inline-flex translate-y-[-4px] items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 align-middle text-[11px] font-semibold text-emerald-300">
+                    <span className="ml-2 inline-flex translate-y-[-4px] items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 align-middle text-[11px] font-semibold text-emerald-600 dark:text-emerald-300">
                       <span className="live-dot" /> Live
                     </span>
                   )}
                 </h1>
                 {arabic && (
-                  <p className="mt-1 font-arabic text-base text-white/55" dir="rtl">{arabic}</p>
+                  <p className="mt-1 font-arabic text-base text-slate-500 dark:text-white/55" dir="rtl">{arabic}</p>
                 )}
                 {description && (
-                  <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/70">{description}</p>
+                  <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-white/70">{description}</p>
                 )}
               </div>
             </div>

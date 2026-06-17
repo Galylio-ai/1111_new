@@ -17,10 +17,10 @@ export function Categories() {
           <Link
             key={c.id}
             href="/categories"
-            className="group flex flex-col items-center rounded-2xl border border-bg-border bg-bg-card p-2 text-center transition hover:-translate-y-0.5 hover:border-white/20 hover:shadow-card sm:p-3"
+            className="group flex flex-col items-center rounded-2xl border border-bg-border bg-bg-card p-2 text-center transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-card dark:hover:border-white/20 sm:p-3"
           >
             <div
-              className={`cat-anim relative h-14 w-14 overflow-hidden rounded-full bg-bg-800 ring-2 ring-inset sm:h-20 sm:w-20 ${c.ring}`}
+              className={`cat-anim relative h-14 w-14 overflow-hidden rounded-full bg-bg-700 ring-2 ring-inset sm:h-20 sm:w-20 ${c.ring}`}
               style={{ animationDelay: `${i * 80}ms, ${600 + i * 80}ms` }}
             >
               <Image
@@ -33,8 +33,8 @@ export function Categories() {
               />
               <span className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-t from-black/40 via-transparent to-white/10" />
             </div>
-            <div className="mt-2 text-[11px] sm:text-xs font-semibold text-white leading-tight">{c.fr}</div>
-            <div className="font-arabic text-[10px] text-white/50">{c.ar}</div>
+            <div className="mt-2 text-[11px] sm:text-xs font-semibold text-slate-800 leading-tight dark:text-white">{c.fr}</div>
+            <div className="font-arabic text-[10px] text-slate-400 dark:text-white/50">{c.ar}</div>
           </Link>
         ))}
       </div>
