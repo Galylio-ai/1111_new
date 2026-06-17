@@ -11,7 +11,7 @@ import { Observatoire } from "@/components/Observatoire";
 import { PromoBanner } from "@/components/PromoBanner";
 import { QoffaSection } from "@/components/QoffaSection";
 import { StatRow } from "@/components/StatRow";
-import { TopOffers } from "@/components/TopOffers";
+import { TechOffers } from "@/components/TechOffers";
 
 export default function HomePage() {
   return (
@@ -19,7 +19,7 @@ export default function HomePage() {
       <Header />
       <Hero />
       <PromoBanner />
-      <TopOffers />
+      <TechOffers />
       <Categories />
       <GrandeDistribRow />
       <StatRow />

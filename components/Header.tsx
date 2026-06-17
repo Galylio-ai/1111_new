@@ -1,9 +1,10 @@
 "use client";
-import { Bell, ChevronDown, Flame, Globe, Heart, Search, ShieldCheck, Sparkles, TrendingUp, User } from "lucide-react";
+import { Bell, ChevronDown, Flame, Globe, Heart, LogOut, Search, ShieldCheck, Sparkles, TrendingUp, User } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { navLinks } from "@/lib/nav";
 import { ThemeToggle } from "./ThemeToggle";
+import { useAuth } from "@/lib/auth";
 
 const tickerItems = [
   { icon: TrendingUp, label: "Indice marché", value: "108.7", trend: "+1.2%", trendUp: true },
@@ -14,6 +15,13 @@ const tickerItems = [
 
 export function Header() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, logout } = useAuth();
+
+  async function handleLogout() {
+    await logout();
+    router.push("/");
+  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/85 backdrop-blur-xl supports-[backdrop-filter]:bg-white/70 dark:border-white/5 dark:bg-[rgba(10,14,26,0.75)] dark:supports-[backdrop-filter]:bg-[rgba(10,14,26,0.60)]">
@@ -172,17 +180,52 @@ export function Header() {
 
           <div className="mx-1 hidden sm:block h-6 w-px bg-slate-200 dark:bg-white/10" />
 
-          <button className="hidden md:flex h-9 items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900 transition dark:border-white/10 dark:bg-white/[0.03] dark:text-white/90 dark:hover:border-white/20 dark:hover:bg-white/[0.06] dark:hover:text-white">
-            <User className="h-4 w-4" />
-            Se connecter
-          </button>
-
-          <button className="group relative h-9 overflow-hidden rounded-xl bg-gradient-to-br from-brand-red via-brand-redDark to-[#7a0f1a] px-3 text-xs font-bold text-white shadow-glow ring-1 ring-white/10 transition hover:shadow-[0_0_30px_rgba(225,29,45,0.55)] hover:ring-brand-gold/30 sm:px-4 sm:text-sm">
-            <span className="relative z-10 flex items-center gap-1.5">
-              <span className="font-arabic">تسجيل الدخول</span>
-            </span>
-            <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-          </button>
+          {user ? (
+            <>
+              <Link
+                href="/profil"
+                className="hidden md:flex h-9 items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900 transition dark:border-white/10 dark:bg-white/[0.03] dark:text-white/90 dark:hover:border-white/20 dark:hover:bg-white/[0.06] dark:hover:text-white"
+              >
+                {user.avatar_url ? (
+                  <img src={user.avatar_url} alt="" className="h-5 w-5 rounded-full object-cover" />
+                ) : (
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-gold/20 text-[10px] font-black text-brand-gold">
+                    {user.full_name.charAt(0).toUpperCase()}
+                  </span>
+                )}
+                <span className="max-w-[100px] truncate">{user.full_name.split(" ")[0]}</span>
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="group relative h-9 overflow-hidden rounded-xl border border-slate-300 bg-white px-3 text-xs font-bold text-slate-700 transition hover:border-red-300 hover:bg-red-50 hover:text-red-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-white/80 dark:hover:border-red-800/50 dark:hover:bg-red-950/30 dark:hover:text-red-300 sm:px-4"
+              >
+                <span className="relative z-10 flex items-center gap-1.5">
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Déconnexion</span>
+                </span>
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="hidden md:flex h-9 items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900 transition dark:border-white/10 dark:bg-white/[0.03] dark:text-white/90 dark:hover:border-white/20 dark:hover:bg-white/[0.06] dark:hover:text-white"
+              >
+                <User className="h-4 w-4" />
+                Se connecter
+              </Link>
+              <Link
+                href="/register"
+                className="group relative h-9 overflow-hidden rounded-xl bg-gradient-to-br from-brand-red via-brand-redDark to-[#7a0f1a] px-3 text-xs font-bold text-white shadow-glow ring-1 ring-white/10 transition hover:shadow-[0_0_30px_rgba(225,29,45,0.55)] hover:ring-brand-gold/30 sm:px-4 sm:text-sm"
+              >
+                <span className="relative z-10 flex items-center gap-1.5">
+                  <span className="hidden sm:inline">S'inscrire</span>
+                  <span className="font-arabic sm:hidden">تسجيل</span>
+                </span>
+                <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>

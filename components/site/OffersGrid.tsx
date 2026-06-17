@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Star } from "lucide-react";
 import { topOffers } from "@/lib/data";
 
@@ -9,11 +10,9 @@ export function OffersGrid({ limit }: { limit?: number }) {
       {items.map((p, i) => {
         const pct = Math.round((p.discount / p.oldPrice) * 100);
         return (
-          <a
+          <Link
             key={p.id}
-            href={p.url ?? "#"}
-            target={p.url ? "_blank" : undefined}
-            rel={p.url ? "noopener noreferrer" : undefined}
+            href={`/produit/${p.id}`}
             style={{ animationDelay: `${(i % 10) * 0.05}s` }}
             className="reveal-up card group relative overflow-hidden p-3 transition hover:-translate-y-1 hover:border-slate-300 hover:shadow-[0_0_30px_-10px_rgba(225,29,45,0.3)] dark:hover:border-white/20 dark:hover:shadow-[0_0_30px_-10px_rgba(225,29,45,0.5)]"
           >
@@ -44,7 +43,7 @@ export function OffersGrid({ limit }: { limit?: number }) {
                 <Star className="h-3 w-3 fill-current" /> {p.rating}
               </span>
             </div>
-          </a>
+          </Link>
         );
       })}
     </div>
