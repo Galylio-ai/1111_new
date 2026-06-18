@@ -2,20 +2,12 @@ import { NextResponse } from "next/server";
 import { Pool } from "pg";
 
 const retailPool = new Pool({
-  host: "localhost",
-  port: 5433,
-  user: "retail_user",
-  password: "galylio-ai",
-  database: "retail_db",
+  connectionString: process.env.RETAIL_DB_URL,
   max: 3,
 });
 
 const paraPool = new Pool({
-  host: "localhost",
-  port: 5434,
-  user: "para_user",
-  password: "galylio-ai",
-  database: "para_db",
+  connectionString: process.env.PARA_DB_URL,
   max: 3,
 });
 

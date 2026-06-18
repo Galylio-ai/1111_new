@@ -1,7 +1,7 @@
 import { Star, Trophy, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { PageShell } from "@/components/site/PageShell";
 import { Reveal } from "@/components/site/Reveal";
-import { distributionEnseignes } from "@/lib/data";
+import { distributionEnseignes, getStoreLogo } from "@/lib/data";
 
 export const metadata = { title: "Magasins & Enseignes — 1111.tn" };
 
@@ -38,9 +38,15 @@ export default function MagasinsPage() {
               <div className="card group relative h-full overflow-hidden p-4 transition hover:-translate-y-1 hover:border-slate-300 hover:shadow-[0_0_30px_-10px_rgba(225,29,45,0.5)] dark:hover:border-white/20">
                 <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-brand-gold/10 blur-2xl" />
                 <div className="relative flex items-center gap-3">
-                  <span className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${s.color} text-lg font-black text-white ring-1 ring-white/10`}>
-                    {s.name.charAt(0)}
-                  </span>
+                  {getStoreLogo(s.name) ? (
+                    <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-white p-1.5 ring-1 ring-slate-200 dark:ring-white/10">
+                      <img src={getStoreLogo(s.name)} alt={s.name} className="h-full w-full object-contain" />
+                    </span>
+                  ) : (
+                    <span className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${s.color} text-lg font-black text-white ring-1 ring-white/10`}>
+                      {s.name.charAt(0)}
+                    </span>
+                  )}
                   <div className="min-w-0">
                     <div className="truncate text-base font-bold text-slate-900 dark:text-white">{s.name}</div>
                     <div className="inline-flex items-center gap-0.5 text-xs text-brand-gold">

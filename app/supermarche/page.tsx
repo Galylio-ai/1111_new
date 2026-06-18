@@ -2,11 +2,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowRight, ChevronDown, ChevronRight, Loader2, Scale, Search, ShoppingCart, Tag, X,
+  ArrowRight, ChevronDown, ChevronRight, Loader2, Search, ShoppingCart, Tag, X,
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/site/Reveal";
+import { getStoreLogo } from "@/lib/data";
 
 type Product = {
   name: string;
@@ -20,12 +21,12 @@ type Product = {
 
 /* ── Shops ───────────────────────────────────────────────────────────────── */
 const shops = [
-  { key: "aziza",             name: "Aziza",             count: 17982, color: "bg-green-600",  imgs: ["https://clusteraz.flesk.fr/images/100013251.jpg","https://clusteraz.flesk.fr/images/100013271.jpg","https://clusteraz.flesk.fr/images/100009532.jpg","https://clusteraz.flesk.fr/images/100003869.jpg"] },
-  { key: "carrefour",         name: "Carrefour",         count: 26069, color: "bg-blue-600",   imgs: ["https://www.carrefour.tn/gel-machine-clean-power-5l-6192477622435-1.html/","https://cdn.monoprix.tn/ennasr/163018-home_default/nectar.jpg","https://www.geantdrive.tn/tunis-city/1320846-home_default/lot-shampooing.jpg","https://cdn.monoprix.tn/ennasr/178113-home_default/lessive-machine.jpg"] },
-  { key: "geant",             name: "Géant",             count: 34412, color: "bg-red-600",    imgs: ["https://www.geantdrive.tn/tunis-city/1320846-home_default/lot-shampooing.jpg","https://www.geantdrive.tn/tunis-city/1320847-home_default/lot-shampooing.jpg","https://www.geantdrive.tn/tunis-city/178113-home_default/lessive.jpg","https://www.geantdrive.tn/tunis-city/163018-home_default/nectar.jpg"] },
-  { key: "monoprix",          name: "Monoprix",          count: 12582, color: "bg-orange-500", imgs: ["https://cdn.monoprix.tn/ennasr/178113-home_default/lessive-machine.jpg","https://cdn.monoprix.tn/ennasr/163018-home_default/nectar.jpg","https://cdn.monoprix.tn/ennasr/100003869-home_default/produit.jpg","https://cdn.monoprix.tn/ennasr/100009532-home_default/produit.jpg"] },
-  { key: "carrefour market",  name: "Carrefour Market",  count: 5049,  color: "bg-sky-600",    imgs: ["https://cdn.monoprix.tn/ennasr/178113-home_default/lessive-machine.jpg","https://cdn.monoprix.tn/ennasr/163018-home_default/nectar.jpg","https://clusteraz.flesk.fr/images/100013251.jpg","https://clusteraz.flesk.fr/images/100003869.jpg"] },
-  { key: "carrefour express", name: "Carrefour Express", count: 3779,  color: "bg-indigo-500", imgs: ["https://cdn.monoprix.tn/ennasr/163018-home_default/nectar.jpg","https://cdn.monoprix.tn/ennasr/178113-home_default/lessive-machine.jpg","https://clusteraz.flesk.fr/images/100013271.jpg","https://clusteraz.flesk.fr/images/100009532.jpg"] },
+  { key: "aziza",             name: "Aziza",             count: 17982, color: "bg-green-600",  logo: "/aziza-logo.jpg",       logoSize: "h-28 px-4", imgs: ["https://clusteraz.flesk.fr/images/100013251.jpg","https://clusteraz.flesk.fr/images/100013271.jpg","https://clusteraz.flesk.fr/images/100009532.jpg","https://clusteraz.flesk.fr/images/100003869.jpg"] },
+  { key: "carrefour",         name: "Carrefour",         count: 26069, color: "bg-blue-600",   logo: "/Carrefour-Logo.png",    logoSize: "h-14 px-6", imgs: ["https://www.carrefour.tn/gel-machine-clean-power-5l-6192477622435-1.html/","https://cdn.monoprix.tn/ennasr/163018-home_default/nectar.jpg","https://www.geantdrive.tn/tunis-city/1320846-home_default/lot-shampooing.jpg","https://cdn.monoprix.tn/ennasr/178113-home_default/lessive-machine.jpg"] },
+  { key: "geant",             name: "Géant",             count: 34412, color: "bg-red-600",    logo: "/geant-logo.png",        logoSize: "h-28 px-4", imgs: ["https://www.geantdrive.tn/tunis-city/1320846-home_default/lot-shampooing.jpg","https://www.geantdrive.tn/tunis-city/1320847-home_default/lot-shampooing.jpg","https://www.geantdrive.tn/tunis-city/178113-home_default/lessive.jpg","https://www.geantdrive.tn/tunis-city/163018-home_default/nectar.jpg"] },
+  { key: "monoprix",          name: "Monoprix",          count: 12582, color: "bg-orange-500", logo: "/monoprix.png",          logoSize: "h-28 px-4", imgs: ["https://cdn.monoprix.tn/ennasr/178113-home_default/lessive-machine.jpg","https://cdn.monoprix.tn/ennasr/163018-home_default/nectar.jpg","https://cdn.monoprix.tn/ennasr/100003869-home_default/produit.jpg","https://cdn.monoprix.tn/ennasr/100009532-home_default/produit.jpg"] },
+  { key: "carrefour market",  name: "Carrefour Market",  count: 5049,  color: "bg-sky-600",    logo: "/carrefour-market.png",  logoSize: "h-28 px-4", imgs: ["https://cdn.monoprix.tn/ennasr/178113-home_default/lessive-machine.jpg","https://cdn.monoprix.tn/ennasr/163018-home_default/nectar.jpg","https://clusteraz.flesk.fr/images/100013251.jpg","https://clusteraz.flesk.fr/images/100003869.jpg"] },
+  { key: "carrefour express", name: "Carrefour Express", count: 3779,  color: "bg-indigo-500", logo: "/Carrefour_Express.png",  logoSize: "h-28 px-4", imgs: ["https://cdn.monoprix.tn/ennasr/163018-home_default/nectar.jpg","https://cdn.monoprix.tn/ennasr/178113-home_default/lessive-machine.jpg","https://clusteraz.flesk.fr/images/100013271.jpg","https://clusteraz.flesk.fr/images/100009532.jpg"] },
 ];
 
 /* ── Custom Dropdown ─────────────────────────────────────────────────────── */
@@ -129,8 +130,8 @@ export default function SupermarchePage() {
             <div className="pointer-events-none absolute right-0 top-0 h-48 w-48 rounded-full bg-brand-gold/8 blur-3xl" />
             <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
               <div className="flex items-start gap-4">
-                <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400/25 to-green-500/10 ring-1 ring-emerald-400/30 shadow-[0_0_30px_-8px_rgba(16,185,129,0.4)]">
-                  <ShoppingCart className="h-8 w-8 text-emerald-500 dark:text-emerald-400" strokeWidth={1.8} />
+                <span className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-400/25 to-green-500/10 ring-1 ring-emerald-400/30 shadow-[0_0_30px_-8px_rgba(16,185,129,0.4)] sm:h-28 sm:w-28">
+                  <img src="/supermarché-logo.png" alt="Supermarché" className="h-20 w-20 object-contain sm:h-24 sm:w-24" />
                 </span>
                 <div>
                   <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl dark:text-white">
@@ -165,29 +166,70 @@ export default function SupermarchePage() {
       {/* ── Shops ─────────────────────────────────────────────────────────── */}
       <section className="mx-auto mt-10 max-w-[1600px] px-4">
         <Reveal>
-          <h2 className="mb-5 text-lg font-black text-slate-900 dark:text-white">
+          <h2 className="mb-6 text-lg font-black text-slate-900 dark:text-white">
             Enseignes <span className="gradient-text-gold">supermarché</span>
           </h2>
         </Reveal>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-6">
           {shops.map((shop, i) => (
-            <Reveal key={shop.key} delay={i * 0.05}>
+            <Reveal key={shop.key} delay={i * 0.06}>
               <button
                 onClick={() => setActiveShop(activeShop === shop.key ? "" : shop.key)}
-                className={`group w-full overflow-hidden rounded-2xl border transition hover:-translate-y-0.5 ${
+                className={`group relative w-full overflow-hidden rounded-3xl transition-all duration-300 ${
                   activeShop === shop.key
-                    ? "border-brand-gold/60 shadow-[0_0_16px_-4px_rgba(246,196,83,0.5)]"
-                    : "border-slate-200 dark:border-white/[0.06]"
-                }`}
+                    ? "shadow-[0_0_0_2px_rgba(246,196,83,0.8),0_20px_40px_-8px_rgba(246,196,83,0.25)]"
+                    : "shadow-[0_2px_16px_rgba(0,0,0,0.08)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.18)] dark:shadow-[0_2px_16px_rgba(0,0,0,0.4)] dark:hover:shadow-[0_16px_48px_rgba(0,0,0,0.6)]"
+                } hover:-translate-y-2`}
               >
-                <div className={`flex h-14 items-center justify-center rounded-t-2xl text-lg font-black text-white ${shop.color}`}>
-                  {shop.name.slice(0, 2).toUpperCase()}
+                {/* Logo panel — white bg so all logos pop */}
+                <div className="relative flex h-36 items-center justify-center overflow-hidden bg-white">
+                  {/* Animated shimmer sweep on hover */}
+                  <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+
+                  <img
+                    src={shop.logo!}
+                    alt={shop.name}
+                    className={`w-full object-contain transition-all duration-500 group-hover:scale-110 group-hover:drop-shadow-lg ${shop.logoSize}`}
+                  />
+
+                  {/* Active badge top-right */}
+                  {activeShop === shop.key && (
+                    <span className="absolute right-2.5 top-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-brand-gold shadow-[0_0_10px_rgba(246,196,83,0.7)]">
+                      <svg viewBox="0 0 12 12" fill="none" className="h-3 w-3" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M2 6l3 3 5-5" />
+                      </svg>
+                    </span>
+                  )}
                 </div>
-                <div className="bg-white px-2 py-2 dark:bg-white/[0.025]">
-                  <div className="text-[11px] font-bold text-slate-800 dark:text-white truncate">{shop.name}</div>
-                  <div className="text-[10px] text-slate-400 dark:text-white/40 tabular-nums">{shop.count.toLocaleString("fr-FR")} produits</div>
+
+                {/* Info panel */}
+                <div className={`relative px-4 py-3.5 transition-colors duration-300 ${
+                  activeShop === shop.key
+                    ? "bg-gradient-to-b from-[#1a1506] to-[#0f0e09]"
+                    : "bg-gradient-to-b from-[#0f1218] to-[#0a0c14] group-hover:from-[#14171f] group-hover:to-[#0d1019]"
+                }`}>
+                  {/* Glow line at top */}
+                  <div className={`absolute inset-x-0 top-0 h-px transition-all duration-300 ${
+                    activeShop === shop.key
+                      ? "bg-brand-gold/60"
+                      : "bg-white/8 group-hover:bg-white/20"
+                  }`} />
+
+                  <p className="truncate text-[13px] font-bold text-white">{shop.name}</p>
+
+                  <div className="mt-1.5 flex items-center justify-between">
+                    <span className="tabular-nums text-[11px] text-white/45">
+                      {shop.count.toLocaleString("fr-FR")}
+                    </span>
+                    <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider transition-colors duration-300 ${
+                      activeShop === shop.key
+                        ? "bg-brand-gold/20 text-brand-gold"
+                        : "bg-white/8 text-white/40 group-hover:bg-emerald-500/15 group-hover:text-emerald-400"
+                    }`}>
+                      {activeShop === shop.key ? "Sélectionné" : "produits"}
+                    </span>
+                  </div>
                 </div>
-                {activeShop === shop.key && <div className="h-0.5 w-full bg-brand-gold" />}
               </button>
             </Reveal>
           ))}
@@ -347,22 +389,73 @@ export default function SupermarchePage() {
       {/* ── CTA ───────────────────────────────────────────────────────────── */}
       <section className="mx-auto mt-14 max-w-[1600px] px-4 pb-12">
         <Reveal>
-          <div className="relative overflow-hidden rounded-2xl border border-brand-gold/20 bg-gradient-to-br from-brand-gold/10 via-amber-500/5 to-transparent p-8 text-center">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(246,196,83,0.08)_0%,transparent_70%)]" />
-            <div className="relative">
-              <ShoppingCart className="mx-auto mb-3 h-12 w-12 text-brand-gold/60" strokeWidth={1.5} />
-              <h3 className="text-2xl font-black text-slate-900 dark:text-white">
-                Comparez <span className="gradient-text-gold">tous les prix</span> alimentaires
-              </h3>
-              <p className="mt-2 text-sm text-slate-600 dark:text-white/60">
-                Économisez sur vos courses en comparant Aziza, Carrefour, Géant, Monoprix et plus.
-              </p>
-              <Link href="/comparateur"
-                className="group relative mt-6 inline-flex items-center gap-2 overflow-hidden rounded-xl bg-gradient-to-br from-brand-red via-brand-redDark to-[#7a0f1a] px-6 py-3 text-sm font-bold text-white shadow-glow ring-1 ring-white/10 transition hover:shadow-[0_0_30px_rgba(225,29,45,0.55)]">
-                <Scale className="h-4 w-4" />
-                Lancer le comparateur
-                <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-              </Link>
+          <div className="relative overflow-hidden rounded-3xl border border-brand-gold/20 bg-gradient-to-br from-[#1a1410] via-[#0f0d0c] to-[#0a0e1a] p-8 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.6)] sm:p-10">
+            {/* decorative glows + grid */}
+            <div className="pointer-events-none absolute -left-16 -top-20 h-64 w-64 rounded-full bg-brand-gold/15 blur-3xl" />
+            <div className="pointer-events-none absolute -right-12 bottom-0 h-56 w-56 rounded-full bg-brand-red/15 blur-3xl" />
+            <div className="pointer-events-none absolute inset-0 opacity-[0.04] [background-image:linear-gradient(rgba(255,255,255,0.6)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.6)_1px,transparent_1px)] [background-size:32px_32px]" />
+
+            <div className="relative flex flex-col items-center gap-8 lg:flex-row lg:justify-between">
+              {/* Left: branded badge + copy */}
+              <div className="flex flex-col items-center text-center lg:flex-row lg:items-center lg:gap-6 lg:text-left">
+                <div className="relative mb-5 shrink-0 lg:mb-0">
+                  <div className="absolute inset-0 -z-10 rounded-3xl bg-brand-gold/30 blur-2xl" />
+                  <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-brand-gold to-brand-goldDark shadow-[0_10px_30px_-8px_rgba(246,196,83,0.6)] ring-1 ring-white/20">
+                    <ShoppingCart className="h-10 w-10 text-[#1a1410]" strokeWidth={2.2} />
+                  </div>
+                </div>
+                <div>
+                  <span className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-brand-gold/30 bg-brand-gold/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-brand-gold">
+                    <Tag className="h-3 w-3" /> Économies garanties
+                  </span>
+                  <h3 className="text-2xl font-black leading-tight text-white sm:text-3xl">
+                    Comparez <span className="gradient-text-gold">tous les prix</span> alimentaires
+                  </h3>
+                  <p className="mt-2 max-w-md text-sm leading-relaxed text-white/65">
+                    Un seul panier, toutes les enseignes. Trouvez instantanément où vos courses coûtent le moins cher.
+                  </p>
+                  {/* store badges */}
+                  <div className="mt-4 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
+                    {["Aziza", "Carrefour", "Géant", "Monoprix", "MG"].map((s) => (
+                      <span
+                        key={s}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs font-semibold text-white/75"
+                      >
+                        {getStoreLogo(s) && (
+                          <span className="flex h-5 w-5 items-center justify-center overflow-hidden rounded bg-white p-0.5">
+                            <img src={getStoreLogo(s)} alt={s} className="h-full w-full object-contain" />
+                          </span>
+                        )}
+                        {s}
+                      </span>
+                    ))}
+                    <span className="rounded-lg px-2.5 py-1 text-xs font-semibold text-brand-gold">+30 autres</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: stats + CTA */}
+              <div className="flex shrink-0 flex-col items-center gap-4 lg:items-end">
+                <div className="flex gap-3">
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3 text-center">
+                    <div className="text-2xl font-black tabular-nums text-white">−23%</div>
+                    <div className="text-[11px] font-medium text-white/50">économie moyenne</div>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3 text-center">
+                    <div className="text-2xl font-black tabular-nums text-white">35+</div>
+                    <div className="text-[11px] font-medium text-white/50">enseignes</div>
+                  </div>
+                </div>
+                <Link
+                  href="/comparateur"
+                  className="group relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-brand-red to-brand-redDark px-7 py-3.5 text-sm font-bold text-white shadow-[0_8px_24px_-6px_rgba(225,29,45,0.6)] ring-1 ring-white/10 transition-all hover:scale-[1.02] hover:shadow-[0_10px_30px_-4px_rgba(225,29,45,0.7)] active:scale-[0.98] sm:w-auto"
+                >
+                  <ShoppingCart className="h-4 w-4" />
+                  Lancer le comparateur
+                  <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+                  <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+                </Link>
+              </div>
             </div>
           </div>
         </Reveal>

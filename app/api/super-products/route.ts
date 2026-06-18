@@ -2,11 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Pool } from "pg";
 
 const pool = new Pool({
-  host: "localhost",
-  port: 5435,
-  user: "alimentation_user",
-  password: "galylio-ai",
-  database: "alimentation_db",
+  connectionString: process.env.ALIMENTATION_DB_URL,
   max: 5,
 });
 

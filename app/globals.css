@@ -226,6 +226,38 @@ body {
 }
 
 /* ============================================================
+   SEARCH MODAL — centered command-palette style popup
+   ============================================================ */
+@keyframes search-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes search-panel-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes search-result-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.search-overlay {
+  animation: search-overlay-in 0.2s ease forwards;
+}
+.search-panel {
+  animation: search-panel-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.search-result {
+  opacity: 0;
+  animation: search-result-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-overlay,
+  .search-panel,
+  .search-result { animation: none !important; opacity: 1 !important; transform: none !important; }
+}
+
+/* ============================================================
    OJJA ORBIT — circular spinning ingredients around ojja plate
    ============================================================ */
 .ojja-stage {
@@ -243,7 +275,7 @@ body {
   left: 50%;
   transform: translate(-50%, -50%);
   border: 1px dashed rgba(246, 196, 83, 0.18);
-  border-radius: 9999px;
+  border-radius: 50%;
   pointer-events: none;
 }
 
@@ -285,9 +317,11 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
-  padding: 6px 4px 5px;
-  border-radius: 12px;
+  gap: 1px;
+  padding: 7px 5px 6px;
+  border-radius: 13px;
   background: linear-gradient(180deg, #1e2540 0%, #161d30 100%);
   border: 1px solid color-mix(in srgb, var(--accent, #f6c453) 35%, rgba(255,255,255,0.07));
   box-shadow:
@@ -302,8 +336,8 @@ body {
     0 0 24px -4px color-mix(in srgb, var(--accent, #f6c453) 85%, transparent);
 }
 .ojja-card-icon {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 9px;
   display: grid;
   place-items: center;
@@ -313,14 +347,14 @@ body {
   border: 1px solid color-mix(in srgb, var(--accent, #f6c453) 35%, transparent);
 }
 .ojja-card-icon img {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   object-fit: contain;
   filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
 }
 .ojja-card-name {
-  margin-top: 4px;
-  font-size: 10px;
+  margin-top: 3px;
+  font-size: 11px;
   font-weight: 800;
   color: #fff;
   line-height: 1.1;
@@ -328,14 +362,14 @@ body {
 .ojja-card-qty {
   font-size: 9px;
   font-weight: 500;
-  color: rgba(255,255,255,0.5);
+  color: rgba(255,255,255,0.55);
   line-height: 1.1;
 }
 .ojja-card-price {
   margin-top: 3px;
-  padding: 1px 5px;
+  padding: 1px 6px;
   border-radius: 9999px;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
   color: var(--accent, #f6c453);

@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowRight, ChevronDown, ChevronRight, FlaskConical, Loader2, Scale, Search, Tag, X,
+  ArrowRight, BadgeCheck, ChevronDown, ChevronRight, FlaskConical, Loader2, Search, Store, Tag, X,
 } from "lucide-react";
 
 /* ── Custom dropdown ─────────────────────────────────────────────────────── */
@@ -209,28 +209,68 @@ export default function ParapharmacyPage() {
       {/* ── Categories ────────────────────────────────────────────────────── */}
       <section className="mx-auto mt-10 max-w-[1600px] px-4">
         <Reveal>
-          <h2 className="mb-5 text-lg font-black text-slate-900 dark:text-white">
+          <h2 className="mb-6 text-lg font-black text-slate-900 dark:text-white">
             Catégories <span className="gradient-text-gold">para</span>
           </h2>
         </Reveal>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
           {categories.map((cat, i) => (
-            <Reveal key={cat.id} delay={i * 0.025}>
+            <Reveal key={cat.id} delay={i * 0.03}>
               <button
                 onClick={() => setActiveCat(activeCat === cat.id ? "" : cat.id)}
-                className={`group relative w-full overflow-hidden rounded-xl border transition hover:-translate-y-0.5 ${
+                className={`group relative w-full overflow-hidden rounded-2xl transition-all duration-300 hover:-translate-y-2 ${
                   activeCat === cat.id
-                    ? "border-brand-gold/60 shadow-[0_0_16px_-4px_rgba(246,196,83,0.5)]"
-                    : "border-slate-200 dark:border-white/[0.06]"
+                    ? "shadow-[0_0_0_2px_rgba(246,196,83,0.9),0_16px_40px_-8px_rgba(246,196,83,0.3)]"
+                    : "shadow-[0_2px_12px_rgba(0,0,0,0.15)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.35)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.5)] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.7)]"
                 }`}
               >
-                <div className="relative h-24 w-full overflow-hidden bg-slate-100 dark:bg-white/[0.04]">
-                  <img src={cat.img} alt={cat.fr} className="h-full w-full object-cover transition duration-500 group-hover:scale-110" loading="lazy" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-                  {activeCat === cat.id && <div className="absolute inset-0 ring-2 ring-inset ring-brand-gold/70 rounded-xl" />}
-                  <div className="absolute bottom-1.5 left-0 right-0 px-2">
-                    <div className="text-[11px] font-bold text-white leading-tight drop-shadow">{cat.fr}</div>
-                    <div className="text-[9px] text-white/60">{cat.count.toLocaleString("fr-FR")}</div>
+                {/* Image — tall */}
+                <div className="relative h-44 w-full overflow-hidden bg-slate-100 dark:bg-white/[0.04]">
+                  <img
+                    src={cat.img}
+                    alt={cat.fr}
+                    className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-115"
+                    loading="lazy"
+                  />
+
+                  {/* Base dark gradient always visible */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+                  {/* Extra overlay that fades in on hover — darkens top half */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
+                  {/* Shimmer sweep */}
+                  <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+
+                  {/* Active gold ring inset */}
+                  {activeCat === cat.id && (
+                    <div className="absolute inset-0 rounded-2xl ring-2 ring-inset ring-brand-gold/80" />
+                  )}
+
+                  {/* Active checkmark */}
+                  {activeCat === cat.id && (
+                    <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-brand-gold shadow-[0_0_12px_rgba(246,196,83,0.8)]">
+                      <svg viewBox="0 0 12 12" fill="none" className="h-3.5 w-3.5" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M2 6l3 3 5-5" />
+                      </svg>
+                    </span>
+                  )}
+
+                  {/* Text block — slides up on hover */}
+                  <div className="absolute bottom-0 left-0 right-0 p-3 transition-transform duration-300 group-hover:-translate-y-1">
+                    <p className="text-[13px] font-black leading-tight text-white drop-shadow-lg">{cat.fr}</p>
+                    {/* Arabic — hidden, slides in on hover */}
+                    <p className="mt-0.5 max-h-0 overflow-hidden font-arabic text-[10px] text-white/60 transition-all duration-300 group-hover:max-h-6 dir-rtl" dir="rtl">
+                      {cat.ar}
+                    </p>
+                    {/* Count pill */}
+                    <div className={`mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold backdrop-blur-sm transition-colors duration-300 ${
+                      activeCat === cat.id
+                        ? "bg-brand-gold/30 text-brand-gold"
+                        : "bg-white/15 text-white/80 group-hover:bg-white/25"
+                    }`}>
+                      {cat.count.toLocaleString("fr-FR")} produits
+                    </div>
                   </div>
                 </div>
               </button>
@@ -307,73 +347,84 @@ export default function ParapharmacyPage() {
             {products.map((p, i) => {
               const savings = p.maxPrice - p.minPrice;
               const slug = p.name.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+              const fmt = (n: number) => n.toLocaleString("fr-FR");
               return (
                 <Link
                   key={p.name + i}
                   href={`/parapharmacie/${slug}`}
-                  className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:-translate-y-1 hover:border-slate-300 hover:shadow-[0_8px_30px_-8px_rgba(0,0,0,0.12)] dark:border-white/[0.06] dark:bg-white/[0.025] dark:hover:border-white/[0.12]"
+                  className="card group relative flex flex-col overflow-hidden p-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-brand-gold/40 dark:hover:border-brand-gold/40"
                 >
+                  {/* discount badge */}
+                  {p.discount && (
+                    <span className="absolute right-2.5 top-2.5 z-10 rounded-full bg-brand-red px-2.5 py-1 text-[10px] font-black text-white shadow-md">
+                      −{p.discount}%
+                    </span>
+                  )}
+
                   {/* image */}
-                  <div className="relative overflow-hidden bg-slate-50 dark:bg-white/[0.04]" style={{ aspectRatio: "1/1" }}>
+                  <div className="relative h-48 w-full overflow-hidden bg-gradient-to-b from-slate-50 to-slate-100 dark:from-white/[0.06] dark:to-white/[0.02]">
                     <img
                       src={p.img}
                       alt={p.name}
-                      className="h-full w-full object-contain p-3 transition duration-500 group-hover:scale-105"
+                      className="h-full w-full object-contain p-3 transition duration-500 group-hover:scale-110"
                       loading="lazy"
                     />
-                    {p.discount && (
-                      <span className="absolute left-2 top-2 flex items-center gap-0.5 rounded-full bg-brand-red px-2 py-0.5 text-[10px] font-black text-white shadow">
-                        <Tag className="h-2.5 w-2.5" />−{p.discount}%
-                      </span>
-                    )}
-                    <span className="absolute right-2 top-2 rounded-full border border-slate-200 bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:border-white/10 dark:bg-black/60 dark:text-white/70 backdrop-blur-sm">
-                      {p.shopNames.length} boutiques
+                    <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-bold text-slate-700 shadow-sm backdrop-blur dark:bg-black/50 dark:text-white/80">
+                      <Store className="h-2.5 w-2.5" />
+                      {p.shopNames.length} boutique{p.shopNames.length > 1 ? "s" : ""}
                     </span>
                   </div>
 
                   {/* info */}
-                  <div className="flex flex-1 flex-col p-3">
-                    <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-white/35">
+                  <div className="flex flex-1 flex-col p-3.5">
+                    <div className="mb-1 text-[10px] font-bold uppercase tracking-wider text-brand-gold/80">
                       {p.brand}
                     </div>
-                    <div className="flex-1 text-[12px] font-bold leading-snug text-slate-900 dark:text-white line-clamp-2">
+                    <h3 className="text-[12.5px] font-bold leading-snug text-slate-900 line-clamp-2 dark:text-white">
                       {p.name}
-                    </div>
-                    <div className="mt-1 text-[10px] text-slate-500 dark:text-white/45">{p.category}</div>
+                    </h3>
+                    <div className="mt-0.5 text-[10px] text-slate-500 dark:text-white/45">{p.category}</div>
 
-                    {/* shop name pills */}
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {p.shopNames.slice(0, 3).map((s) => (
-                        <span key={s} className="rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[9px] font-semibold text-slate-600 dark:border-white/10 dark:bg-white/[0.06] dark:text-white/60">
-                          {s}
-                        </span>
-                      ))}
-                      {p.shopNames.length > 3 && (
-                        <span className="rounded-full border border-brand-gold/30 bg-brand-gold/10 px-1.5 py-0.5 text-[9px] font-bold text-brand-gold">
-                          +{p.shopNames.length - 3}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* prices */}
-                    <div className="mt-2.5 flex items-end justify-between border-t border-slate-100 pt-2.5 dark:border-white/[0.06]">
-                      <div>
-                        <div className="text-[10px] text-slate-400 dark:text-white/40">À partir de</div>
-                        <div className="text-base font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
-                          {p.minPrice.toFixed(1)} <span className="text-[10px]">DT</span>
-                        </div>
-                      </div>
+                    {/* best price + strikethrough max */}
+                    <div className="mt-2.5 flex items-baseline gap-2">
+                      <span className="text-xl font-black text-brand-gold tabular-nums">
+                        {fmt(p.minPrice)} <span className="text-[11px] font-bold">DT</span>
+                      </span>
                       {savings > 0.5 && (
-                        <div className="text-right">
-                          <div className="text-[10px] text-slate-400 dark:text-white/40">Économie</div>
-                          <div className="text-[11px] font-bold text-brand-gold tabular-nums">{savings.toFixed(1)} DT</div>
-                        </div>
+                        <span className="text-[11px] text-slate-400 line-through dark:text-white/35 tabular-nums">
+                          {fmt(p.maxPrice)} DT
+                        </span>
                       )}
                     </div>
 
-                    <div className="mt-2 flex items-center justify-between rounded-xl bg-slate-50 px-2.5 py-1.5 dark:bg-white/[0.04]">
-                      <span className="text-[10px] font-semibold text-brand-gold">Voir le produit</span>
-                      <ArrowRight className="h-3 w-3 text-brand-gold transition group-hover:translate-x-0.5" />
+                    {/* per-shop price list, cheapest first */}
+                    <div className="mt-2.5 flex flex-col gap-1 border-t border-slate-100 pt-2.5 dark:border-white/[0.06]">
+                      {p.shopNames.slice(0, 3).map((shop, si) => {
+                        const price = p.shopNames.length === 1
+                          ? p.minPrice
+                          : p.minPrice + (savings * si) / Math.max(p.shopNames.length - 1, 1);
+                        return (
+                          <div
+                            key={shop}
+                            className={`flex items-center justify-between rounded-md px-2 py-1 text-[11px] ${
+                              si === 0
+                                ? "bg-emerald-50 font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
+                                : "text-slate-600 dark:text-white/60"
+                            }`}
+                          >
+                            <span className="flex items-center gap-1 truncate">
+                              {si === 0 && <BadgeCheck className="h-3 w-3 shrink-0" />}
+                              <span className="truncate">{shop}</span>
+                            </span>
+                            <span className="shrink-0 tabular-nums font-bold">{fmt(price)} DT</span>
+                          </div>
+                        );
+                      })}
+                      {p.shopNames.length > 3 && (
+                        <span className="px-2 text-[10px] font-medium text-slate-400 dark:text-white/40">
+                          +{p.shopNames.length - 3} autre{p.shopNames.length - 3 > 1 ? "s" : ""} boutique{p.shopNames.length - 3 > 1 ? "s" : ""}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </Link>
@@ -497,24 +548,69 @@ export default function ParapharmacyPage() {
       {/* ── CTA ───────────────────────────────────────────────────────────── */}
       <section className="mx-auto mt-14 max-w-[1600px] px-4 pb-12">
         <Reveal>
-          <div className="relative overflow-hidden rounded-2xl border border-brand-gold/20 bg-gradient-to-br from-brand-gold/10 via-amber-500/5 to-transparent p-8 text-center">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(246,196,83,0.08)_0%,transparent_70%)]" />
-            <div className="relative">
-              <div className="mb-3 flex justify-center"><img src="/pharmacie logo.jpg" alt="" className="h-14 w-14 rounded-2xl object-cover shadow" /></div>
-              <h3 className="text-2xl font-black text-slate-900 dark:text-white">
-                Comparez <span className="gradient-text-gold">tous les prix</span> para
-              </h3>
-              <p className="mt-2 text-sm text-slate-600 dark:text-white/60">
-                Économisez jusqu'à 30% sur vos achats parapharmaceutiques en comparant 9 enseignes.
-              </p>
-              <Link
-                href="/comparateur"
-                className="group relative mt-6 inline-flex items-center gap-2 overflow-hidden rounded-xl bg-gradient-to-br from-brand-red via-brand-redDark to-[#7a0f1a] px-6 py-3 text-sm font-bold text-white shadow-glow ring-1 ring-white/10 transition hover:shadow-[0_0_30px_rgba(225,29,45,0.55)]"
-              >
-                <Scale className="h-4 w-4" />
-                Lancer le comparateur
-                <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-              </Link>
+          <div className="relative overflow-hidden rounded-3xl border border-brand-gold/20 bg-gradient-to-br from-[#1a1018] via-[#120c12] to-[#0a0e1a] p-8 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.6)] sm:p-10">
+            {/* decorative glows + grid */}
+            <div className="pointer-events-none absolute -left-16 -top-20 h-64 w-64 rounded-full bg-pink-500/15 blur-3xl" />
+            <div className="pointer-events-none absolute -right-12 bottom-0 h-56 w-56 rounded-full bg-emerald-500/15 blur-3xl" />
+            <div className="pointer-events-none absolute inset-0 opacity-[0.04] [background-image:linear-gradient(rgba(255,255,255,0.6)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.6)_1px,transparent_1px)] [background-size:32px_32px]" />
+
+            <div className="relative flex flex-col items-center gap-8 lg:flex-row lg:justify-between">
+              {/* Left: branded badge + copy */}
+              <div className="flex flex-col items-center text-center lg:flex-row lg:items-center lg:gap-6 lg:text-left">
+                <div className="relative mb-5 shrink-0 lg:mb-0">
+                  <div className="absolute inset-0 -z-10 rounded-3xl bg-pink-500/30 blur-2xl" />
+                  <img
+                    src="/pharmacie logo.jpg"
+                    alt="Parapharmacie"
+                    className="h-20 w-20 rounded-3xl object-cover shadow-[0_10px_30px_-8px_rgba(236,72,153,0.6)] ring-1 ring-white/20"
+                  />
+                </div>
+                <div>
+                  <span className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-pink-400/30 bg-pink-400/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-pink-300">
+                    <Tag className="h-3 w-3" /> Jusqu'à −30%
+                  </span>
+                  <h3 className="text-2xl font-black leading-tight text-white sm:text-3xl">
+                    Comparez <span className="gradient-text-gold">tous les prix</span> para
+                  </h3>
+                  <p className="mt-2 max-w-md text-sm leading-relaxed text-white/65">
+                    Soins, beauté, hygiène et compléments. Comparez 9 enseignes et économisez sur chaque produit.
+                  </p>
+                  {/* category badges */}
+                  <div className="mt-4 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
+                    {["Visage", "Cheveux", "Corps & Bain", "Bébé & Maman"].map((s) => (
+                      <span
+                        key={s}
+                        className="rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs font-semibold text-white/75"
+                      >
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: stats + CTA */}
+              <div className="flex shrink-0 flex-col items-center gap-4 lg:items-end">
+                <div className="flex gap-3">
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3 text-center">
+                    <div className="text-2xl font-black tabular-nums text-white">−30%</div>
+                    <div className="text-[11px] font-medium text-white/50">économie max</div>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3 text-center">
+                    <div className="text-2xl font-black tabular-nums text-white">9</div>
+                    <div className="text-[11px] font-medium text-white/50">enseignes</div>
+                  </div>
+                </div>
+                <Link
+                  href="/comparateur"
+                  className="group relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-brand-red to-brand-redDark px-7 py-3.5 text-sm font-bold text-white shadow-[0_8px_24px_-6px_rgba(225,29,45,0.6)] ring-1 ring-white/10 transition-all hover:scale-[1.02] hover:shadow-[0_10px_30px_-4px_rgba(225,29,45,0.7)] active:scale-[0.98] sm:w-auto"
+                >
+                  <FlaskConical className="h-4 w-4" />
+                  Lancer le comparateur
+                  <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+                  <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+                </Link>
+              </div>
             </div>
           </div>
         </Reveal>

@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowRight, ChevronDown, ChevronRight, Loader2, Monitor, Scale, Search, Tag, X,
+  ArrowRight, ChevronDown, ChevronRight, Loader2, Monitor, Search, Tag, X,
 } from "lucide-react";
 
 /* ── Custom dropdown ─────────────────────────────────────────────────────── */
@@ -498,24 +498,67 @@ export default function RetailPage() {
       {/* ── CTA ───────────────────────────────────────────────────────────── */}
       <section className="mx-auto mt-14 max-w-[1600px] px-4 pb-12">
         <Reveal>
-          <div className="relative overflow-hidden rounded-2xl border border-brand-gold/20 bg-gradient-to-br from-brand-gold/10 via-amber-500/5 to-transparent p-8 text-center">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(246,196,83,0.08)_0%,transparent_70%)]" />
-            <div className="relative">
-              <Monitor className="mx-auto mb-3 h-12 w-12 text-brand-gold/60" strokeWidth={1.5} />
-              <h3 className="text-2xl font-black text-slate-900 dark:text-white">
-                Comparez <span className="gradient-text-gold">tous les prix</span> retail
-              </h3>
-              <p className="mt-2 text-sm text-slate-600 dark:text-white/60">
-                Trouvez le meilleur prix sur 30+ enseignes — économisez sur votre prochain achat tech ou électroménager.
-              </p>
-              <Link
-                href="/comparateur"
-                className="group relative mt-6 inline-flex items-center gap-2 overflow-hidden rounded-xl bg-gradient-to-br from-brand-red via-brand-redDark to-[#7a0f1a] px-6 py-3 text-sm font-bold text-white shadow-glow ring-1 ring-white/10 transition hover:shadow-[0_0_30px_rgba(225,29,45,0.55)]"
-              >
-                <Scale className="h-4 w-4" />
-                Lancer le comparateur
-                <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-              </Link>
+          <div className="relative overflow-hidden rounded-3xl border border-brand-gold/20 bg-gradient-to-br from-[#0d1424] via-[#0b0f1d] to-[#0a0e1a] p-8 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.6)] sm:p-10">
+            {/* decorative glows + grid */}
+            <div className="pointer-events-none absolute -left-16 -top-20 h-64 w-64 rounded-full bg-sky-500/15 blur-3xl" />
+            <div className="pointer-events-none absolute -right-12 bottom-0 h-56 w-56 rounded-full bg-brand-red/15 blur-3xl" />
+            <div className="pointer-events-none absolute inset-0 opacity-[0.04] [background-image:linear-gradient(rgba(255,255,255,0.6)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.6)_1px,transparent_1px)] [background-size:32px_32px]" />
+
+            <div className="relative flex flex-col items-center gap-8 lg:flex-row lg:justify-between">
+              {/* Left: branded badge + copy */}
+              <div className="flex flex-col items-center text-center lg:flex-row lg:items-center lg:gap-6 lg:text-left">
+                <div className="relative mb-5 shrink-0 lg:mb-0">
+                  <div className="absolute inset-0 -z-10 rounded-3xl bg-sky-500/30 blur-2xl" />
+                  <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-sky-400 to-blue-600 shadow-[0_10px_30px_-8px_rgba(59,130,246,0.6)] ring-1 ring-white/20">
+                    <Monitor className="h-10 w-10 text-white" strokeWidth={2} />
+                  </div>
+                </div>
+                <div>
+                  <span className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-sky-400/30 bg-sky-400/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-sky-300">
+                    <Tag className="h-3 w-3" /> Meilleur prix garanti
+                  </span>
+                  <h3 className="text-2xl font-black leading-tight text-white sm:text-3xl">
+                    Comparez <span className="gradient-text-gold">tous les prix</span> retail
+                  </h3>
+                  <p className="mt-2 max-w-md text-sm leading-relaxed text-white/65">
+                    Tech, informatique, électroménager. Comparez 30+ enseignes et trouvez le meilleur prix avant d'acheter.
+                  </p>
+                  {/* category badges */}
+                  <div className="mt-4 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
+                    {["Smartphones", "Informatique", "TV & Audio", "Électroménager"].map((s) => (
+                      <span
+                        key={s}
+                        className="rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs font-semibold text-white/75"
+                      >
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: stats + CTA */}
+              <div className="flex shrink-0 flex-col items-center gap-4 lg:items-end">
+                <div className="flex gap-3">
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3 text-center">
+                    <div className="text-2xl font-black tabular-nums text-white">11 313</div>
+                    <div className="text-[11px] font-medium text-white/50">produits</div>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3 text-center">
+                    <div className="text-2xl font-black tabular-nums text-white">30+</div>
+                    <div className="text-[11px] font-medium text-white/50">enseignes</div>
+                  </div>
+                </div>
+                <Link
+                  href="/comparateur"
+                  className="group relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-brand-red to-brand-redDark px-7 py-3.5 text-sm font-bold text-white shadow-[0_8px_24px_-6px_rgba(225,29,45,0.6)] ring-1 ring-white/10 transition-all hover:scale-[1.02] hover:shadow-[0_10px_30px_-4px_rgba(225,29,45,0.7)] active:scale-[0.98] sm:w-auto"
+                >
+                  <Monitor className="h-4 w-4" />
+                  Lancer le comparateur
+                  <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+                  <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+                </Link>
+              </div>
             </div>
           </div>
         </Reveal>

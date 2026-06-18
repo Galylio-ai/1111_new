@@ -1,7 +1,7 @@
 "use client";
 import { ArrowDownRight, Bell, ShieldAlert, TrendingDown, TrendingUp } from "lucide-react";
 import Link from "next/link";
-import { distributionEnseignes, veilleProducts } from "@/lib/data";
+import { distributionEnseignes, getStoreLogo, veilleProducts } from "@/lib/data";
 
 export function GrandeDistribRow() {
   return (
@@ -47,9 +47,15 @@ export function GrandeDistribRow() {
                   >
                     {/* Logo + name */}
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[10px] font-black ${e.logo.bg} ${e.logo.textColor}`}>
-                        {e.logo.text}
-                      </span>
+                      {getStoreLogo(e.name) ? (
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white p-0.5 ring-1 ring-slate-200 dark:ring-white/10">
+                          <img src={getStoreLogo(e.name)} alt={e.name} className="h-full w-full object-contain" />
+                        </span>
+                      ) : (
+                        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[10px] font-black ${e.logo.bg} ${e.logo.textColor}`}>
+                          {e.logo.text}
+                        </span>
+                      )}
                       <span className={`truncate font-semibold ${e.best ? "text-slate-900 dark:text-white" : "text-slate-700 dark:text-white/80"}`}>
                         {e.name}
                         {e.best && <span className="ml-1.5 text-brand-gold">⭐</span>}

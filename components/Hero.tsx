@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { AlertTriangle, BarChart3, Coins, Flame, Search, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { SparkArea } from "./charts/SparkArea";
+import { SearchModal } from "./SearchModal";
 
 const initialIndexData = [
   { x: "00h", y: 105.2 },
@@ -32,6 +33,19 @@ const stats = [
 
 export function Hero() {
   const [indexData, setIndexData] = useState(initialIndexData);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  // ⌘K / Ctrl+K opens search
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -59,34 +73,40 @@ export function Hero() {
         <div className="relative overflow-hidden rounded-2xl border border-bg-border bg-gradient-to-br from-slate-50 to-white p-4 sm:p-6 md:p-8 dark:from-bg-700 dark:to-bg-800">
           <div className="absolute -left-6 -bottom-6 h-48 w-48 rounded-full bg-brand-red/15 blur-3xl" />
           <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-brand-gold/10 blur-3xl" />
-          <div className="relative flex flex-col items-center gap-4 sm:gap-5 md:flex-row md:items-center md:text-left">
+          <div className="relative flex flex-row items-center gap-3 md:gap-5">
             <div className="shrink-0">
               <Mascot />
             </div>
-            <div className="flex-1 text-center md:text-left">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black leading-[1.05] tracking-tight text-slate-900 dark:text-white">
+            <div className="flex-1 min-w-0 text-left">
+              <h1 className="text-base sm:text-xl md:text-3xl lg:text-4xl font-black leading-[1.05] tracking-tight text-slate-900 dark:text-white">
                 VÉRIFIEZ AVANT D'ACHETER,
                 <br />
                 <span className="gradient-text-gold">ÉCONOMISEZ PLUS !</span>
               </h1>
-              <p className="mt-2 font-arabic text-center md:text-right text-lg sm:text-xl text-slate-700 dark:text-white/90" dir="rtl">
+              <p className="mt-1 md:mt-2 font-arabic text-right text-sm sm:text-base md:text-xl text-slate-700 dark:text-white/90" dir="rtl">
                 ثبت قبل ما تشري، وفر أكثر ! 😎
               </p>
-              <p className="mt-3 text-xs sm:text-sm text-slate-600 dark:text-white/70">
+              <p className="mt-1 md:mt-3 text-[11px] sm:text-xs md:text-sm text-slate-600 dark:text-white/70">
                 Comparez plus de <span className="text-slate-900 font-semibold dark:text-white">250 000 produits</span>,
                 surveillez les prix, détectez les vraies promotions et économisez sur tous vos achats.
               </p>
 
-              <div className="mt-4 flex items-center gap-1.5 sm:gap-2 rounded-2xl border border-slate-300 bg-white p-1.5 shadow-inner dark:border-bg-border dark:bg-bg-900">
-                <Search className="ml-1 sm:ml-2 h-4 w-4 sm:h-5 sm:w-5 shrink-0 text-slate-400 dark:text-white/50" />
-                <input
-                  className="min-w-0 flex-1 bg-transparent px-1 sm:px-2 py-2 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder:text-white/40"
-                  placeholder="Rechercher un produit, marque…"
-                />
-                <Link href="/comparateur" className="btn-gold whitespace-nowrap px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm">Rechercher</Link>
-              </div>
+              <button
+                type="button"
+                onClick={() => setSearchOpen(true)}
+                className="group mt-2 md:mt-4 flex w-full items-center gap-1 sm:gap-2 rounded-2xl border border-slate-300 bg-white p-1 sm:p-1.5 text-left shadow-inner transition hover:border-brand-gold/50 hover:shadow-[0_0_0_3px_rgba(246,196,83,0.12)] dark:border-bg-border dark:bg-bg-900 dark:hover:border-brand-gold/40"
+              >
+                <Search className="ml-1 h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 shrink-0 text-slate-400 transition group-hover:text-brand-gold dark:text-white/50" />
+                <span className="min-w-0 flex-1 truncate px-1 py-1 sm:py-2 text-[11px] sm:text-xs md:text-sm text-slate-400 dark:text-white/40">
+                  Rechercher un produit, marque…
+                </span>
+                <kbd className="mr-1 hidden shrink-0 rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 sm:inline-block dark:border-white/10 dark:bg-white/5 dark:text-white/50">
+                  ⌘K
+                </kbd>
+                <span className="btn-gold whitespace-nowrap px-2 py-1 text-[10px] sm:px-3 sm:py-1.5 sm:text-xs md:px-4 md:py-2 md:text-sm">Rechercher</span>
+              </button>
 
-              <div className="mt-3 flex flex-wrap justify-center gap-1.5 sm:gap-2 md:justify-start">
+              <div className="mt-2 md:mt-3 flex flex-wrap justify-start gap-1 sm:gap-1.5 md:gap-2">
                 {tags.map((t) => (
                   <Link key={t} href="/comparateur" className="chip">
                     {t}
@@ -145,13 +165,15 @@ export function Hero() {
           </Link>
         </div>
       </div>
+
+      <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
     </section>
   );
 }
 
 function Mascot() {
   return (
-    <div className="relative h-40 w-40 sm:h-56 sm:w-56 md:h-80 md:w-80 lg:h-96 lg:w-96">
+    <div className="relative h-20 w-20 sm:h-28 sm:w-28 md:h-40 md:w-40 lg:h-56 lg:w-56 xl:h-72 xl:w-72 2xl:h-96 2xl:w-96">
       <div className="absolute inset-0 -z-10 animate-pulse-slow rounded-full bg-brand-red/20 blur-2xl" />
       <img
         src="/mascot.png"

@@ -20,12 +20,13 @@ const ingredients: Ingredient[] = [
   { name: "Concentré", qty: "100g",   price: "0.463", icon: "/food/tomato-paste.svg", accent: "#dc2626" },
 ];
 
-const CARD = 76; // card size in px
-const PADDING = 8; // breathing room from stage edge
+const CARD = 78; // card size in px
+const PADDING = 6; // breathing room from stage edge
+const STAGE_HEIGHT = 360; // fixed height — only width grows
 
 export function OjjaOrbit() {
   const stageRef = useRef<HTMLDivElement>(null);
-  const [size, setSize] = useState(320); // default until measured
+  const [width, setWidth] = useState(360); // measured stage width
   const [paused, setPaused] = useState(false);
 
   // Measure the stage so cards stay inside the available width.
@@ -35,21 +36,28 @@ export function OjjaOrbit() {
     const ro = new ResizeObserver((entries) => {
       for (const e of entries) {
         const w = e.contentRect.width;
-        if (w > 0) setSize(Math.round(w));
+        if (w > 0) setWidth(Math.round(w));
       }
     });
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
 
-  const center = size / 2;
-  const radius = Math.max(0, size / 2 - CARD / 2 - PADDING);
+  const height = STAGE_HEIGHT;
+  // Circular orbit. Radius is bound by the SMALLER of the two half-dimensions
+  // so the ring never overflows vertically (fixed height) nor horizontally.
+  const halfW = width / 2;
+  const halfH = height / 2;
+  const radius = Math.max(0, Math.min(halfW, halfH) - CARD / 2 - PADDING);
+  // Square ring area centred inside the (wider) stage.
+  const ring = 2 * radius + CARD;
+  const center = ring / 2;
 
   return (
     <div
       ref={stageRef}
       className="ojja-stage"
-      style={{ height: size }}
+      style={{ height }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
@@ -70,8 +78,8 @@ export function OjjaOrbit() {
       <div
         className="ojja-spinner"
         style={{
-          width: size,
-          height: size,
+          width: ring,
+          height: ring,
           animationPlayState: paused ? "paused" : "running",
         }}
       >

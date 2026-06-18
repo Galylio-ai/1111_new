@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowLeft, Bell, ChevronRight, ExternalLink, Heart,
+  ArrowLeft, Bell, ChevronRight, ExternalLink, FileText, Heart, ListChecks,
   Scale, ShieldCheck, Sparkles, Star, Store, Tag, Truck,
 } from "lucide-react";
 import { Header } from "@/components/Header";
@@ -303,6 +303,66 @@ export function CatalogProductDetail({
                 Les prix sont mis à jour quotidiennement par 1111.tn.
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Description & caractéristiques */}
+        <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1fr]">
+          {/* Description */}
+          <div className="rounded-2xl border border-bg-border bg-bg-card p-5 shadow-card">
+            <h2 className="section-title mb-3 flex items-center gap-2">
+              <FileText className="h-4 w-4 text-brand-gold" />
+              Description
+            </h2>
+            <p className="text-sm leading-relaxed text-slate-600 dark:text-white/70">
+              <span className="font-semibold text-slate-900 dark:text-white">{product.name}</span>
+              {" "}de la marque{" "}
+              <span className="font-semibold text-slate-900 dark:text-white">{product.brand}</span>
+              {" "}fait partie de la catégorie{" "}
+              <span className="font-semibold text-slate-900 dark:text-white">{product.category}</span>.
+              {" "}Ce produit est suivi en temps réel par 1111.tn et comparé sur{" "}
+              <span className="font-semibold text-brand-gold">{product.shopNames.length} boutique{product.shopNames.length > 1 ? "s" : ""}</span>
+              {" "}afin de vous garantir le meilleur prix.
+              {savings > 0.5 && (
+                <> Vous pouvez économiser jusqu'à{" "}
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">{savings.toFixed(3)} DT</span>
+                  {" "}en choisissant la boutique la moins chère.
+                </>
+              )}
+            </p>
+            <p className="mt-3 text-sm leading-relaxed text-slate-600 dark:text-white/70">
+              Le prix le plus bas observé est de{" "}
+              <span className="font-semibold text-emerald-600 dark:text-emerald-400">{product.minPrice.toFixed(3)} DT</span>.
+              Activez une alerte prix pour être notifié dès qu'une nouvelle promotion est détectée.
+            </p>
+          </div>
+
+          {/* Caractéristiques */}
+          <div className="rounded-2xl border border-bg-border bg-bg-card p-5 shadow-card">
+            <h2 className="section-title mb-3 flex items-center gap-2">
+              <ListChecks className="h-4 w-4 text-brand-gold" />
+              Caractéristiques
+            </h2>
+            <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {[
+                ["Marque", product.brand],
+                ["Catégorie", product.category],
+                ["Prix min", `${product.minPrice.toFixed(3)} DT`],
+                ["Prix max", `${product.maxPrice.toFixed(3)} DT`],
+                ["Boutiques", `${product.shopNames.length}`],
+                ["Disponibilité", "En stock"],
+                ...(discountPct ? [["Réduction", `−${discountPct}%`] as [string, string]] : []),
+                ["Mise à jour", "Aujourd'hui"],
+              ].map(([k, v]) => (
+                <div
+                  key={k}
+                  className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs dark:border-white/5 dark:bg-bg-800"
+                >
+                  <dt className="text-slate-500 dark:text-white/50">{k}</dt>
+                  <dd className="font-semibold text-slate-900 dark:text-white">{v}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
         </div>
 

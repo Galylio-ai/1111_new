@@ -269,6 +269,31 @@ export const categories: Category[] = [
   },
 ];
 
+// Central map of shop/enseigne name -> real logo image in /public.
+// Keys are matched case-insensitively via getStoreLogo().
+export const storeLogos: Record<string, string> = {
+  "carrefour": "/Carrefour-Logo.png",
+  "carrefour market": "/carrefour-market.png",
+  "carrefour express": "/Carrefour_Express.png",
+  "aziza": "/aziza-logo.jpg",
+  "géant": "/geant-logo.png",
+  "geant": "/geant-logo.png",
+  "monoprix": "/monoprix.png",
+  "mg": "/logos/mg.png",
+  "mytek": "/logos/mytek.png",
+  "tunisianet": "/logos/tunisianet.png",
+  "spacenet": "/logos/spacenet.svg",
+  "technopro": "/logos/technopro.jpg",
+  "jumbo": "/logos/jumbo.png",
+  "parashop": "/logos/parashop.png",
+  "parahouse": "/logos/parahouse.jpg",
+  "parafendri": "/logos/parafendri.png",
+};
+
+export function getStoreLogo(name: string): string | undefined {
+  return storeLogos[name.trim().toLowerCase()];
+}
+
 export const distributionEnseignes = [
   { name: "Aziza", price: "127 940", diff: "Meilleur prix", best: true, logo: { bg: "bg-green-600", text: "✓", textColor: "text-white" } },
   { name: "Carrefour Market", price: "129 950", diff: "+2.110 DT", logo: { bg: "bg-red-600", text: "C", textColor: "text-white" } },

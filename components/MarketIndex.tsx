@@ -1,12 +1,7 @@
 "use client";
 import {
-  Activity,
   Diamond,
-  Flame,
   Info,
-  ShoppingBag,
-  Tag,
-  Lock,
 } from "lucide-react";
 import Link from "next/link";
 import { categoryBarometres } from "@/lib/data";
@@ -17,8 +12,9 @@ const indices = [
     value: "104.2",
     change: "+ 1.9%",
     up: true,
-    icon: Tag,
-    iconBg: "from-blue-500/40 to-blue-700/30 ring-blue-400/30 text-blue-600 dark:text-blue-300",
+    img: "/Inflation e-commerce.png",
+    imgSize: "h-12 w-12",
+    iconBg: "from-blue-500/40 to-blue-700/30 ring-blue-400/30",
     impact: "Moyen",
     impactIcon: "🟡",
     impactColor: "text-amber-600 dark:text-amber-400",
@@ -32,8 +28,9 @@ const indices = [
     value: "102.7",
     change: "− 0.6%",
     up: false,
-    icon: Activity,
-    iconBg: "from-cyan-500/40 to-cyan-700/30 ring-cyan-400/30 text-cyan-600 dark:text-cyan-300",
+    img: "/volatilité.png",
+    imgSize: "h-11 w-11",
+    iconBg: "from-cyan-500/40 to-cyan-700/30 ring-cyan-400/30",
     impact: "Élevé",
     impactIcon: "🔴",
     impactColor: "text-red-500 dark:text-red-400",
@@ -47,8 +44,9 @@ const indices = [
     value: "103.5",
     change: "+ 1.2%",
     up: true,
-    icon: ShoppingBag,
-    iconBg: "from-emerald-500/40 to-emerald-700/30 ring-emerald-400/30 text-emerald-600 dark:text-emerald-300",
+    img: "/Guerre des prix.png",
+    imgSize: "h-11 w-11",
+    iconBg: "from-emerald-500/40 to-emerald-700/30 ring-emerald-400/30",
     impact: "Positif",
     impactIcon: "🟢",
     impactColor: "text-emerald-600 dark:text-emerald-400",
@@ -62,8 +60,9 @@ const indices = [
     value: "99.6",
     change: "+ 0.6%",
     up: false,
-    icon: Lock,
-    iconBg: "from-purple-500/40 to-purple-700/30 ring-purple-400/30 text-purple-600 dark:text-purple-300",
+    img: "/Pression promotionnelle.png",
+    imgSize: "h-11 w-11",
+    iconBg: "from-purple-500/40 to-purple-700/30 ring-purple-400/30",
     impact: "Moyen",
     impactIcon: "🟡",
     impactColor: "text-amber-600 dark:text-amber-400",
@@ -127,95 +126,113 @@ export function MarketIndex() {
             <div
               key={idx.name}
               tabIndex={0}
-              className="group relative rounded-2xl border border-brand-gold/15 bg-slate-50 p-3.5 ring-1 ring-brand-gold/10 transition hover:border-brand-gold/40 hover:bg-slate-100 hover:ring-brand-gold/30 focus:outline-none focus-visible:border-brand-gold/40 focus-visible:bg-slate-100 dark:bg-bg-800 dark:hover:bg-bg-700 dark:focus-visible:bg-bg-700"
+              className="group relative flex flex-col gap-3 rounded-2xl border border-white/[0.06] bg-gradient-to-b from-bg-800 to-bg-900 p-4 shadow-[0_2px_12px_rgba(0,0,0,0.25)] ring-1 ring-white/[0.04] transition-all duration-200 hover:border-brand-gold/30 hover:shadow-[0_4px_24px_rgba(246,196,83,0.08)] hover:ring-brand-gold/20 focus:outline-none focus-visible:border-brand-gold/30 dark:from-bg-800 dark:to-bg-900"
             >
-              {/* Info hint icon */}
-              <Info className="absolute right-2 top-2 h-3.5 w-3.5 text-slate-400 transition group-hover:text-brand-gold group-focus-visible:text-brand-gold dark:text-white/30" />
+              {/* Info button */}
+              <Info className="absolute right-3 top-3 h-3.5 w-3.5 text-white/20 transition group-hover:text-brand-gold/60 group-focus-visible:text-brand-gold/60" />
 
-              {/* Top row: icon + name/value */}
-              <div className="flex items-start gap-3">
-                <span
-                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${idx.iconBg} ring-1`}
-                >
-                  <idx.icon className="h-6 w-6" strokeWidth={2} />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate pr-4 text-xs text-slate-600 dark:text-white/80">{idx.name}</div>
-                  <div className="mt-1 flex items-baseline gap-2">
-                    <span className="text-2xl font-black tabular-nums text-slate-900 dark:text-white">{idx.value}</span>
-                    <span
-                      className={`text-sm font-bold tabular-nums ${
-                        idx.up ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"
-                      }`}
-                    >
-                      {idx.change}
-                    </span>
-                  </div>
+              {/* Icon + name */}
+              <div className="flex items-center gap-3">
+                <div className={`flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br ${idx.iconBg} ring-1 shadow-lg`}>
+                  <img
+                    src={(idx as { img: string; imgSize: string }).img}
+                    alt={idx.name}
+                    className={`${(idx as { imgSize: string }).imgSize} object-contain`}
+                  />
                 </div>
-              </div>
-              {/* Impact row */}
-              <div className="mt-3 flex items-center gap-1.5 text-xs text-slate-500 dark:text-white/50">
-                <span className="text-slate-400 dark:text-white/40">👤</span>
-                <span>Impact :</span>
-                <span>{idx.impactIcon}</span>
-                <span className={`font-semibold ${idx.impactColor}`}>{idx.impact}</span>
+                <span className="text-[11px] font-semibold leading-tight text-white/60 pr-5">{idx.name}</span>
               </div>
 
-              {/* Hover/focus tooltip */}
+              {/* Divider */}
+              <div className="h-px bg-white/[0.06]" />
+
+              {/* Value + change */}
+              <div className="flex items-end justify-between">
+                <span className="text-[28px] font-black tabular-nums leading-none tracking-tight text-white">
+                  {idx.value}
+                </span>
+                <span className={`mb-0.5 flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold tabular-nums ${
+                  idx.up
+                    ? "bg-emerald-500/15 text-emerald-400"
+                    : "bg-red-500/15 text-red-400"
+                }`}>
+                  {idx.up ? "▲" : "▼"} {idx.change.replace(/[+−\-\s]/g, "")}
+                </span>
+              </div>
+
+              {/* Impact badge */}
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase tracking-widest text-white/30 font-semibold">Impact consommateur</span>
+                <span className={`text-[11px] font-bold ${idx.impactColor}`}>
+                  {idx.impactIcon} {idx.impact}
+                </span>
+              </div>
+
+              {/* Hover tooltip */}
               <div
                 role="tooltip"
-                className="pointer-events-none invisible absolute left-1/2 top-full z-30 mt-2 w-72 -translate-x-1/2 translate-y-1 rounded-xl border border-brand-gold/30 bg-white/95 p-3 text-left shadow-[0_8px_30px_rgba(0,0,0,0.15)] ring-1 ring-brand-gold/15 backdrop-blur-md opacity-0 transition duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:visible group-focus-visible:translate-y-0 group-focus-visible:opacity-100 dark:bg-bg-900 dark:shadow-[0_8px_30px_rgba(0,0,0,0.6)]"
+                className="pointer-events-none invisible absolute left-1/2 top-full z-30 mt-2 w-72 -translate-x-1/2 translate-y-1 rounded-xl border border-brand-gold/30 bg-bg-900/95 p-3 text-left shadow-[0_8px_30px_rgba(0,0,0,0.5)] ring-1 ring-brand-gold/15 backdrop-blur-md opacity-0 transition duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:visible group-focus-visible:translate-y-0 group-focus-visible:opacity-100"
               >
-                {/* arrow */}
-                <span className="absolute -top-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 border-l border-t border-brand-gold/30 bg-white/95 dark:bg-bg-900" />
+                <span className="absolute -top-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 border-l border-t border-brand-gold/30 bg-bg-900/95" />
                 <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-brand-gold">
-                  <Info className="h-3 w-3" />
-                  Définition
+                  <Info className="h-3 w-3" /> Définition
                 </div>
-                <div className="mt-1 text-[12px] font-semibold text-slate-900 dark:text-white">{idx.name}</div>
-                <p className="mt-1 text-[11px] leading-relaxed text-slate-600 dark:text-white/75">{idx.desc}</p>
+                <div className="mt-1 text-[12px] font-semibold text-white">{idx.name}</div>
+                <p className="mt-1 text-[11px] leading-relaxed text-white/60">{idx.desc}</p>
               </div>
             </div>
           ))}
 
-          {/* Meta Index Global 1111 */}
+          {/* Meta Index Global 1111 — golden card */}
           <div
             tabIndex={0}
-            className="group relative overflow-visible rounded-2xl border border-brand-gold/40 bg-gradient-to-br from-brand-gold/10 via-brand-gold/5 to-transparent p-3.5 ring-1 ring-brand-gold/25 transition hover:border-brand-gold/60 hover:ring-brand-gold/40 focus:outline-none focus-visible:border-brand-gold/60"
+            className="group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-brand-gold/30 bg-gradient-to-b from-[#1a1506] to-[#0f0e09] p-4 shadow-[0_2px_24px_rgba(246,196,83,0.12)] ring-1 ring-brand-gold/20 transition-all duration-200 hover:border-brand-gold/50 hover:shadow-[0_4px_32px_rgba(246,196,83,0.2)] focus:outline-none"
           >
-            <div className="pointer-events-none absolute -right-4 -top-4 h-20 w-20 overflow-hidden rounded-full bg-brand-gold/20 blur-2xl" />
-            <Info className="absolute right-2 top-2 h-3.5 w-3.5 text-slate-400 transition group-hover:text-brand-gold group-focus-visible:text-brand-gold dark:text-white/30" />
+            {/* Ambient glow */}
+            <div className="pointer-events-none absolute -right-6 -top-6 h-28 w-28 rounded-full bg-brand-gold/20 blur-2xl" />
 
-            <div className="relative flex items-start justify-between gap-2">
-              <div className="min-w-0 flex-1">
-                <div className="pr-4 text-xs font-semibold text-slate-600 dark:text-white/80">Meta Index Global 1111</div>
-                <div className="mt-1 flex items-baseline gap-1">
-                  <span className="text-3xl font-black tabular-nums tracking-tight text-slate-900 dark:text-white">
-                    108.7
-                  </span>
-                  <span className="text-sm text-slate-400 dark:text-white/40">/ 100</span>
-                </div>
-                <div className="mt-2 flex items-center gap-1.5 text-xs">
-                  <Diamond className="h-3 w-3 text-slate-400 dark:text-white/40" />
-                  <span className="font-bold text-emerald-600 dark:text-emerald-400">+1.2%</span>
-                </div>
-                <div className="mt-0.5 text-[11px] text-slate-500 dark:text-white/50">vs mois dernier</div>
+            <Info className="absolute right-3 top-3 h-3.5 w-3.5 text-brand-gold/30 transition group-hover:text-brand-gold/70" />
+
+            {/* Icon + name */}
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-brand-gold/30 to-brand-gold/10 ring-1 ring-brand-gold/30 shadow-lg">
+                <img src="/Meta Index Global 1111.png" alt="Meta Index Global 1111" className="h-11 w-11 object-contain" />
               </div>
-              <span className="text-3xl">🚀</span>
+              <span className="text-[11px] font-semibold leading-tight text-brand-gold/70 pr-5">Meta Index Global 1111</span>
             </div>
 
-            {/* Tooltip — opens to the LEFT since this is the last card */}
+            {/* Divider */}
+            <div className="h-px bg-brand-gold/15" />
+
+            {/* Value + change */}
+            <div className="flex items-end justify-between">
+              <span className="text-[28px] font-black tabular-nums leading-none tracking-tight text-white">
+                108.7
+              </span>
+              <span className="mb-0.5 flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-bold tabular-nums text-emerald-400">
+                ▲ 1.2%
+              </span>
+            </div>
+
+            {/* Sub label */}
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] uppercase tracking-widest text-brand-gold/40 font-semibold">vs mois dernier</span>
+              <span className="flex items-center gap-1 text-[11px] font-bold text-brand-gold">
+                <Diamond className="h-3 w-3" /> Composite
+              </span>
+            </div>
+
+            {/* Tooltip */}
             <div
               role="tooltip"
-              className="pointer-events-none invisible absolute right-0 top-full z-30 mt-2 w-72 translate-y-1 rounded-xl border border-brand-gold/30 bg-white/95 p-3 text-left shadow-[0_8px_30px_rgba(0,0,0,0.15)] ring-1 ring-brand-gold/15 backdrop-blur-md opacity-0 transition duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:visible group-focus-visible:translate-y-0 group-focus-visible:opacity-100 dark:bg-bg-900 dark:shadow-[0_8px_30px_rgba(0,0,0,0.6)]"
+              className="pointer-events-none invisible absolute right-0 top-full z-30 mt-2 w-72 translate-y-1 rounded-xl border border-brand-gold/30 bg-bg-900/95 p-3 text-left shadow-[0_8px_30px_rgba(0,0,0,0.5)] ring-1 ring-brand-gold/15 backdrop-blur-md opacity-0 transition duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:visible group-focus-visible:translate-y-0 group-focus-visible:opacity-100"
             >
-              <span className="absolute -top-1.5 right-6 h-3 w-3 rotate-45 border-l border-t border-brand-gold/30 bg-white/95 dark:bg-bg-900" />
+              <span className="absolute -top-1.5 right-6 h-3 w-3 rotate-45 border-l border-t border-brand-gold/30 bg-bg-900/95" />
               <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-brand-gold">
-                <Info className="h-3 w-3" />
-                Définition
+                <Info className="h-3 w-3" /> Définition
               </div>
-              <div className="mt-1 text-[12px] font-semibold text-slate-900 dark:text-white">Meta Index Global 1111</div>
-              <p className="mt-1 text-[11px] leading-relaxed text-slate-600 dark:text-white/75">{META_DESC}</p>
+              <div className="mt-1 text-[12px] font-semibold text-white">Meta Index Global 1111</div>
+              <p className="mt-1 text-[11px] leading-relaxed text-white/60">{META_DESC}</p>
             </div>
           </div>
         </div>
