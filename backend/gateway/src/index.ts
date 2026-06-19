@@ -30,7 +30,7 @@ app.use(helmet());
 app.use(
   cors({
     origin(requestOrigin, callback) {
-      if (!requestOrigin || ALLOWED_ORIGINS.has(requestOrigin)) {
+      if (!requestOrigin || ALLOWED_ORIGINS.has(requestOrigin) || /\.1111\.tn$/.test(requestOrigin)) {
         callback(null, true);
       } else {
         logger.warn('CORS: rejected origin', { origin: requestOrigin });
