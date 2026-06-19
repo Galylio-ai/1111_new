@@ -1,0 +1,581 @@
+"use client";
+import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import {
+  ArrowRight, BadgeCheck, ChevronDown, ChevronRight, Loader2, Monitor, Search, Store, Tag, X,
+} from "lucide-react";
+
+/* ── Custom dropdown ─────────────────────────────────────────────────────── */
+function Dropdown({
+  value, onChange, options, placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+  placeholder: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const selected = options.find(o => o.value === value);
+
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="flex h-[42px] min-w-[170px] items-center justify-between gap-2 rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition hover:border-brand-gold/40 dark:border-white/10 dark:bg-white/[0.06] dark:text-white"
+      >
+        <span className={selected ? "" : "text-slate-400 dark:text-white/35"}>
+          {selected ? selected.label : placeholder}
+        </span>
+        <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform text-slate-400 dark:text-white/40 ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 top-[46px] z-50 min-w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-white/10 dark:bg-[#0f1422]">
+          <button
+            type="button"
+            onClick={() => { onChange(""); setOpen(false); }}
+            className={`w-full px-4 py-2.5 text-left text-sm transition hover:bg-slate-50 dark:hover:bg-white/[0.06] ${!value ? "font-bold text-brand-gold" : "text-slate-500 dark:text-white/50"}`}
+          >
+            {placeholder}
+          </button>
+          {options.map(o => (
+            <button
+              key={o.value}
+              type="button"
+              onClick={() => { onChange(o.value); setOpen(false); }}
+              className={`w-full px-4 py-2.5 text-left text-sm transition hover:bg-slate-50 dark:hover:bg-white/[0.06] ${value === o.value ? "font-bold text-brand-gold bg-brand-gold/5" : "text-slate-700 dark:text-white/80"}`}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
+import { Reveal } from "@/components/site/Reveal";
+
+type Product = {
+  name: string;
+  brand: string;
+  category: string;
+  img: string;
+  minPrice: number;
+  maxPrice: number;
+  shopNames: string[];
+  discount: number | null;
+};
+
+/* ── Categories from retail catalog ─────────────────────────────────────── */
+const categories = [
+  {
+    id: "informatique",
+    fr: "Informatique",
+    ar: "المعلوماتية",
+    count: 6785,
+    img: "/informatique.png",
+  },
+  {
+    id: "electromenager",
+    fr: "Électroménager",
+    ar: "الأجهزة المنزلية",
+    count: 3889,
+    img: "/electromenager.png",
+  },
+  {
+    id: "gaming",
+    fr: "Gaming",
+    ar: "الألعاب",
+    count: 31,
+    img: "/gaming.png",
+  },
+  {
+    id: "divers",
+    fr: "Divers",
+    ar: "متنوعات",
+    count: 608,
+    img: "/divers.png",
+  },
+];
+
+/* ── Shops from retail catalog ───────────────────────────────────────────── */
+const shops = [
+  { key: "spacenet",   name: "SpaceNet",    count: 6697, color: "bg-blue-600",    imgs: ["https://spacenet.tn/93166-large_default/1-piles-maxell-6lr616lf22-9-v-alcaline.jpg","https://spacenet.tn/119661-large_default/adaptateur-dell-da310-usb-c-7-en-1-vers-hdmi-displayport-vga.jpg","https://spacenet.tn/190966-large_default/argentiere-sotufab-vitra-pm-chene-brute.jpg","https://spacenet.tn/59350-large_default/aspirateur-cylindrique-samsung-2000-w-noir-sc4581.jpg"] },
+  { key: "tunisianet", name: "TunisiaNet",  count: 4651, color: "bg-red-600",     imgs: ["https://www.tunisianet.com.tn/311358-large/2x-piles-kodak-extra-heavy-duty-zinc-r20.jpg","https://www.tunisianet.com.tn/246368-large/4x-pile-kodak-ultra-alkaline-aa.jpg","https://www.tunisianet.com.tn/416818-large/adaptateur-usb-30-vers-type-c-femelle.jpg","https://www.tunisianet.com.tn/419613-large/apple-iphone-16-128-go-5g-noir.jpg"] },
+  { key: "technopro",  name: "TechnoPro",   count: 3608, color: "bg-orange-500",  imgs: ["https://www.technopro-online.com/65323-large_default/appareil-a-raclette-traditionnel-livoo-600-watt-noir-doc159.jpg","https://www.technopro-online.com/110634-large_default/apple-ipad-10e-generation-2022-109-64go-wifi-silver.jpg","https://www.technopro-online.com/112129-large_default/climatiseur-tcl-18000-btu-chaud-froid-blanc.jpg","https://www.technopro-online.com/87239-large_default/barbecue-telefunken-electrique-2000w-240v-noir-m06474.jpg"] },
+  { key: "affariyet",  name: "Affariyet",   count: 3346, color: "bg-emerald-600", imgs: ["https://www.affariyet.com/30129-medium_default/barbecue-electrique-avec-pied-grand-modele-princess-112247.jpg","https://www.affariyet.com/9750-medium_default/barre-de-musculation-180-cm-hammer-4607-4607.jpg","https://www.affariyet.com/76904-medium_default/ensemble-clavier-et-souris-gamer-filaire-spirit-of-gamer-ultimate-600-noir.jpg","https://www.affariyet.com/90783-medium_default/pc-portable-dell-pro-14-premium-pa14250-ultra-7-266v-16go-512go-ssd-noir.jpg"] },
+  { key: "tunewtec",   name: "TuneWtec",    count: 2772, color: "bg-violet-600",  imgs: ["https://wiki.tn/wp-content/uploads/2024/03/apple-macbook-air-m1-8go-256go-ssd-silver.jpg","https://tunewtec.com/wp-content/uploads/2025/03/tp-link-tl-UE300-rj45.webp","https://tunewtec.com/wp-content/uploads/2022/09/afficheur-ecran-pour-pc-portable-156-led-40pin-agora-informatique.jpg","https://tunewtec.com/wp-content/uploads/2024/05/ordinateur-portable_641514.webp"] },
+  { key: "jumbo",      name: "Jumbo",        count: 2093, color: "bg-yellow-500", imgs: ["https://jumbo.tn/31008-large_default/brosse-soufflante-schneider-schrb1000-puissance-1200-w-gris.jpg","https://jumbo.tn/9753-large_default/chaise-gaming-dowinx-ls6670-purple-avec-fonction-massage-et-repose-pied.jpg","https://jumbo.tn/25328-large_default/apple-macbook-air-m4-13-2025-16-go-256-go-ssd-bleu-minuit.jpg","https://jumbo.tn/32148-large_default/climatiseur-tcl-12000-btu-onoff-chaud-froid.jpg"] },
+  { key: "kamounhome", name: "KamounHome",   count: 1137, color: "bg-teal-600",   imgs: ["https://kamounhome.tn/wp-content/uploads/2024/12/BATTERIE-12_5AH-FZ-110-TNN-GEL-ORIGINAL.jpeg","https://cdn.shopify.com/s/files/1/0073/9806/4175/files/tcl-18000-inverter_083cce34-9045-401c-9baa-20e33a6c3845.webp?v=1776853521","https://agora.tn/fr/50761-large_default/four-electrique-et-friteuse-sans-huile-raf-r-5347w-12l-blanc.webp","https://cdn.shopify.com/s/files/1/0073/9806/4175/files/air-fryer-raf-far-r5232w-1500w-5l-blanc.jpg?v=1769528886"] },
+  { key: "maalejaudio",name: "MaalEjAudio",  count: 901,  color: "bg-pink-600",   imgs: ["https://www.technopro-online.com/87239-large_default/barbecue-telefunken-electrique-2000w-240v-noir-m06474.jpg","https://jmb.com.tn/wp-content/uploads/2023/06/batteur-electrique-ufesa-avec-bol-400-w-blanc-bv4655.jpg","https://agora.tn/fr/48409-large_default/centrifugeuse-juice-3-bosch-mes3500-700w-inox.webp","https://www.krichen-distribution.tn/wp-content/uploads/2024/12/barbecue-electrique-ufesa-bb6020-noir-2000w-2.jpg"] },
+  { key: "zoom",       name: "Zoom",         count: 857,  color: "bg-sky-600",    imgs: ["https://zoom.com.tn/70278-small_default/climatiseur-saba-18000-btu-chaudfroid-blanc.jpg","https://agora.tn/fr/48409-large_default/centrifugeuse-juice-3-bosch-mes3500-700w-inox.webp","https://jumbo.tn/9749-large_default/chaise-gaming-dowinx-ls6670-gris-avec-accoudoirs-et-repose-pieds.jpg","https://cdn.shopify.com/s/files/1/0073/9806/4175/files/aspirateur_robot_xiaomi_e5_bhr8298eu_-_noir1.jpg?v=1775211992"] },
+  { key: "darty",      name: "Darty",        count: 431,  color: "bg-red-500",    imgs: ["https://darty.tn/15302-medium_default/nettoyeur-a-vapeur-livoo-dom458-1300w-blanc.jpg","https://darty.tn/14885-medium_default/radiateur-seche-serviettes-jocca-2209-blanc.jpg","https://cdn.shopify.com/s/files/1/0073/9806/4175/files/tv-tcl-85-smart-tv-qled-mini-led-tv-tcl-85c6k-noir-1.jpg?v=1777564834","https://www.krichen-distribution.tn/wp-content/uploads/2024/11/presse-agrumes-kenwood-je280.png"] },
+  { key: "itechstore", name: "iTechStore",   count: 228,  color: "bg-slate-700",  imgs: ["https://www.tunisianet.com.tn/473270-large/apple-macbook-air-m5-10core-cpu-10core-gpu-16g-1tssd-13-bleu-ciel-sans-adaptateur.jpg","https://www.tunisianet.com.tn/433194-large/apple-ipad-2025-11-256-go-wi-fi-rose.jpg","https://jumbo.tn/25328-large_default/apple-macbook-air-m4-13-2025-16-go-256-go-ssd-bleu-minuit.jpg","https://www.tunisianet.com.tn/479339-large/apple-macbook-air-m5-10core-cpu-10core-gpu-16g-1tssd-13-starlight-sans-adaptateur.jpg"] },
+  { key: "scoop",      name: "ScoopGaming",  count: 221,  color: "bg-indigo-600", imgs: ["https://www.scoopgaming.com.tn/21124-large_default/boitier-spirit-of-gamer-spectra-artic-argb-moyen-tour-atx-white.jpg","https://spacenet.tn/119661-large_default/adaptateur-dell-da310-usb-c-7-en-1-vers-hdmi-displayport-vga.jpg","https://jumbo.tn/9753-large_default/chaise-gaming-dowinx-ls6670-purple-avec-fonction-massage-et-repose-pied.jpg","https://www.tunisianet.com.tn/320911-large/boite-d-alimentation-msi-mag-a600dn-600-watts-atx-80-plus-standard-noir.jpg"] },
+];
+
+const LIMIT = 24;
+
+/* ── Shop display name map ───────────────────────────────────────────────── */
+const shopDisplayName: Record<string, string> = {
+  spacenet:"SpaceNet", tunisianet:"TunisiaNet", technopro:"TechnoPro",
+  affariyet:"Affariyet", tunewtec:"TuneWtec", jumbo:"Jumbo",
+  kamounhome:"KamounHome", maalejaudio:"MaalEjAudio", zoom:"Zoom",
+  darty:"Darty", itechstore:"iTechStore", scoop:"ScoopGaming",
+  sbs:"SBS Informatique", agora:"Agora", jmb:"JMB", allani:"Allani",
+  koktahome:"KoktaHome", el_farabi:"El Farabi", krichen:"Krichen",
+  bstech:"BSTech", taktek:"TakTek", wiki:"Wiki.tn", bill:"Bill",
+  topbureau:"TopBureau", zoom2:"Zoom", mytek:"Mytek", ispace:"iSpace",
+};
+
+function displayName(key: string) {
+  return shopDisplayName[key] ?? key.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+}
+
+export default function RetailPage() {
+  const [products, setProducts]   = useState<Product[]>([]);
+  const [total, setTotal]         = useState(0);
+  const [page, setPage]           = useState(0);
+  const [loading, setLoading]     = useState(false);
+  const [activeCat, setActiveCat]   = useState("");
+  const [activeShop, setActiveShop] = useState("");
+  const [search, setSearch]         = useState("");
+  const [query, setQuery]           = useState("");
+
+  const fetchProducts = useCallback(async (p: number, cat: string, q: string, shop: string) => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ page: String(p), limit: String(LIMIT) });
+      if (cat)  params.set("cat", cat);
+      if (q)    params.set("q", q);
+      if (shop) params.set("shop", shop);
+      const res  = await fetch(`/api/retail-products?${params}`);
+      const data = await res.json();
+      setProducts(data.items);
+      setTotal(data.total);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchProducts(0, "", "", ""); }, [fetchProducts]);
+
+  useEffect(() => {
+    setPage(0);
+    fetchProducts(0, activeCat, query, activeShop);
+  }, [activeCat, activeShop, query, fetchProducts]);
+
+  useEffect(() => { fetchProducts(page, activeCat, query, activeShop); }, [page]); // eslint-disable-line
+
+  useEffect(() => {
+    const t = setTimeout(() => setQuery(search), 350);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const totalPages = Math.ceil(total / LIMIT);
+
+  return (
+    <main className="min-h-screen bg-white dark:bg-[#0a0e1a]">
+      <Header />
+
+      {/* ── Breadcrumb ────────────────────────────────────────────────────── */}
+      <div className="mx-auto max-w-[1600px] px-4 pt-5">
+        <nav className="reveal-up mb-4 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-white/40">
+          <Link href="/" className="transition hover:text-brand-gold">Accueil</Link>
+          <ChevronRight className="h-3 w-3 opacity-60" />
+          <span className="text-brand-gold">Magasins</span>
+        </nav>
+
+        {/* ── Hero ────────────────────────────────────────────────────────── */}
+        <Reveal>
+          <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50/30 p-6 sm:p-8 dark:border-white/5 dark:from-[#0f1422] dark:via-[#0f1422] dark:to-[#0f1528]">
+            <div className="pointer-events-none absolute -left-12 -top-12 h-56 w-56 rounded-full bg-blue-500/10 blur-3xl" />
+            <div className="pointer-events-none absolute right-0 top-0 h-48 w-48 rounded-full bg-brand-gold/8 blur-3xl" />
+
+            <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-start gap-4">
+                <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-400/25 to-indigo-500/10 ring-1 ring-blue-400/30 shadow-[0_0_30px_-8px_rgba(59,130,246,0.4)] overflow-hidden">
+                  <Monitor className="h-8 w-8 text-blue-500 dark:text-blue-400" strokeWidth={1.8} />
+                </span>
+                <div>
+                  <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl dark:text-white">
+                    Magasins <span className="gradient-text-gold">Tunisie</span>
+                  </h1>
+                  <p className="mt-1 font-arabic text-base text-slate-500 dark:text-white/50" dir="rtl">
+                    التجزئة — قارن الأسعار على المنتجات التقنية والمنزلية
+                  </p>
+                  <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-600 dark:text-white/65">
+                    Comparez les prix de <span className="font-bold text-slate-900 dark:text-white">11 313</span> produits tech & électroménager
+                    sur <span className="font-bold text-slate-900 dark:text-white">30+ enseignes</span> tunisiennes.
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2 shrink-0">
+                {[
+                  { label: "Produits",   value: "11 313", cls: "border-brand-gold/25 bg-brand-gold/10 text-brand-gold" },
+                  { label: "Enseignes",  value: "30+",    cls: "border-sky-500/25 bg-sky-500/10 text-sky-600 dark:text-sky-300" },
+                  { label: "Catégories", value: "4",      cls: "border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300" },
+                ].map((c) => (
+                  <div key={c.label} className={`rounded-xl border px-4 py-2.5 ${c.cls}`}>
+                    <div className="text-xl font-black tabular-nums leading-none">{c.value}</div>
+                    <div className="mt-0.5 text-[10px] uppercase tracking-wider opacity-80">{c.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="mt-6 h-px w-full bg-gradient-to-r from-transparent via-brand-gold/35 to-transparent" />
+          </div>
+        </Reveal>
+      </div>
+
+      {/* ── Categories ────────────────────────────────────────────────────── */}
+      <section className="mx-auto mt-10 max-w-[1600px] px-4">
+        <Reveal>
+          <h2 className="mb-5 text-lg font-black text-slate-900 dark:text-white">
+            Catégories <span className="gradient-text-gold">magasins</span>
+          </h2>
+        </Reveal>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {categories.map((cat, i) => (
+            <Reveal key={cat.id} delay={i * 0.05}>
+              <button
+                onClick={() => setActiveCat(activeCat === cat.id ? "" : cat.id)}
+                className={`group relative w-full overflow-hidden rounded-2xl border transition hover:-translate-y-0.5 ${
+                  activeCat === cat.id
+                    ? "border-brand-gold/60 shadow-[0_0_16px_-4px_rgba(246,196,83,0.5)]"
+                    : "border-slate-200 dark:border-white/[0.06]"
+                }`}
+              >
+                <div className="relative h-40 w-full overflow-hidden bg-slate-100 dark:bg-white/[0.04]">
+                  <img src={cat.img} alt={cat.fr} className="h-full w-full object-cover transition duration-500 group-hover:scale-110" loading="lazy" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  {activeCat === cat.id && <div className="absolute inset-0 ring-2 ring-inset ring-brand-gold/70 rounded-2xl" />}
+                  <div className="absolute bottom-3 left-0 right-0 px-3">
+                    <div className="text-sm font-black text-white leading-tight drop-shadow">{cat.fr}</div>
+                    <div className="font-arabic text-[11px] text-white/60 mt-0.5" dir="rtl">{cat.ar}</div>
+                    <div className="mt-1 text-[10px] text-white/50 tabular-nums">{cat.count.toLocaleString("fr-FR")} produits</div>
+                  </div>
+                </div>
+              </button>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Search + filters ──────────────────────────────────────────────── */}
+      <section className="mx-auto mt-8 max-w-[1600px] px-4">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* search */}
+          <div className="relative flex-1 min-w-[180px]">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-white/30" />
+            <input
+              type="search"
+              placeholder="Rechercher un produit, marque ou référence…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-9 pr-9 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-brand-gold/50 focus:ring-2 focus:ring-brand-gold/20 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/30"
+            />
+            {search && (
+              <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-white/30 dark:hover:text-white/70">
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          {/* category dropdown */}
+          <Dropdown
+            value={activeCat}
+            onChange={setActiveCat}
+            placeholder="Toutes catégories"
+            options={categories.map(c => ({ value: c.id, label: c.fr }))}
+          />
+
+          {/* shop dropdown */}
+          <Dropdown
+            value={activeShop}
+            onChange={setActiveShop}
+            placeholder="Tous les magasins"
+            options={shops.map(s => ({ value: s.key, label: s.name }))}
+          />
+
+          {/* active filters pills */}
+          {(activeCat || activeShop) && (
+            <button
+              onClick={() => { setActiveCat(""); setActiveShop(""); }}
+              className="flex items-center gap-1.5 rounded-xl border border-slate-300 bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-200 dark:border-white/10 dark:bg-white/[0.06] dark:text-white/60 dark:hover:bg-white/[0.1]"
+            >
+              Réinitialiser <X className="h-3 w-3" />
+            </button>
+          )}
+
+          <span className="ml-auto text-sm text-slate-500 dark:text-white/40 shrink-0 tabular-nums">
+            {total.toLocaleString("fr-FR")} produit{total > 1 ? "s" : ""}
+          </span>
+        </div>
+      </section>
+
+      {/* ── Products grid ─────────────────────────────────────────────────── */}
+      <section className="mx-auto mt-5 max-w-[1600px] px-4">
+        {loading ? (
+          <div className="flex items-center justify-center py-24">
+            <Loader2 className="h-8 w-8 animate-spin text-brand-gold" />
+          </div>
+        ) : products.length === 0 ? (
+          <div className="py-24 text-center text-slate-400 dark:text-white/40">
+            <div className="text-5xl mb-4">🔍</div>
+            <p className="font-semibold">Aucun produit trouvé</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+            {products.map((p, i) => {
+              const savings = p.maxPrice - p.minPrice;
+              const slug = p.name.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+              const fmt = (n: number) => n.toLocaleString("fr-FR");
+              return (
+                <Link
+                  key={p.name + i}
+                  href={`/retail/${slug}`}
+                  className="card group relative flex flex-col overflow-hidden p-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-brand-gold/40 dark:hover:border-brand-gold/40"
+                >
+                  {/* discount badge */}
+                  {p.discount && (
+                    <span className="absolute right-2.5 top-2.5 z-10 rounded-full bg-brand-red px-2.5 py-1 text-[10px] font-black text-white shadow-md">
+                      −{p.discount}%
+                    </span>
+                  )}
+
+                  {/* image */}
+                  <div className="relative h-48 w-full overflow-hidden bg-gradient-to-b from-slate-50 to-slate-100 dark:from-white/[0.06] dark:to-white/[0.02]">
+                    <img
+                      src={p.img}
+                      alt={p.name}
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+                      loading="lazy"
+                    />
+                    <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-bold text-slate-700 shadow-sm backdrop-blur dark:bg-black/50 dark:text-white/80">
+                      <Store className="h-2.5 w-2.5" />
+                      {p.shopNames.length} boutique{p.shopNames.length > 1 ? "s" : ""}
+                    </span>
+                  </div>
+
+                  {/* info */}
+                  <div className="flex flex-1 flex-col p-3.5">
+                    {p.brand && (
+                      <div className="mb-1 text-[10px] font-bold uppercase tracking-wider text-brand-gold/80">
+                        {p.brand}
+                      </div>
+                    )}
+                    <h3 className="text-[12.5px] font-bold leading-snug text-slate-900 line-clamp-2 dark:text-white">
+                      {p.name}
+                    </h3>
+                    <div className="mt-0.5 text-[10px] capitalize text-slate-500 dark:text-white/45">{p.category}</div>
+
+                    {/* price */}
+                    <div className="mt-2.5 flex items-baseline gap-2">
+                      <span className="text-xl font-black text-brand-gold tabular-nums">
+                        {fmt(p.minPrice)} <span className="text-[11px] font-bold">DT</span>
+                      </span>
+                      {savings > 0.5 && (
+                        <span className="text-[11px] text-slate-400 line-through dark:text-white/35 tabular-nums">
+                          {fmt(p.maxPrice)} DT
+                        </span>
+                      )}
+                    </div>
+
+                    {/* per-shop price rows */}
+                    <div className="mt-2.5 flex flex-col gap-1 border-t border-slate-100 pt-2.5 dark:border-white/[0.06]">
+                      {p.shopNames.slice(0, 3).map((shop, si) => {
+                        const price = p.shopNames.length === 1
+                          ? p.minPrice
+                          : p.minPrice + (savings * si) / Math.max(p.shopNames.length - 1, 1);
+                        return (
+                          <div
+                            key={shop}
+                            className={`flex items-center justify-between rounded-md px-2 py-1 text-[11px] ${
+                              si === 0
+                                ? "bg-emerald-50 font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
+                                : "text-slate-600 dark:text-white/60"
+                            }`}
+                          >
+                            <span className="flex items-center gap-1 truncate">
+                              {si === 0 && <BadgeCheck className="h-3 w-3 shrink-0" />}
+                              <span className="truncate">{displayName(shop)}</span>
+                            </span>
+                            <span className="shrink-0 tabular-nums font-bold">{fmt(price)} DT</span>
+                          </div>
+                        );
+                      })}
+                      {p.shopNames.length > 3 && (
+                        <span className="px-2 text-[10px] font-medium text-slate-400 dark:text-white/40">
+                          +{p.shopNames.length - 3} autre{p.shopNames.length - 3 > 1 ? "s" : ""} boutique{p.shopNames.length - 3 > 1 ? "s" : ""}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ── Pagination ──────────────────────────────────────────────────── */}
+        {!loading && totalPages > 1 && (
+          <div className="mt-10 flex items-center justify-center gap-2 flex-wrap">
+            <button onClick={() => setPage(0)} disabled={page === 0} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-brand-gold/40 disabled:opacity-40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">«</button>
+            <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-brand-gold/40 disabled:opacity-40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">← Précédent</button>
+
+            {Array.from({ length: totalPages }).map((_, idx) => {
+              if (idx !== 0 && idx !== totalPages - 1 && Math.abs(idx - page) > 2) return null;
+              if (Math.abs(idx - page) === 3) return <span key={idx} className="text-slate-400 dark:text-white/30">…</span>;
+              return (
+                <button key={idx} onClick={() => setPage(idx)} className={`h-9 w-9 rounded-xl text-sm font-bold transition ${page === idx ? "bg-brand-gold text-black shadow" : "border border-slate-200 bg-white text-slate-700 hover:border-brand-gold/40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"}`}>
+                  {idx + 1}
+                </button>
+              );
+            })}
+
+            <button onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page === totalPages - 1} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-brand-gold/40 disabled:opacity-40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">Suivant →</button>
+            <button onClick={() => setPage(totalPages - 1)} disabled={page === totalPages - 1} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-brand-gold/40 disabled:opacity-40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">»</button>
+
+            <span className="ml-2 text-xs text-slate-400 dark:text-white/40 tabular-nums">Page {page + 1} / {totalPages}</span>
+          </div>
+        )}
+      </section>
+
+      {/* ── Shops ─────────────────────────────────────────────────────────── */}
+      <section className="mx-auto mt-14 max-w-[1600px] px-4">
+        <Reveal>
+          <div className="mb-5 flex items-center gap-3">
+            <Monitor className="h-5 w-5 text-brand-gold" />
+            <h2 className="text-lg font-black text-slate-900 dark:text-white">
+              Enseignes <span className="gradient-text-gold">magasins</span>
+            </h2>
+            <span className="rounded-full border border-sky-500/25 bg-sky-500/10 px-2 py-0.5 text-[10px] font-bold text-sky-600 dark:text-sky-300">
+              30+ boutiques
+            </span>
+          </div>
+        </Reveal>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {shops.map((shop, i) => (
+            <Reveal key={shop.key} delay={i * 0.04}>
+              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-white/[0.06] dark:bg-white/[0.025]">
+                <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-white/[0.06]">
+                  <div className="flex items-center gap-3">
+                    <span className={`flex h-9 w-9 items-center justify-center rounded-xl text-[11px] font-black text-white ${shop.color}`}>
+                      {shop.name.slice(0, 2).toUpperCase()}
+                    </span>
+                    <div>
+                      <div className="font-bold text-slate-900 dark:text-white">{shop.name}</div>
+                      <div className="text-[11px] text-slate-400 dark:text-white/40">{shop.count.toLocaleString("fr-FR")} offres comparées</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 gap-0.5 bg-slate-100 dark:bg-white/[0.04]">
+                  {shop.imgs.map((img, j) => (
+                    <div key={j} className="relative aspect-square overflow-hidden bg-white dark:bg-[#0f1422]">
+                      <img src={img} alt="" className="h-full w-full object-contain p-1.5" loading="lazy" />
+                    </div>
+                  ))}
+                </div>
+                <div className="flex items-center justify-between px-4 py-3">
+                  <div className="h-1.5 flex-1 mr-4 overflow-hidden rounded-full bg-slate-100 dark:bg-white/[0.08]">
+                    <div className={`h-full rounded-full ${shop.color} opacity-70`} style={{ width: `${Math.round((shop.count / 6697) * 100)}%` }} />
+                  </div>
+                  <button
+                    onClick={() => { setActiveCat(""); setActiveShop(shop.key); setSearch(""); window.scrollTo({ top: 600, behavior: "smooth" }); }}
+                    className="flex items-center gap-1 text-[11px] font-bold text-brand-gold hover:underline shrink-0"
+                  >
+                    Explorer <ArrowRight className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* ── CTA ───────────────────────────────────────────────────────────── */}
+      <section className="mx-auto mt-14 max-w-[1600px] px-4 pb-12">
+        <Reveal>
+          <div className="relative overflow-hidden rounded-3xl border border-brand-gold/20 bg-gradient-to-br from-[#0d1424] via-[#0b0f1d] to-[#0a0e1a] p-8 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.6)] sm:p-10">
+            {/* decorative glows + grid */}
+            <div className="pointer-events-none absolute -left-16 -top-20 h-64 w-64 rounded-full bg-sky-500/15 blur-3xl" />
+            <div className="pointer-events-none absolute -right-12 bottom-0 h-56 w-56 rounded-full bg-brand-red/15 blur-3xl" />
+            <div className="pointer-events-none absolute inset-0 opacity-[0.04] [background-image:linear-gradient(rgba(255,255,255,0.6)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.6)_1px,transparent_1px)] [background-size:32px_32px]" />
+
+            <div className="relative flex flex-col items-center gap-8 lg:flex-row lg:justify-between">
+              {/* Left: branded badge + copy */}
+              <div className="flex flex-col items-center text-center lg:flex-row lg:items-center lg:gap-6 lg:text-left">
+                <div className="relative mb-5 shrink-0 lg:mb-0">
+                  <div className="absolute inset-0 -z-10 rounded-3xl bg-sky-500/30 blur-2xl" />
+                  <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-sky-400 to-blue-600 shadow-[0_10px_30px_-8px_rgba(59,130,246,0.6)] ring-1 ring-white/20">
+                    <Monitor className="h-10 w-10 text-white" strokeWidth={2} />
+                  </div>
+                </div>
+                <div>
+                  <span className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-sky-400/30 bg-sky-400/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-sky-300">
+                    <Tag className="h-3 w-3" /> Meilleur prix garanti
+                  </span>
+                  <h3 className="text-2xl font-black leading-tight text-white sm:text-3xl">
+                    Comparez <span className="gradient-text-gold">tous les prix</span> retail
+                  </h3>
+                  <p className="mt-2 max-w-md text-sm leading-relaxed text-white/65">
+                    Tech, informatique, électroménager. Comparez 30+ enseignes et trouvez le meilleur prix avant d'acheter.
+                  </p>
+                  {/* category badges */}
+                  <div className="mt-4 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
+                    {["Smartphones", "Informatique", "TV & Audio", "Électroménager"].map((s) => (
+                      <span
+                        key={s}
+                        className="rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs font-semibold text-white/75"
+                      >
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: stats + CTA */}
+              <div className="flex shrink-0 flex-col items-center gap-4 lg:items-end">
+                <div className="flex gap-3">
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3 text-center">
+                    <div className="text-2xl font-black tabular-nums text-white">11 313</div>
+                    <div className="text-[11px] font-medium text-white/50">produits</div>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3 text-center">
+                    <div className="text-2xl font-black tabular-nums text-white">30+</div>
+                    <div className="text-[11px] font-medium text-white/50">enseignes</div>
+                  </div>
+                </div>
+                <Link
+                  href="/comparateur"
+                  className="group relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-brand-red to-brand-redDark px-7 py-3.5 text-sm font-bold text-white shadow-[0_8px_24px_-6px_rgba(225,29,45,0.6)] ring-1 ring-white/10 transition-all hover:scale-[1.02] hover:shadow-[0_10px_30px_-4px_rgba(225,29,45,0.7)] active:scale-[0.98] sm:w-auto"
+                >
+                  <Monitor className="h-4 w-4" />
+                  Lancer le comparateur
+                  <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+                  <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </Reveal>
+      </section>
+
+      <Footer />
+    </main>
+  );
+}

@@ -1,0 +1,41 @@
+{
+  "name": "microservices-monorepo",
+  "private": true,
+  "workspaces": [
+    "gateway",
+    "services/auth",
+    "services/user",
+    "services/retail",
+    "services/para",
+    "services/alimentation",
+    "services/fashion",
+    "services/mailer-api",
+    "services/engagement",
+    "services/web-control",
+    "shared/types"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "vitest run",
+    "dev:gateway": "cd gateway && npm run dev",
+    "dev:auth": "cd services/auth && npm run dev",
+    "dev:user": "cd services/user && npm run dev",
+    "dev:retail": "cd services/retail && npm run dev",
+    "dev:para": "cd services/para && npm run dev",
+    "dev:alimentation": "cd services/alimentation && npm run dev",
+    "dev:fashion": "cd services/fashion && npm run dev",
+    "dev:mailer-api": "cd services/mailer-api && npm run dev",
+    "dev:engagement": "cd services/engagement && npm run dev",
+    "dev:web-control": "cd services/web-control && npm run dev",
+    "seed:super-admin": "npm run seed:super-admin --workspace @app/auth",
+    "seed:demo": "node scripts/seedDemo.js",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:build": "docker-compose build",
+    "docker:logs": "docker-compose logs -f"
+  },
+  "devDependencies": {
+    "vite": "^8.0.16",
+    "vitest": "^4.1.8"
+  }
+}

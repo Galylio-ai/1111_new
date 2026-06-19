@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="shaker" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#cbd5e1"/>
+    </linearGradient>
+  </defs>
+  <path d="M20 22 L20 56 Q20 60 24 60 L40 60 Q44 60 44 56 L44 22 Z" fill="url(#shaker)" stroke="#64748b" stroke-width="1.5"/>
+  <ellipse cx="32" cy="22" rx="12" ry="3" fill="#94a3b8"/>
+  <rect x="20" y="14" width="24" height="10" rx="2" fill="#475569"/>
+  <circle cx="26" cy="18" r="1.2" fill="#1e293b"/>
+  <circle cx="32" cy="18" r="1.2" fill="#1e293b"/>
+  <circle cx="38" cy="18" r="1.2" fill="#1e293b"/>
+  <circle cx="29" cy="35" r="1.5" fill="#ffffff"/>
+  <circle cx="36" cy="42" r="1.5" fill="#ffffff"/>
+  <circle cx="26" cy="48" r="1.5" fill="#ffffff"/>
+  <circle cx="38" cy="50" r="1.5" fill="#ffffff"/>
+  <circle cx="32" cy="55" r="1.5" fill="#ffffff"/>
+</svg>

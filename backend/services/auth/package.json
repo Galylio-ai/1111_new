@@ -1,0 +1,34 @@
+{
+  "name": "@app/auth",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "db:migrate": "knex --knexfile src/db/knexfile.js migrate:latest",
+    "seed:super-admin": "tsx src/scripts/seedSuperAdmin.ts"
+  },
+  "dependencies": {
+    "amqplib": "^0.10.4",
+    "bcrypt": "^6.0.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "helmet": "^7.1.0",
+    "google-auth-library": "^10.7.0",
+    "jsonwebtoken": "^9.0.2",
+    "knex": "^3.1.0",
+    "pg": "^8.12.0",
+    "uuid": "^11.1.1",
+    "winston": "^3.13.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/amqplib": "^0.10.5",
+    "@types/bcrypt": "^5.0.2",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/node": "^20.14.2",
+    "tsx": "^4.20.6",
+    "typescript": "^5.4.5"
+  }
+}

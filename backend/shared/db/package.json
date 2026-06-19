@@ -1,0 +1,15 @@
+{
+  "name": "@app/db",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "migrate": "knex migrate:latest",
+    "migrate:rollback": "knex migrate:rollback",
+    "migrate:make": "knex migrate:make"
+  },
+  "dependencies": {
+    "knex": "^3.1.0",
+    "pg": "^8.12.0",
+    "dotenv": "^16.4.5"
+  }
+}
