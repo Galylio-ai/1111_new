@@ -27,26 +27,12 @@ app.use((req, _res, next) => {
 
 app.use(helmet());
 
-app.use(
-  cors({
-    origin(requestOrigin, callback) {
-      if (!requestOrigin || ALLOWED_ORIGINS.has(requestOrigin) || /\.1111\.tn$/.test(requestOrigin)) {
-        callback(null, true);
-      } else {
-        logger.warn('CORS: rejected origin', { origin: requestOrigin });
-        callback(new Error(`CORS policy does not allow origin: ${requestOrigin}`));
-      }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  }),
-);
+app.use(cors(corsOptions));
 
 app.use(rateLimiter);
 
-app.options('*', cors({
-  origin(requestOrigin, callback) {
+const corsOptions = {
+  origin(requestOrigin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
     if (!requestOrigin || ALLOWED_ORIGINS.has(requestOrigin) || /\.1111\.tn$/.test(requestOrigin)) {
       callback(null, true);
     } else {
@@ -56,7 +42,10 @@ app.options('*', cors({
   credentials: true,
   methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+};
+
+// Handle preflight before any auth middleware
+app.options('*', cors(corsOptions), (_req, res) => { res.sendStatus(204); });
 
 app.get('/health', (_req, res) => {
   res.json({ success: true, data: { status: 'ok', service: 'gateway' } });
