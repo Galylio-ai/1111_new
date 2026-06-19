@@ -45,6 +45,19 @@ app.use(
 
 app.use(rateLimiter);
 
+app.options('*', cors({
+  origin(requestOrigin, callback) {
+    if (!requestOrigin || ALLOWED_ORIGINS.has(requestOrigin) || /\.1111\.tn$/.test(requestOrigin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS policy does not allow origin: ${requestOrigin}`));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
 app.get('/health', (_req, res) => {
   res.json({ success: true, data: { status: 'ok', service: 'gateway' } });
 });
