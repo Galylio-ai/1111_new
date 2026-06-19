@@ -51,6 +51,7 @@ type ShopRow = {
   product_id: number;
   shop: string;
   current_price: string;
+  shop_product_url: string | null;
 };
 
 type ImageRow = {
@@ -111,7 +112,8 @@ export async function GET() {
 
     const [shopPricesRes, imgsRes] = await Promise.all([
       pool.query<ShopRow>(
-        `SELECT sp.product_id, s.name AS shop, sp.current_price::text AS current_price
+        `SELECT sp.product_id, s.name AS shop, sp.current_price::text AS current_price,
+                sp.shop_product_url
          FROM shop_prices sp
          JOIN shops s ON s.id = sp.shop_id
          WHERE sp.product_id = ANY($1::bigint[])
@@ -140,10 +142,10 @@ export async function GET() {
     const imgsByProduct = new Map<number, string>();
     for (const r of imgsRes.rows) imgsByProduct.set(r.product_id, r.image_url);
 
-    const offersByProduct = new Map<number, { shop: string; price: number }[]>();
+    const offersByProduct = new Map<number, { shop: string; price: number; url: string | null }[]>();
     for (const r of shopPricesRes.rows) {
       const arr = offersByProduct.get(r.product_id) ?? [];
-      arr.push({ shop: r.shop, price: parseFloat(r.current_price) });
+      arr.push({ shop: r.shop, price: parseFloat(r.current_price), url: r.shop_product_url });
       offersByProduct.set(r.product_id, arr);
     }
 
@@ -164,6 +166,7 @@ export async function GET() {
         offers: (offersByProduct.get(r.id) ?? []).map(o => ({
           shop: o.shop,
           price: toFrInt(o.price),
+          url: o.url,
         })),
       };
     });

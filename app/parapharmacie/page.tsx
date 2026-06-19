@@ -76,6 +76,7 @@ type Product = {
   maxPrice: number;
   shopNames: string[];
   discount: number | null;
+  bestUrl?: string | null;
 };
 
 /* ── Real categories (top 16 by product count) ──────────────────────────── */
@@ -353,10 +354,13 @@ export default function ParapharmacyPage() {
               const savings = p.maxPrice - p.minPrice;
               const slug = p.name.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
               const fmt = (n: number) => n.toLocaleString("fr-FR");
+              const href = p.bestUrl ?? `/parapharmacie/${slug}`;
+              const isExternal = !!p.bestUrl;
               return (
-                <Link
+                <a
                   key={p.name + i}
-                  href={`/parapharmacie/${slug}`}
+                  href={href}
+                  {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                   className="card group relative flex flex-col overflow-hidden p-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-brand-gold/40 dark:hover:border-brand-gold/40"
                 >
                   {/* discount badge */}
@@ -432,7 +436,7 @@ export default function ParapharmacyPage() {
                       )}
                     </div>
                   </div>
-                </Link>
+                </a>
               );
             })}
           </div>

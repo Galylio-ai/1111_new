@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, Gamepad2, Store, BadgeCheck, Smartphone } fr
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
-type ShopPrice = { shop: string; price: string };
+type ShopPrice = { shop: string; price: string; url?: string | null };
 
 type TechProduct = {
   id: number;
@@ -21,10 +21,14 @@ type TechProduct = {
 function ProductCard({ p }: { p: TechProduct }) {
   const offers = p.offers;
   const hasSavings = p.savings && p.savings !== "0";
+  const bestOfferUrl = offers.find(o => o.url)?.url;
+  const href = bestOfferUrl ?? `/retail/${p.slug}`;
+  const isExternal = !!bestOfferUrl;
 
   return (
-    <Link
-      href={`/retail/${p.slug}`}
+    <a
+      href={href}
+      {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
       className="card group relative w-[230px] sm:w-[250px] md:w-[270px] shrink-0 snap-start flex flex-col overflow-hidden p-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-brand-gold/40 dark:hover:border-brand-gold/40"
     >
       {hasSavings && (
@@ -95,7 +99,7 @@ function ProductCard({ p }: { p: TechProduct }) {
           )}
         </div>
       </div>
-    </Link>
+    </a>
   );
 }
 
