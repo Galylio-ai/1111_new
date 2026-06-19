@@ -40,10 +40,10 @@ function shopChip(shop: BasketShop) {
         {shop.shop === "Geant" ? "Géant" : shop.shop}
       </div>
       <div className="mt-0.5 text-base font-extrabold tabular-nums text-slate-900 dark:text-white">
-        {shop.current.toFixed(1).replace(".", ",")}
+        {(shop.current ?? 0).toFixed(1).replace(".", ",")}
       </div>
       <div className={`text-[10px] ${up ? "text-red-500 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}`}>
-        {up ? "▲" : "▼"} {up ? "+" : ""}{shop.change.toFixed(1).replace(".", ",")}%
+        {up ? "▲" : "▼"} {up ? "+" : ""}{(shop.change ?? 0).toFixed(1).replace(".", ",")}%
       </div>
     </div>
   );

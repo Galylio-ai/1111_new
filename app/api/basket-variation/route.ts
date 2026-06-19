@@ -52,21 +52,25 @@ export async function GET() {
     const baskets = await computeBaskets();
     const map = new Map(baskets.map(b => [b.shop, b.total]));
 
+    // If DB is empty, return empty to trigger client fallback
+    if (map.size === 0) return NextResponse.json({});
+
     const shops = SHOPS.map((shop, i) => {
       const total = map.get(shop) ?? 0;
       const week = buildWeek(total, (i + 1) * 7919);
-      const change = +(((week[6] - week[0]) / week[0]) * 100).toFixed(1);
-      return { shop, current: week[6], change, week };
+      const prev = week[0] || 1;
+      const change = +(((week[6] - prev) / prev) * 100).toFixed(1);
+      return { shop, current: week[6] ?? 0, change: change ?? 0, week };
     });
 
     const data = DAYS.map((m, i) => {
       const point: Record<string, string | number> = { m };
-      for (const s of shops) point[s.shop] = s.week[i];
+      for (const s of shops) point[s.shop] = s.week[i] ?? 0;
       return point;
     });
 
     return NextResponse.json({ shops, data });
-  } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+  } catch {
+    return NextResponse.json({});
   }
 }
