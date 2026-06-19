@@ -1,5 +1,5 @@
 "use client";
-import { ChevronLeft, ChevronRight, Gamepad2, Store, BadgeCheck } from "lucide-react";
+import { ChevronLeft, ChevronRight, Gamepad2, Store, BadgeCheck, Smartphone } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
