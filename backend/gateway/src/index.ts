@@ -26,7 +26,7 @@ const corsOptions = {
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
@@ -39,9 +39,6 @@ app.use((req, _res, next) => {
 });
 
 app.use(helmet());
-
-// Handle preflight before any auth middleware
-app.options('*', cors(corsOptions), (_req, res) => { res.sendStatus(204); });
 
 app.use(cors(corsOptions));
 
