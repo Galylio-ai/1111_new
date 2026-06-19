@@ -17,20 +17,6 @@ const ALLOWED_ORIGINS: ReadonlySet<string> = new Set(
     .filter(Boolean),
 );
 
-const app = express();
-
-app.use((req, _res, next) => {
-  delete req.headers['x-user-id'];
-  delete req.headers['x-user-role'];
-  next();
-});
-
-app.use(helmet());
-
-app.use(cors(corsOptions));
-
-app.use(rateLimiter);
-
 const corsOptions = {
   origin(requestOrigin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
     if (!requestOrigin || ALLOWED_ORIGINS.has(requestOrigin) || /\.1111\.tn$/.test(requestOrigin)) {
@@ -44,8 +30,22 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
+const app = express();
+
+app.use((req, _res, next) => {
+  delete req.headers['x-user-id'];
+  delete req.headers['x-user-role'];
+  next();
+});
+
+app.use(helmet());
+
 // Handle preflight before any auth middleware
 app.options('*', cors(corsOptions), (_req, res) => { res.sendStatus(204); });
+
+app.use(cors(corsOptions));
+
+app.use(rateLimiter);
 
 app.get('/health', (_req, res) => {
   res.json({ success: true, data: { status: 'ok', service: 'gateway' } });
