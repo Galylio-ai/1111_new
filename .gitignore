@@ -7,3 +7,4 @@ out/
 data/
 data_matching/
 supermarché/
+*.tsbuildinfo

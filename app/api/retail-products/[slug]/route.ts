@@ -52,9 +52,9 @@ async function getDbData(productName: string, slug: string): Promise<{
            FROM products p
            JOIN shop_prices sp ON sp.product_id = p.id
            JOIN shops s ON s.id = sp.shop_id
-           WHERE lower(p.name) = lower($1)
+           WHERE p.slug = $1
            ORDER BY sp.current_price ASC`,
-          [productName]
+          [slug]
         ),
       ]);
 
@@ -66,9 +66,12 @@ async function getDbData(productName: string, slug: string): Promise<{
       const shopUrls: Record<string, string> = {};
       const shopPrices: Record<string, number> = {};
       for (const row of pricesRes.rows) {
-        const key = row.shop_key || row.shop_name;
-        if (row.shop_product_url) shopUrls[key] = row.shop_product_url;
-        shopPrices[key] = parseFloat(row.current_price);
+        const price = parseFloat(row.current_price);
+        const url = row.shop_product_url;
+        for (const key of [row.shop_key, row.shop_name, row.shop_name?.toLowerCase()].filter(Boolean)) {
+          shopPrices[key] = price;
+          if (url) shopUrls[key] = url;
+        }
       }
       return { description, specs, shopUrls, shopPrices };
     } finally {

@@ -334,10 +334,17 @@ export function CatalogProductDetail({
               <ul className="space-y-2">
                 {[...product.shopNames]
                   .map((shop) => {
-                    const shopKey = shop.toLowerCase().replace(/[^a-z0-9_]/g, "");
-                    const price = product.shopPrices?.[shopKey] ?? product.shopPrices?.[shop] ?? product.minPrice;
-                    const href = product.shopUrls?.[shopKey] ?? product.shopUrls?.[shop] ?? shopUrl(shop, product.name);
-                    return { shop, shopKey, price, href };
+                    // Try multiple key formats to match what the DB stores
+                    const keyExact = shop;
+                    const keyLower = shop.toLowerCase();
+                    const keyUnder = keyLower.replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+                    const keyNoSep = keyLower.replace(/[^a-z0-9]/g, "");
+                    const p = product.shopPrices;
+                    const u = product.shopUrls;
+                    const price = p?.[keyUnder] ?? p?.[keyExact] ?? p?.[keyLower] ?? p?.[keyNoSep] ?? product.minPrice;
+                    const dbUrl = u?.[keyUnder] ?? u?.[keyExact] ?? u?.[keyLower] ?? u?.[keyNoSep];
+                    const href = dbUrl ?? shopUrl(shop, product.name);
+                    return { shop, price, href };
                   })
                   .sort((a, b) => a.price - b.price)
                   .map(({ shop, price, href }, i) => {
