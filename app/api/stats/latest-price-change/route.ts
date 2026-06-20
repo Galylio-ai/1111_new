@@ -10,56 +10,40 @@ type Row = {
   brand: string | null;
   slug: string;
   image: string | null;
-  shopName: string;
-  oldPrice: number;       // suspicious regular_price (the lie)
-  currentPrice: number;   // current price at the offender shop
-  honestMin: number;      // min price across other shops (what the product really costs)
-  effectiveDiscountPct: number; // honestMin → currentPrice diff (often near 0 or negative)
-  claimedDiscountPct: number;   // (regular_price → current_price) -- inflated
+  shopName: string | null;
+  oldPrice: number;
+  newPrice: number;
   changedAt: string;
 };
 
-// Detect fake "ancien prix" claims from current data (no history needed):
-//   - At least 3 distinct shops sell the product (so we have a market floor to compare against)
-//   - Shop's regular_price > 1.4 * min(current_price) across all shops for that product
-//   - regular_price > current_price (must look like a discount)
-//
-// Picks the most flagrant lie (largest gap between claimed regular and honest market min).
+// Find the latest distinct price drop or rise for any product.
+// Compare the newest price_history row to the previous one for the same (product, shop).
 const SQL = `
-  WITH per_product AS (
+  WITH ranked AS (
     SELECT
-      sp.product_id,
-      MIN(sp.current_price) AS min_current,
-      COUNT(DISTINCT sp.shop_id) AS shop_count
-    FROM shop_prices sp
-    WHERE sp.current_price IS NOT NULL
-    GROUP BY sp.product_id
+      ph.id,
+      ph.product_id,
+      ph.shop_id,
+      ph.price,
+      ph.recorded_at,
+      LAG(ph.price)       OVER (PARTITION BY ph.product_id, ph.shop_id ORDER BY ph.recorded_at) AS prev_price,
+      LAG(ph.recorded_at) OVER (PARTITION BY ph.product_id, ph.shop_id ORDER BY ph.recorded_at) AS prev_recorded
+    FROM price_history ph
   ),
-  suspicious AS (
-    SELECT
-      sp.product_id,
-      sp.shop_id,
-      sp.current_price,
-      sp.regular_price,
-      sp.updated_at,
-      pp.min_current AS honest_min
-    FROM shop_prices sp
-    JOIN per_product pp ON pp.product_id = sp.product_id
-    WHERE sp.regular_price IS NOT NULL
-      AND sp.current_price IS NOT NULL
-      AND pp.shop_count >= 3
-      AND sp.regular_price > pp.min_current * 1.4
-      AND sp.regular_price > sp.current_price
+  changes AS (
+    SELECT *
+    FROM ranked
+    WHERE prev_price IS NOT NULL
+      AND prev_price <> price
   )
   SELECT
     p.name,
     b.name AS brand,
     p.slug,
     s.name AS shop_name,
-    su.regular_price AS old_price,
-    su.current_price AS current_price,
-    su.honest_min,
-    su.updated_at,
+    c.prev_price AS old_price,
+    c.price     AS new_price,
+    c.recorded_at AS changed_at,
     (
       SELECT image_url FROM product_images
       WHERE product_id = p.id
@@ -89,11 +73,11 @@ const SQL = `
       ORDER BY id ASC
       LIMIT 1
     ) AS image
-  FROM suspicious su
-  JOIN products p ON p.id = su.product_id
-  JOIN shops    s ON s.id = su.shop_id
+  FROM changes c
+  JOIN products p ON p.id = c.product_id
+  JOIN shops    s ON s.id = c.shop_id
   LEFT JOIN brands b ON b.id = p.brand_id
-  ORDER BY (su.regular_price - su.honest_min) DESC, su.updated_at DESC
+  ORDER BY c.recorded_at DESC
   LIMIT 1
 `;
 
@@ -105,15 +89,6 @@ export async function GET() {
           const r = await cat.getPool().query(SQL);
           const row = r.rows[0];
           if (!row) return null;
-          const oldPrice = parseFloat(row.old_price);
-          const currentPrice = parseFloat(row.current_price);
-          const honestMin = parseFloat(row.honest_min);
-          const claimedDiscountPct = oldPrice > 0
-            ? Math.round((1 - currentPrice / oldPrice) * 100)
-            : 0;
-          const effectiveDiscountPct = honestMin > 0
-            ? Math.round((1 - currentPrice / honestMin) * 100)
-            : 0;
           return {
             catalog: cat.label,
             catalogPath: cat.path,
@@ -122,12 +97,9 @@ export async function GET() {
             slug: row.slug,
             image: row.image,
             shopName: row.shop_name,
-            oldPrice,
-            currentPrice,
-            honestMin,
-            effectiveDiscountPct,
-            claimedDiscountPct,
-            changedAt: row.updated_at,
+            oldPrice: parseFloat(row.old_price),
+            newPrice: parseFloat(row.new_price),
+            changedAt: row.changed_at,
           } as Row;
         } catch {
           return null;
@@ -140,7 +112,7 @@ export async function GET() {
       return NextResponse.json({ item: null });
     }
 
-    valid.sort((a, b) => (b.oldPrice - b.honestMin) - (a.oldPrice - a.honestMin));
+    valid.sort((a, b) => new Date(b.changedAt).getTime() - new Date(a.changedAt).getTime());
     return NextResponse.json({ item: valid[0] });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });

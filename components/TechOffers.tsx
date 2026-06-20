@@ -42,7 +42,7 @@ function ProductCard({ p }: { p: TechProduct }) {
           <img
             src={p.img}
             alt={p.name}
-            className="h-full w-full object-contain p-3 transition duration-500 group-hover:scale-110"
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
             loading="lazy"
           />
         ) : (

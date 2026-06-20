@@ -1,9 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowLeft, Bell, ChevronRight, ExternalLink, FileText, Heart, ListChecks,
-  Scale, ShieldCheck, Sparkles, Star, Store, Tag, Truck,
+  ArrowLeft, Bell, ChevronRight, ExternalLink, FileText, Heart,
+  ListChecks, Scale, ShieldCheck, Sparkles, Star, Store, Tag, Truck,
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -22,6 +22,8 @@ type Product = {
   brand: string;
   category: string;
   img: string;
+  images?: string[] | null;
+  reference?: string | null;
   minPrice: number;
   maxPrice: number;
   shopNames: string[];
@@ -32,28 +34,6 @@ type Product = {
   shopUrls: Record<string, string> | null;
   shopPrices: Record<string, number> | null;
   related: RelatedProduct[];
-};
-
-const shopColors: Record<string, string> = {
-  mapara: "bg-emerald-500", paraexpert: "bg-blue-500", parashop: "bg-violet-500",
-  parafendri: "bg-rose-500", el_farabi: "bg-amber-500", cosmetique: "bg-pink-500",
-  beautystore: "bg-fuchsia-500", pharmashop: "bg-teal-500", parahouse: "bg-indigo-500",
-  spacenet: "bg-blue-600", tunisianet: "bg-red-600", technopro: "bg-orange-500",
-  affariyet: "bg-emerald-600", tunewtec: "bg-violet-600", jumbo: "bg-yellow-500",
-  kamounhome: "bg-teal-600", zoom: "bg-sky-600", darty: "bg-red-500",
-  itechstore: "bg-slate-700", scoop: "bg-indigo-600",
-  mytek: "bg-red-700", sbs: "bg-blue-800", agora: "bg-cyan-600",
-  jmb: "bg-orange-600", wiki: "bg-slate-600", bill: "bg-green-700",
-  bstech: "bg-indigo-700", maalejaudio: "bg-pink-600", krichen: "bg-amber-600",
-  taktek: "bg-purple-600", topbureau: "bg-blue-700", emh: "bg-teal-700",
-  sigshop: "bg-emerald-700", aziza: "bg-green-600", carrefour: "bg-blue-600",
-  geant: "bg-red-600", monoprix: "bg-orange-500", paraland: "bg-rose-600",
-  acspace: "bg-sky-700", alarabia: "bg-green-800", allani: "bg-amber-700",
-  batam: "bg-violet-700", bestbuytunisie: "bg-blue-500", chaktech: "bg-slate-500",
-  electrobennjima: "bg-yellow-600", expert_gaming: "bg-purple-700",
-  informatica: "bg-cyan-700", ispace: "bg-indigo-500", psstore: "bg-blue-900",
-  qsnet: "bg-teal-500", sangour: "bg-orange-700", skymill: "bg-sky-600",
-  techland: "bg-slate-800", tokyo_store: "bg-red-500", yatoo: "bg-emerald-500",
 };
 
 // Search URL patterns for each shop key — {q} is replaced with the encoded product name
@@ -110,9 +90,11 @@ function shopUrl(shopKey: string, productName: string): string {
   return pattern.replace("{q}", encodeURIComponent(productName));
 }
 
-function shopColor(name: string) {
-  const key = name.toLowerCase().replace(/[^a-z]/g, "");
-  return shopColors[key] ?? "bg-brand-gold";
+function shopBadge(name: string, isCheapest: boolean) {
+  if (isCheapest) {
+    return "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 ring-1 ring-emerald-500/30";
+  }
+  return "bg-brand-gold/10 text-brand-gold ring-1 ring-brand-gold/25";
 }
 
 function PriceBar({ min, max, current }: { min: number; max: number; current: number }) {
@@ -150,6 +132,7 @@ export function CatalogProductDetail({
   const [notFound, setNotFound] = useState(false);
   const [wished, setWished] = useState(false);
   const [alerted, setAlerted] = useState(false);
+  const [activeImage, setActiveImage] = useState(0);
 
   useEffect(() => {
     fetch(`${apiBase}/${slug}`)
@@ -158,6 +141,15 @@ export function CatalogProductDetail({
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
   }, [slug, apiBase]);
+
+  const gallery = useMemo(() => {
+    if (!product) return [] as string[];
+    const all = [
+      ...(product.images ?? []),
+      ...(product.img ? [product.img] : []),
+    ].filter(u => typeof u === "string" && u.startsWith("http"));
+    return Array.from(new Set(all));
+  }, [product]);
 
   if (loading) return (
     <main className="min-h-screen bg-bg-900">
@@ -201,15 +193,15 @@ export function CatalogProductDetail({
       </div>
 
       <section className="mx-auto mt-2 max-w-[1400px] px-4">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[480px_1fr]">
+        <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[420px_1fr]">
 
-          {/* LEFT — image */}
-          <div className="space-y-4">
-            <div className="relative overflow-hidden rounded-2xl border border-bg-border bg-white dark:bg-gradient-to-br dark:from-white/[0.06] dark:via-white/[0.02] dark:to-transparent aspect-square flex items-center justify-center p-6">
+          {/* LEFT — image (stretches to match right column height) */}
+          <div className="flex flex-col gap-3">
+            <div className="relative flex flex-1 min-h-[420px] items-center justify-center overflow-hidden rounded-2xl border border-bg-border bg-white p-6 dark:bg-gradient-to-br dark:from-white/[0.06] dark:via-white/[0.02] dark:to-transparent">
               <img
-                src={product.img}
+                src={gallery[activeImage] ?? product.img}
                 alt={product.name}
-                className="h-full w-full object-contain transition duration-500 hover:scale-105"
+                className="max-h-full max-w-full object-contain transition duration-500 hover:scale-105"
               />
               {discountPct && (
                 <span className="absolute left-4 top-4 inline-flex items-center gap-1 rounded-full bg-brand-red px-3 py-1 text-[12px] font-bold text-white shadow">
@@ -218,25 +210,46 @@ export function CatalogProductDetail({
               )}
               <button
                 onClick={() => setWished(v => !v)}
-                className={`absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border transition shadow-sm ${
+                className={`absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border backdrop-blur-sm shadow-sm transition-all duration-300 ease-out hover:scale-110 active:scale-95 ${
                   wished
-                    ? "border-rose-400/50 bg-rose-50 text-rose-500 dark:bg-rose-950/50 dark:text-rose-400"
-                    : "border-slate-200 bg-white/90 text-slate-400 hover:text-rose-500 dark:border-white/10 dark:bg-black/40 dark:text-white/50 dark:hover:text-rose-400"
+                    ? "border-brand-gold/60 bg-brand-gold/15 text-brand-gold shadow-[0_0_18px_rgba(246,196,83,0.35)]"
+                    : "border-slate-200 bg-white/90 text-slate-400 hover:border-brand-gold/40 hover:text-brand-gold hover:shadow-[0_0_14px_rgba(246,196,83,0.25)] dark:border-white/10 dark:bg-black/40 dark:text-white/50"
                 }`}
+                aria-label={wished ? "Retirer des favoris" : "Ajouter aux favoris"}
               >
-                <Heart className={`h-4 w-4 ${wished ? "fill-current" : ""}`} />
+                <Heart className={`h-4 w-4 transition-transform duration-300 ${wished ? "fill-current scale-110" : ""}`} />
               </button>
             </div>
+
+            {/* Thumbnail strip — only when multiple images */}
+            {gallery.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {gallery.map((src, i) => (
+                  <button
+                    key={src}
+                    onClick={() => setActiveImage(i)}
+                    className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-white p-1 transition dark:bg-white/[0.04] ${
+                      i === activeImage
+                        ? "border-brand-gold ring-2 ring-brand-gold/30"
+                        : "border-bg-border hover:border-brand-gold/40"
+                    }`}
+                    aria-label={`Image ${i + 1}`}
+                  >
+                    <img src={src} alt="" className="h-full w-full object-contain" />
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Trust badges */}
             <div className="grid grid-cols-3 gap-2">
               {[
-                { icon: ShieldCheck, label: "Prix vérifié", color: "text-emerald-600 dark:text-emerald-400" },
-                { icon: Scale,       label: "Comparé sur 9+", color: "text-brand-gold" },
-                { icon: Truck,       label: "Livraison dispo", color: "text-blue-600 dark:text-blue-400" },
+                { icon: ShieldCheck, label: "Prix vérifié" },
+                { icon: Scale,       label: "Comparé sur 9+" },
+                { icon: Truck,       label: "Livraison dispo" },
               ].map((b) => (
                 <div key={b.label} className="flex flex-col items-center gap-1.5 rounded-xl border border-bg-border bg-bg-700 p-2.5 text-center">
-                  <b.icon className={`h-4 w-4 ${b.color}`} strokeWidth={2} />
+                  <b.icon className="h-4 w-4 text-brand-gold" strokeWidth={2} />
                   <span className="text-[10px] font-semibold text-slate-600 dark:text-white/60 leading-tight">{b.label}</span>
                 </div>
               ))}
@@ -305,21 +318,27 @@ export function CatalogProductDetail({
               <div className="mt-4 flex gap-2 flex-wrap">
                 <Link
                   href={`/comparateur/${slug}?from=${comparatorBase.replace(/^\//, "")}`}
-                  className="group relative flex flex-1 min-w-[140px] items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-br from-brand-red via-brand-redDark to-[#7a0f1a] px-5 py-3 text-sm font-bold text-white shadow-glow ring-1 ring-white/10 transition hover:shadow-[0_0_30px_rgba(225,29,45,0.5)]"
+                  className="group relative flex flex-1 min-w-[140px] items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-br from-brand-gold via-brand-goldDark to-[#a77f24] px-5 py-3 text-sm font-bold text-bg-900 ring-1 ring-brand-gold/40 shadow-[0_4px_18px_-4px_rgba(246,196,83,0.45)] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-[0_6px_24px_-2px_rgba(246,196,83,0.65)] active:translate-y-0 active:shadow-[0_2px_10px_-2px_rgba(246,196,83,0.45)]"
                 >
-                  <Scale className="h-4 w-4" />
-                  Comparer les prix
-                  <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+                  <Scale className="h-4 w-4 transition-transform duration-300 group-hover:rotate-[-8deg]" />
+                  <span className="relative z-10">Comparer les prix</span>
+                  <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/35 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-full" />
                 </Link>
                 <button
                   onClick={() => setAlerted(v => !v)}
-                  className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition ${
+                  className={`group/alert relative flex items-center gap-2 overflow-hidden rounded-xl border px-4 py-3 text-sm font-semibold transition-all duration-300 ease-out hover:-translate-y-0.5 active:translate-y-0 ${
                     alerted
-                      ? "border-brand-gold/40 bg-brand-gold/10 text-brand-gold"
-                      : "border-slate-300 bg-white text-slate-700 hover:border-brand-gold/30 hover:bg-brand-gold/5 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/80"
+                      ? "border-brand-gold/50 bg-brand-gold/15 text-brand-gold shadow-[0_0_18px_rgba(246,196,83,0.25)]"
+                      : "border-slate-300 bg-white text-slate-700 hover:border-brand-gold/40 hover:bg-brand-gold/5 hover:shadow-[0_0_14px_rgba(246,196,83,0.18)] dark:border-white/10 dark:bg-white/[0.04] dark:text-white/80"
                   }`}
                 >
-                  <Bell className={`h-4 w-4 ${alerted ? "fill-brand-gold text-brand-gold" : ""}`} />
+                  <Bell
+                    className={`h-4 w-4 transition-transform duration-300 ${
+                      alerted
+                        ? "fill-brand-gold text-brand-gold animate-[wiggle_0.6s_ease-in-out]"
+                        : "group-hover/alert:rotate-12"
+                    }`}
+                  />
                   {alerted ? "Alerte activée" : "Alerte prix"}
                 </button>
               </div>
@@ -355,28 +374,29 @@ export function CatalogProductDetail({
                         href={href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`flex items-center justify-between rounded-xl px-3 py-2.5 transition group/shop ${
+                        className={`relative flex items-center justify-between overflow-hidden rounded-xl px-3 py-2.5 transition-all duration-300 ease-out group/shop hover:-translate-y-0.5 active:translate-y-0 ${
                           isFirst
-                            ? "border border-emerald-500/25 bg-emerald-500/10 hover:border-emerald-500/50 hover:bg-emerald-500/15"
-                            : "border border-slate-200 bg-slate-50 hover:border-brand-gold/30 hover:bg-brand-gold/5 dark:border-white/5 dark:bg-bg-800 dark:hover:border-brand-gold/30 dark:hover:bg-brand-gold/5"
+                            ? "border border-emerald-500/30 bg-emerald-500/10 hover:border-emerald-500/60 hover:bg-emerald-500/15 hover:shadow-[0_6px_20px_-6px_rgba(16,185,129,0.45)]"
+                            : "border border-slate-200 bg-slate-50 hover:border-brand-gold/40 hover:bg-brand-gold/5 hover:shadow-[0_6px_20px_-6px_rgba(246,196,83,0.35)] dark:border-white/5 dark:bg-bg-800 dark:hover:border-brand-gold/40 dark:hover:bg-brand-gold/[0.06]"
                         }`}
                       >
-                        <div className="flex items-center gap-2.5">
-                          <span className={`flex h-7 w-7 items-center justify-center rounded-lg text-[10px] font-black text-white ${shopColor(shop)}`}>
+                        <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 ease-out group-hover/shop:translate-x-full" />
+                        <div className="relative flex items-center gap-2.5">
+                          <span className={`flex h-7 w-7 items-center justify-center rounded-lg text-[11px] font-black transition-transform duration-300 group-hover/shop:scale-110 ${shopBadge(shop, isFirst)}`}>
                             {shop.charAt(0).toUpperCase()}
                           </span>
-                          <span className={`text-sm font-semibold ${isFirst ? "text-emerald-700 dark:text-emerald-300" : "text-slate-800 dark:text-white/85"}`}>
+                          <span className={`text-sm font-semibold capitalize transition-colors ${isFirst ? "text-emerald-700 dark:text-emerald-300" : "text-slate-800 dark:text-white/85 group-hover/shop:text-brand-gold"}`}>
                             {shop}
                           </span>
                           {isFirst && (
-                            <span className="rounded-full bg-emerald-500 px-1.5 py-0.5 text-[9px] font-bold text-white">Moins cher</span>
+                            <span className="rounded-full bg-emerald-500 px-1.5 py-0.5 text-[9px] font-bold text-white shadow-[0_0_10px_rgba(16,185,129,0.5)]">Moins cher</span>
                           )}
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="relative flex items-center gap-2">
                           <span className={`text-sm font-extrabold tabular-nums ${isFirst ? "text-emerald-600 dark:text-emerald-400" : "text-slate-900 dark:text-white"}`}>
                             {price.toFixed(3)} <span className="text-[10px] font-normal text-slate-400 dark:text-white/40">DT</span>
                           </span>
-                          <ExternalLink className={`h-3.5 w-3.5 transition ${isFirst ? "text-emerald-500/60 group-hover/shop:text-emerald-400" : "text-slate-300 dark:text-white/20 group-hover/shop:text-brand-gold"}`} />
+                          <ExternalLink className={`h-3.5 w-3.5 transition-all duration-300 group-hover/shop:translate-x-0.5 group-hover/shop:-translate-y-0.5 ${isFirst ? "text-emerald-500/60 group-hover/shop:text-emerald-400" : "text-slate-300 dark:text-white/20 group-hover/shop:text-brand-gold"}`} />
                         </div>
                       </a>
                     </li>
@@ -511,9 +531,9 @@ export function CatalogProductDetail({
 
       <Link
         href={backHref}
-        className="fixed bottom-6 left-6 z-40 flex items-center gap-2 rounded-full border border-bg-border bg-bg-card px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-lg transition hover:border-brand-gold/30 hover:text-brand-gold dark:text-white/80"
+        className="group/back fixed bottom-6 left-6 z-40 flex items-center gap-2 rounded-full border border-bg-border bg-bg-card/95 px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-lg backdrop-blur-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:border-brand-gold/50 hover:text-brand-gold hover:shadow-[0_8px_28px_-6px_rgba(246,196,83,0.4)] active:translate-y-0 dark:text-white/80"
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ArrowLeft className="h-4 w-4 transition-transform duration-300 group-hover/back:-translate-x-1" />
         {backLabel}
       </Link>
 

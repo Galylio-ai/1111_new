@@ -30,6 +30,8 @@ const pool = new Pool({ connectionString: process.env.PARA_DB_URL, max: 3 });
 
 async function getDbData(productName: string, slug: string): Promise<{
   description: string | null;
+  reference: string | null;
+  images: string[];
   specs: Record<string, string>;
   shopUrls: Record<string, string>;
   shopPrices: Record<string, number>;
@@ -37,14 +39,22 @@ async function getDbData(productName: string, slug: string): Promise<{
   try {
     const client = await pool.connect();
     try {
-      const [descRes, specsRes, pricesRes] = await Promise.all([
-        client.query(`SELECT p.description FROM products p WHERE p.slug = $1 LIMIT 1`, [slug]),
+      const [headRes, specsRes, imagesRes, pricesRes] = await Promise.all([
+        client.query(`SELECT p.description, p.source_product_id FROM products p WHERE p.slug = $1 LIMIT 1`, [slug]),
         client.query(
           `SELECT ps.spec_key, ps.spec_value
            FROM products p
            JOIN product_specs ps ON ps.product_id = p.id
            WHERE p.slug = $1
              AND ps.spec_key NOT IN ('data_quality_score','shop_count')`,
+          [slug]
+        ),
+        client.query(
+          `SELECT pi.image_url
+           FROM products p
+           JOIN product_images pi ON pi.product_id = p.id
+           WHERE p.slug = $1
+           ORDER BY pi.id ASC`,
           [slug]
         ),
         client.query(
@@ -58,7 +68,9 @@ async function getDbData(productName: string, slug: string): Promise<{
         ),
       ]);
 
-      const description = descRes.rows[0]?.description ?? null;
+      const description = headRes.rows[0]?.description ?? null;
+      const reference = headRes.rows[0]?.source_product_id ?? null;
+      const images = imagesRes.rows.map(r => r.image_url).filter(Boolean);
       const specs: Record<string, string> = {};
       for (const row of specsRes.rows) {
         if (row.spec_key && row.spec_value) specs[row.spec_key] = row.spec_value;
@@ -73,12 +85,12 @@ async function getDbData(productName: string, slug: string): Promise<{
           if (url) shopUrls[key] = url;
         }
       }
-      return { description, specs, shopUrls, shopPrices };
+      return { description, reference, images, specs, shopUrls, shopPrices };
     } finally {
       client.release();
     }
   } catch {
-    return { description: null, specs: {}, shopUrls: {}, shopPrices: {} };
+    return { description: null, reference: null, images: [], specs: {}, shopUrls: {}, shopPrices: {} };
   }
 }
 
@@ -101,6 +113,8 @@ export async function GET(_req: NextRequest, { params }: { params: { slug: strin
     ...product,
     slug: params.slug,
     description: dbData.description,
+    reference: dbData.reference,
+    images: dbData.images,
     specs: dbData.specs,
     shopUrls: dbData.shopUrls,
     shopPrices: dbData.shopPrices,

@@ -58,6 +58,13 @@ const config: Config = {
           "0%, 100%": { transform: "translateY(0) rotate(-6deg)" },
           "50%": { transform: "translateY(-8px) rotate(6deg)" },
         },
+        wiggle: {
+          "0%, 100%": { transform: "rotate(0deg)" },
+          "20%": { transform: "rotate(-14deg)" },
+          "40%": { transform: "rotate(12deg)" },
+          "60%": { transform: "rotate(-8deg)" },
+          "80%": { transform: "rotate(6deg)" },
+        },
       },
     },
   },

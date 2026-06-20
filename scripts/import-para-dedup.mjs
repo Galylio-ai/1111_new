@@ -101,7 +101,7 @@ async function main() {
 
       const sourceId = String(p.reference);
       if (existing.has(sourceId)) {
-        // Refresh prices
+        // Refresh prices, log changes to price_history
         const pr = await client.query("SELECT id FROM products WHERE source_product_id=$1", [sourceId]);
         if (pr.rows.length) {
           const productId = pr.rows[0].id;
@@ -116,14 +116,29 @@ async function main() {
               sid = sr.rows[0].id;
               shopCache.set(off.shop, sid);
             }
+            const newPrice = off.price ?? null;
+            const newRegular = off.old_price ?? null;
+            const prev = await client.query(
+              "SELECT current_price FROM shop_prices WHERE product_id=$1 AND shop_id=$2",
+              [productId, sid]
+            );
+            const prevPrice = prev.rows[0]?.current_price != null ? parseFloat(prev.rows[0].current_price) : null;
+            const changed = prev.rows.length > 0 && newPrice != null && prevPrice !== newPrice;
             await client.query(
               `INSERT INTO shop_prices (product_id, shop_id, current_price, regular_price, shop_product_url)
                VALUES ($1,$2,$3,$4,$5)
                ON CONFLICT (product_id, shop_id) DO UPDATE
                SET current_price=EXCLUDED.current_price, regular_price=EXCLUDED.regular_price,
                    shop_product_url=EXCLUDED.shop_product_url`,
-              [productId, sid, off.price ?? null, off.old_price ?? null, off.source_url ?? ""]
+              [productId, sid, newPrice, newRegular, off.source_url ?? ""]
             );
+            if (changed) {
+              await client.query(
+                `INSERT INTO price_history (product_id, shop_id, price, regular_price, recorded_at)
+                 VALUES ($1,$2,$3,$4, NOW())`,
+                [productId, sid, newPrice, newRegular]
+              );
+            }
           }
         }
         skippedDup++;

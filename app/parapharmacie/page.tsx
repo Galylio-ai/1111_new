@@ -354,13 +354,10 @@ export default function ParapharmacyPage() {
               const savings = p.maxPrice - p.minPrice;
               const slug = p.name.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
               const fmt = (n: number) => n.toLocaleString("fr-FR");
-              const href = p.bestUrl ?? `/parapharmacie/${slug}`;
-              const isExternal = !!p.bestUrl;
               return (
-                <a
+                <Link
                   key={p.name + i}
-                  href={href}
-                  {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                  href={`/parapharmacie/${slug}`}
                   className="card group relative flex flex-col overflow-hidden p-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-brand-gold/40 dark:hover:border-brand-gold/40"
                 >
                   {/* discount badge */}
@@ -436,7 +433,7 @@ export default function ParapharmacyPage() {
                       )}
                     </div>
                   </div>
-                </a>
+                </Link>
               );
             })}
           </div>

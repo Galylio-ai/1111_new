@@ -111,21 +111,36 @@ async function main() {
 
       const sourceId = p.id;
       if (sourceId && existing.has(sourceId)) {
-        // Already imported — refresh prices only
+        // Already imported — refresh prices, log changes to price_history
         const pr = await client.query("SELECT id FROM products WHERE source_product_id=$1", [sourceId]);
         if (pr.rows.length) {
           const productId = pr.rows[0].id;
           for (const pp of p.prices) {
             const sid = shopIds[pp.shop_key];
             if (!sid) continue;
+            const newPrice = pp.price ?? null;
+            const newRegular = pp.regular_price ?? null;
+            const prev = await client.query(
+              "SELECT current_price, regular_price FROM shop_prices WHERE product_id=$1 AND shop_id=$2",
+              [productId, sid]
+            );
+            const prevPrice = prev.rows[0]?.current_price != null ? parseFloat(prev.rows[0].current_price) : null;
+            const changed = prev.rows.length > 0 && newPrice != null && prevPrice !== newPrice;
             await client.query(
               `INSERT INTO shop_prices (product_id, shop_id, current_price, regular_price, shop_product_url)
                VALUES ($1,$2,$3,$4,$5)
                ON CONFLICT (product_id, shop_id) DO UPDATE
                SET current_price=EXCLUDED.current_price, regular_price=EXCLUDED.regular_price,
                    shop_product_url=EXCLUDED.shop_product_url`,
-              [productId, sid, pp.price ?? null, pp.regular_price ?? null, pp.url ?? ""]
+              [productId, sid, newPrice, newRegular, pp.url ?? ""]
             );
+            if (changed) {
+              await client.query(
+                `INSERT INTO price_history (product_id, shop_id, price, regular_price, recorded_at)
+                 VALUES ($1,$2,$3,$4, NOW())`,
+                [productId, sid, newPrice, newRegular]
+              );
+            }
             pricesUpdated++;
           }
         }

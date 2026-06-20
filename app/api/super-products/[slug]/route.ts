@@ -56,20 +56,36 @@ export async function GET(
         ? Math.round((1 - minPrice / maxPrice) * 100)
         : null;
 
-    // Fetch per-shop URLs and prices
+    // Fetch per-shop URLs/prices, all images, and source reference
     const client = await pool.connect();
     let shopUrls: Record<string, string> = {};
     let shopPrices: Record<string, number> = {};
+    let images: string[] = [];
+    let reference: string | null = null;
     try {
-      const pricesRes = await client.query(
-        `SELECT s.shop_key, s.name AS shop_name, sp.shop_product_url, sp.current_price
-         FROM products p
-         JOIN shop_prices sp ON sp.product_id = p.id
-         JOIN shops s ON s.id = sp.shop_id
-         WHERE p.slug = $1
-         ORDER BY sp.current_price ASC`,
-        [params.slug]
-      );
+      const [pricesRes, imagesRes, refRes] = await Promise.all([
+        client.query(
+          `SELECT s.shop_key, s.name AS shop_name, sp.shop_product_url, sp.current_price
+           FROM products p
+           JOIN shop_prices sp ON sp.product_id = p.id
+           JOIN shops s ON s.id = sp.shop_id
+           WHERE p.slug = $1
+           ORDER BY sp.current_price ASC`,
+          [params.slug]
+        ),
+        client.query(
+          `SELECT pi.image_url
+           FROM products p
+           JOIN product_images pi ON pi.product_id = p.id
+           WHERE p.slug = $1
+           ORDER BY pi.id ASC`,
+          [params.slug]
+        ),
+        client.query(
+          `SELECT source_product_id FROM products WHERE slug = $1 LIMIT 1`,
+          [params.slug]
+        ),
+      ]);
       for (const row of pricesRes.rows) {
         const price = parseFloat(row.current_price);
         const url = row.shop_product_url;
@@ -78,6 +94,8 @@ export async function GET(
           if (url) shopUrls[key] = url;
         }
       }
+      images = imagesRes.rows.map(r => r.image_url).filter(Boolean);
+      reference = refRes.rows[0]?.source_product_id ?? null;
     } finally {
       client.release();
     }
@@ -106,6 +124,8 @@ export async function GET(
       brand: product.brand,
       category: "Supermarché",
       img: product.img ?? "",
+      images,
+      reference,
       minPrice,
       maxPrice,
       shopNames: product.shop_names ?? [],
