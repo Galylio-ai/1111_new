@@ -77,6 +77,13 @@ function toDate(v) {
 const nameOf  = p => p.name || p.title || null;
 const imageOf = p => p.image || (Array.isArray(p.images) && p.images[0]) || null;
 
+// Stable unique key for a product within a shop. url is the most reliable
+// identifier (verified: distinct url == true unique product count); fall back
+// to id / product_id only when url is absent. NEVER fall back to _id — that is
+// unique per Mongo document, so duplicate re-scrapes would each be kept.
+const keyOf = p => (p.url && String(p.url)) || (p.id != null && `id:${p.id}`) ||
+                   (p.product_id != null && `pid:${p.product_id}`) || `oid:${p._id}`;
+
 // Derive the shop's registrable domain from a product URL, then build a logo
 // URL via Clearbit (clean transparent PNG) — falls back to the site favicon.
 function domainFromUrl(url) {
@@ -124,7 +131,7 @@ async function migrateShop(mongoDb, client, shopKey, clusterTag) {
       // statement, so per-statement dedup is mandatory regardless.)
       const byKey = new Map();
       for (const p of batch) {
-        const key = String(p.id ?? p.product_id ?? p._id);
+        const key = keyOf(p);
         const prev = byKey.get(key);
         const pAt = toDate(p._updated_at)?.getTime() ?? 0;
         const prevAt = prev ? (toDate(prev._updated_at)?.getTime() ?? 0) : -1;
@@ -141,7 +148,7 @@ async function migrateShop(mongoDb, client, shopKey, clusterTag) {
         while (slugSeen.has(sl)) sl = `${sl}-${(Math.random()*1e4|0)}`;
         slugSeen.add(sl);
         vals.push(
-          shopId, clusterTag, String(p.id ?? p.product_id ?? p._id), nm, sl,
+          shopId, clusterTag, keyOf(p), nm, sl,
           p.brand ?? null, imageOf(p), p.url ?? null,
           p.top_category ?? null, p.low_category ?? null, p.subcategory ?? null,
           toNum(p.price), toNum(p.old_price), toBool(p), toDate(p._updated_at)
@@ -181,7 +188,15 @@ async function migrateShop(mongoDb, client, shopKey, clusterTag) {
   );
   const byUrl = new Map(), bySrc = new Map();
   for (const r of idRows) { if (r.url) byUrl.set(r.url, r.id); if (r.source_product_id) bySrc.set(r.source_product_id, r.id); }
+  // history docs reference the numeric product id; for url-keyed shops the
+  // stored source_product_id is a url, so also index by the "id:<n>" form.
+  const byNumId = new Map();
+  for (const r of idRows) {
+    if (r.source_product_id?.startsWith?.("id:")) byNumId.set(r.source_product_id.slice(3), r.id);
+  }
   const resolve = (d) => byUrl.get(d.url) ?? bySrc.get(String(d.product_id ?? d.id)) ?? null;
+  const resolveByProductId = (pid) =>
+    bySrc.get(String(pid)) ?? bySrc.get(`id:${pid}`) ?? byNumId.get(String(pid)) ?? null;
 
   // ── details ──
   let nDet = 0;
@@ -212,7 +227,7 @@ async function migrateShop(mongoDb, client, shopKey, clusterTag) {
   let nPh = 0;
   if (cols.has(`${shopKey}_history_price`)) {
     for await (const h of mongoDb.collection(`${shopKey}_history_price`).find({}, { batchSize: 500 })) {
-      const pid = bySrc.get(String(h.product_id));
+      const pid = resolveByProductId(h.product_id);
       if (!pid || !Array.isArray(h.history)) continue;
       for (const pt of h.history) {
         const at = toDate(pt.date); if (!at) continue;
@@ -229,7 +244,7 @@ async function migrateShop(mongoDb, client, shopKey, clusterTag) {
   // ── availability history ──
   if (cols.has(`${shopKey}_history_availability`)) {
     for await (const h of mongoDb.collection(`${shopKey}_history_availability`).find({}, { batchSize: 500 })) {
-      const pid = bySrc.get(String(h.product_id));
+      const pid = resolveByProductId(h.product_id);
       if (!pid || !Array.isArray(h.history)) continue;
       for (const pt of h.history) {
         const at = toDate(pt.date); if (!at) continue;
