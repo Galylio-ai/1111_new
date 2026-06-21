@@ -66,6 +66,7 @@ function Dropdown({
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/site/Reveal";
+import { ParaRanking } from "@/components/ParaRanking";
 
 type Product = {
   name: string;
@@ -619,6 +620,13 @@ export default function ParapharmacyPage() {
               </div>
             </div>
           </div>
+        </Reveal>
+      </section>
+
+      {/* ── Ranking des sites parapharmacie ──────────────────────────────── */}
+      <section className="mx-auto mt-10 max-w-[1600px] px-4 pb-4">
+        <Reveal>
+          <ParaRanking />
         </Reveal>
       </section>
 

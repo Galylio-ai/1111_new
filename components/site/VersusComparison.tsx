@@ -359,14 +359,30 @@ export function VersusComparison({
   );
   const points = useMemo(() => (radar.length ? totalPoints(radar) : null), [radar]);
 
-  // "Why is A better than B?" — bullet highlights from the spec face-off.
+  // "Why is A better than B?" — versus-style claims with a % diff when both
+  // values are numeric ("5.63% de plus — 7500 vs 7100").
   const highlights = useMemo(() => {
-    if (!a || !b) return { a: [] as { label: string; va: string; vb: string }[], b: [] as { label: string; va: string; vb: string }[] };
-    const ah: { label: string; va: string; vb: string }[] = [];
-    const bh: { label: string; va: string; vb: string }[] = [];
+    type HL = { label: string; va: string; vb: string; claim: string };
+    if (!a || !b) return { a: [] as HL[], b: [] as HL[] };
+    const make = (key: string, win: string, lose: string): HL => {
+      const label = key.replace(/_/g, " ");
+      const nw = numOf(win), nl = numOf(lose);
+      let claim = `Meilleur ${label.toLowerCase()}`;
+      if (nw != null && nl != null && nl !== 0) {
+        const ratio = nw / nl;
+        if (ratio >= 1.6) claim = `${(ratio).toFixed(1).replace(/\.0$/, "")}× plus de ${label.toLowerCase()}`;
+        else {
+          const pct = Math.abs((nw - nl) / nl) * 100;
+          if (pct >= 1) claim = `${pct.toFixed(pct < 10 ? 1 : 0)}% de ${label.toLowerCase()} en plus`;
+        }
+      }
+      return { label, va: win, vb: lose, claim };
+    };
+    const ah: HL[] = [];
+    const bh: HL[] = [];
     for (const r of specRows) {
-      if (r.winner === "A" && r.va && r.vb) ah.push({ label: r.key.replace(/_/g, " "), va: r.va, vb: r.vb });
-      else if (r.winner === "B" && r.va && r.vb) bh.push({ label: r.key.replace(/_/g, " "), va: r.va, vb: r.vb });
+      if (r.winner === "A" && r.va && r.vb) ah.push(make(r.key, r.va, r.vb));
+      else if (r.winner === "B" && r.va && r.vb) bh.push(make(r.key, r.vb, r.va));
     }
     return { a: ah.slice(0, 8), b: bh.slice(0, 8) };
   }, [a, b, specRows]);
@@ -477,13 +493,23 @@ export function VersusComparison({
                 <div className="h-[320px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <RadarChart data={radar} outerRadius="72%">
+                      <defs>
+                        <linearGradient id="vs-blue" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#7600e0" />
+                          <stop offset="100%" stopColor="#3c59fc" />
+                        </linearGradient>
+                        <linearGradient id="vs-red" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#ff164b" />
+                          <stop offset="100%" stopColor="#ff5631" />
+                        </linearGradient>
+                      </defs>
                       <PolarGrid stroke="#94a3b8" strokeOpacity={0.35} />
                       <PolarAngleAxis
                         dataKey="dimension"
                         tick={{ fontSize: 11, fontWeight: 700, fill: "#64748b" }}
                       />
-                      <Radar name={a!.name} dataKey="a" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.35} strokeWidth={2} />
-                      <Radar name={b!.name} dataKey="b" stroke="#e11d2d" fill="#e11d2d" fillOpacity={0.3} strokeWidth={2} />
+                      <Radar name={a!.name} dataKey="a" stroke="#5b3cf0" fill="url(#vs-blue)" fillOpacity={0.45} strokeWidth={2} />
+                      <Radar name={b!.name} dataKey="b" stroke="#ff3a45" fill="url(#vs-red)" fillOpacity={0.4} strokeWidth={2} />
                     </RadarChart>
                   </ResponsiveContainer>
                 </div>
@@ -527,14 +553,17 @@ export function VersusComparison({
                         hl.length > 0 && (
                           <div key={sideKey}>
                             <div className={`mb-2 text-[11px] font-black uppercase tracking-wider ${color}`}>{prod.name}</div>
-                            <ul className="space-y-2">
+                            <ul className="space-y-2.5">
                               {hl.map((h, i) => (
                                 <li key={i} className="flex items-start gap-2 text-sm">
                                   <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                                  <span className="text-slate-700 dark:text-white/80">
-                                    <span className="font-bold capitalize">{h.label}</span>{" "}
-                                    <span className="font-semibold text-slate-900 dark:text-white">{h.va}</span>
-                                    <span className="text-slate-400 dark:text-white/40"> vs {h.vb}</span>
+                                  <span className="min-w-0">
+                                    <span className="font-semibold capitalize text-slate-800 dark:text-white/90">{h.claim}</span>
+                                    <span className="mt-0.5 block text-[12px]">
+                                      <span className="font-bold italic text-slate-900 dark:text-white">{h.va}</span>
+                                      <span className="px-1 text-slate-400 dark:text-white/40">vs</span>
+                                      <span className="italic text-slate-400 dark:text-white/45">{h.vb}</span>
+                                    </span>
                                   </span>
                                 </li>
                               ))}

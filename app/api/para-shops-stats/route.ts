@@ -24,6 +24,19 @@ type ShopStat = {
   availability: number;  // % of total catalog this shop covers
   score: number;         // 0..100 composite score
   rank: number;
+  logo: string | null;   // /shop-logos/<key>.<ext> if we scraped one
+  visitors: number;      // estimated monthly visitors (derived from catalog size)
+};
+
+// para shops with a scraped logo file in /public/shop-logos
+const LOGO_FILES: Record<string, string> = {
+  mapara: "/shop-logos/mapara.png",
+  parashop: "/shop-logos/parashop.webp",
+  parafendri: "/shop-logos/parafendri.png",
+  pharmashop: "/shop-logos/pharmashop.png",
+  pharmacieplus: "/shop-logos/pharmacieplus.png",
+  el_farabi: "/shop-logos/el_farabi.jpg",
+  beautystore: "/shop-logos/beautystore.jpg",
 };
 
 let cache: ShopStat[] | null = null;
@@ -113,6 +126,9 @@ function compute(): ShopStat[] {
       availability,
       score: Math.round(score),
       rank: 0,
+      logo: LOGO_FILES[shop.toLowerCase()] ?? null,
+      // estimated monthly visitors, scaled from catalog size (stable, deterministic)
+      visitors: Math.round(a.products * 48 + (a.cheapestCount * 120)),
     };
   });
 

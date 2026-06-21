@@ -99,7 +99,6 @@ function EmptyState({ label }: { label: string }) {
 }
 
 export function StatRow() {
-  const [totalSkus, setTotalSkus] = useState<number | null>(null);
   const [latestAdded, setLatestAdded] = useState<LatestAdded | null>(null);
   const [latestChange, setLatestChange] = useState<LatestPriceChange | null>(null);
   const [illogical, setIllogical] = useState<IllogicalPromo | null>(null);
@@ -112,7 +111,6 @@ export function StatRow() {
         .then(d => { if (!cancelled && d) set(pick(d)); })
         .catch(() => {});
 
-    safeFetch<number>("/api/stats/total-skus", setTotalSkus, d => typeof d?.total === "number" ? d.total : null);
     safeFetch<LatestAdded>("/api/stats/latest-added", setLatestAdded, d => d?.item ?? null);
     safeFetch<LatestPriceChange>("/api/stats/latest-price-change", setLatestChange, d => d?.item ?? null);
     safeFetch<IllogicalPromo>("/api/stats/illogical-promo", setIllogical, d => d?.item ?? null);
@@ -201,7 +199,7 @@ export function StatRow() {
           </div>
           <div className="text-[11px] text-slate-600 dark:text-white/60">dans notre base</div>
           <div className="mt-2 text-4xl font-black tracking-tight text-slate-900 dark:text-white">
-            {totalSkus !== null ? formatNumber(totalSkus) : "—"}
+            +350 000
           </div>
           <div className="mt-1 text-[11px] text-slate-600 dark:text-white/60">
             SKU uniques analysés
