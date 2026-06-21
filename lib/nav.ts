@@ -7,4 +7,5 @@ export const navLinks: NavLink[] = [
   { fr: "Parapharmacie", ar: "شبه الصيدلية", href: "/parapharmacie" },
   { fr: "Magasins", ar: "المتاجر", href: "/retail" },
   { fr: "Promotions", ar: "العروض", href: "/promotions" },
+  { fr: "Comparaison", ar: "مقارنة", href: "/comparaison" },
 ];

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ChevronRight, ExternalLink, Loader2, Package, Store, Tag } from "lucide-react";
+import { ArrowLeftRight, ChevronRight, ExternalLink, Loader2, Package, Store, Tag } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 
@@ -30,6 +30,21 @@ type Detail = {
 };
 
 const fmt = (n: number) => n.toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 3 });
+
+// Keep in sync with TECH_KEYWORDS in /api/catalog/compare/search — the "Comparer"
+// CTA (versus page) only makes sense for tech / informatique products.
+const TECH_HINTS = [
+  "smartphone", "telephone", "téléphone", "phone", "mobile", "gsm", "tablette", "tablet",
+  "ipad", "pc portable", "ordinateur", "laptop", "notebook", "macbook", "pc bureau",
+  "desktop", "informatique", "composant", "processeur", "carte graphique", "carte mere",
+  "carte mère", "ram", "ssd", "disque dur", "stockage", "boitier", "boîtier", "ecran",
+  "écran", "moniteur", "monitor", "clavier", "souris", "imprimante", "gaming",
+];
+function isTech(d: Detail): boolean {
+  const hay = [d.category.top, d.category.low, d.category.sub, d.name]
+    .filter(Boolean).join(" ").toLowerCase();
+  return TECH_HINTS.some((k) => hay.includes(k));
+}
 
 export default function ProductDetailPage() {
   const { shop, slug } = useParams<{ shop: string; slug: string }>();
@@ -160,13 +175,21 @@ export default function ProductDetailPage() {
               {data.barcode && <span>Code-barres: <span className="font-semibold text-slate-700 dark:text-white/80">{data.barcode}</span></span>}
             </div>
 
-            {/* CTA to source */}
-            {data.url && (
-              <a href={data.url} target="_blank" rel="noopener noreferrer"
-                className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-brand-red to-brand-redDark px-6 py-3 text-sm font-bold text-white shadow-[0_8px_24px_-6px_rgba(225,29,45,0.5)] transition hover:scale-[1.02]">
-                Voir sur {data.shop} <ExternalLink className="h-4 w-4" />
-              </a>
-            )}
+            {/* CTAs: source + compare */}
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              {data.url && (
+                <a href={data.url} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-brand-red to-brand-redDark px-6 py-3 text-sm font-bold text-white shadow-[0_8px_24px_-6px_rgba(225,29,45,0.5)] transition hover:scale-[1.02]">
+                  Voir sur {data.shop} <ExternalLink className="h-4 w-4" />
+                </a>
+              )}
+              {isTech(data) && (
+                <Link href={`/comparaison?a=${encodeURIComponent(slug)}`}
+                  className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-800 transition hover:border-brand-gold/50 hover:text-brand-gold dark:border-white/15 dark:bg-white/[0.03] dark:text-white/85 dark:hover:border-brand-gold/50 dark:hover:text-brand-gold">
+                  <ArrowLeftRight className="h-4 w-4" /> Comparer
+                </Link>
+              )}
+            </div>
 
             {data.overview && (
               <p className="mt-6 text-sm leading-relaxed text-slate-600 dark:text-white/65">{data.overview}</p>
