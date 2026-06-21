@@ -4,6 +4,7 @@ import ssl
 import threading
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.utils import formatdate, make_msgid
 
 import config
 
@@ -43,6 +44,12 @@ def send_email(to: str, subject: str, html_body: str) -> None:
     msg["Subject"] = subject
     msg["From"] = config.SMTP_FROM
     msg["To"] = to
+    # RFC 5322 requires Message-ID and Date; Gmail rejects (550-5.7.1) messages
+    # that lack a valid Message-ID. Derive the Message-ID domain from the FROM
+    # address so it matches the sending domain (better deliverability).
+    from_domain = config.SMTP_FROM.split("@")[-1] if "@" in config.SMTP_FROM else "1111.tn"
+    msg["Message-ID"] = make_msgid(domain=from_domain)
+    msg["Date"] = formatdate(localtime=True)
     msg.attach(MIMEText(html_body, "html"))
 
     with _lock:
