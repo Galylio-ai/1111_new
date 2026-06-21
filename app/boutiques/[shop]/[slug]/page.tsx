@@ -96,7 +96,7 @@ export default function ProductDetailPage() {
           <div>
             <div className="relative flex h-[420px] items-center justify-center overflow-hidden rounded-3xl border border-slate-200 bg-white dark:border-white/[0.07] dark:bg-white/[0.02]">
               {images.length ? (
-                <img src={images[activeImg]} alt={data.name} className="max-h-[90%] max-w-[90%] object-contain" />
+                <img src={images[activeImg]} alt={data.name} referrerPolicy="no-referrer" className="max-h-[90%] max-w-[90%] object-contain" />
               ) : (
                 <Package className="h-20 w-20 text-slate-200 dark:text-white/10" />
               )}
@@ -109,7 +109,7 @@ export default function ProductDetailPage() {
                 {images.slice(0, 8).map((im, i) => (
                   <button key={i} onClick={() => setActiveImg(i)}
                     className={`flex h-16 w-16 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl border bg-white transition dark:bg-white/[0.03] ${activeImg === i ? "border-brand-gold ring-2 ring-brand-gold/30" : "border-slate-200 hover:border-brand-gold/40 dark:border-white/10"}`}>
-                    <img src={im} alt="" className="max-h-full max-w-full object-contain" loading="lazy" />
+                    <img src={im} alt="" referrerPolicy="no-referrer" className="max-h-full max-w-full object-contain" loading="lazy" />
                   </button>
                 ))}
               </div>
@@ -242,7 +242,7 @@ export default function ProductDetailPage() {
                 <Link key={r.slug} href={`/boutiques/${shop}/${r.slug}`}
                   className="card group flex flex-col overflow-hidden p-0 transition hover:-translate-y-1 hover:border-brand-gold/40">
                   <div className="flex h-32 items-center justify-center overflow-hidden bg-white dark:bg-white/[0.03]">
-                    {r.img ? <img src={r.img} alt={r.name} className="max-h-full max-w-full object-contain p-2 transition group-hover:scale-105" loading="lazy" /> : <Package className="h-8 w-8 text-slate-200" />}
+                    {r.img ? <img src={r.img} alt={r.name} referrerPolicy="no-referrer" className="max-h-full max-w-full object-contain p-2 transition group-hover:scale-105" loading="lazy" /> : <Package className="h-8 w-8 text-slate-200" />}
                   </div>
                   <div className="flex flex-1 flex-col p-2.5">
                     <h3 className="text-[11px] font-semibold leading-snug text-slate-800 line-clamp-2 dark:text-white/85">{r.name}</h3>

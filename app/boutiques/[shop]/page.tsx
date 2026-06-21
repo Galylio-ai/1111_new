@@ -191,15 +191,15 @@ export default function ShopCatalogPage() {
                   </span>
                 )}
 
-                <div className="relative h-44 w-full overflow-hidden bg-gradient-to-b from-slate-50 to-slate-100 dark:from-white/[0.06] dark:to-white/[0.02]">
-                  {p.img ? (
+                <div className="relative flex h-44 w-full items-center justify-center overflow-hidden bg-gradient-to-b from-slate-50 to-slate-100 dark:from-white/[0.06] dark:to-white/[0.02]">
+                  <span className="absolute text-4xl opacity-60">🛍️</span>
+                  {p.img && (
                     <img src={p.img} alt={p.name}
-                      className="h-full w-full object-contain p-2 transition duration-500 group-hover:scale-105"
+                      className="relative z-10 h-full w-full object-contain p-2 transition duration-500 group-hover:scale-105"
                       loading="lazy"
-                      onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
+                      referrerPolicy="no-referrer"
+                      onError={e => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }}
                     />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-4xl">🛍️</div>
                   )}
                 </div>
 
