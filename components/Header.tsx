@@ -1,5 +1,5 @@
 "use client";
-import { Bell, ChevronDown, Flame, Globe, Heart, LogOut, Menu, ShieldCheck, Sparkles, TrendingUp, User, X } from "lucide-react";
+import { Bell, ChevronDown, Flame, LogOut, Menu, ShieldCheck, Sparkles, TrendingUp, User, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -132,25 +132,7 @@ export function Header() {
           {/* Actions */}
           <div className="flex items-center gap-1">
 
-            {/* Language switcher (xl+ to keep room for nav + auth buttons) */}
-            <button
-              className="hidden xl:flex h-9 items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-700 hover:border-brand-gold/40 hover:bg-slate-50 hover:text-slate-900 transition dark:border-white/10 dark:bg-white/[0.03] dark:text-white/85 dark:hover:border-brand-gold/30 dark:hover:bg-white/[0.06] dark:hover:text-white"
-              aria-label="Langue"
-            >
-              <Globe className="h-3.5 w-3.5 text-brand-gold/80" />
-              FR
-              <span className="text-slate-300 dark:text-white/30">·</span>
-              <span className="font-arabic text-slate-600 dark:text-white/70">ع</span>
-            </button>
-
             <ThemeToggle />
-
-            <button
-              className="relative hidden h-9 w-9 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition sm:flex dark:text-white/80 dark:hover:bg-white/10 dark:hover:text-white"
-              aria-label="Favoris"
-            >
-              <Heart className="h-4 w-4" />
-            </button>
 
             <button
               className="relative hidden h-9 w-9 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition sm:flex dark:text-white/80 dark:hover:bg-white/10 dark:hover:text-white"
