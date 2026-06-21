@@ -78,17 +78,34 @@ function abs(base, src) {
 }
 
 // Pull ordered logo candidate URLs out of homepage HTML.
+// Priority: a real wordmark logo beats a favicon for a shop directory, so
+// header <img class/src=logo> and og:image come FIRST; icon links are fallback.
 function candidatesFromHtml(html, baseUrl) {
   const out = [];
   const push = u => { const a = abs(baseUrl, u); if (a && !out.includes(a)) out.push(a); };
 
-  // og:image / twitter:image
+  // 1. header <img> whose src/class/alt/id contains "logo" (the real logo)
+  const imgRe = /<img[^>]+>/gi; let im;
+  const logoImgs = [];
+  while ((im = imgRe.exec(html))) {
+    const tag = im[0];
+    if (!/logo/i.test(tag)) continue;
+    const src = (tag.match(/(?:data-src|data-original|src)=["']([^"']+)["']/i) || [])[1];
+    if (!src) continue;
+    if (/sprite|placeholder|spinner|loading|1x1|blank|lazy\.(gif|png)/i.test(src)) continue;
+    // prefer ones that look like a brand logo file
+    const score = /logo/i.test(src) ? 2 : 1;
+    logoImgs.push({ src, score });
+  }
+  logoImgs.sort((a, b) => b.score - a.score).slice(0, 6).forEach(l => push(l.src));
+
+  // 2. og:image / twitter:image (often the brand image)
   for (const re of [
     /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/gi,
     /<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/gi,
   ]) { let m; while ((m = re.exec(html))) push(m[1]); }
 
-  // <link rel="...icon"> — prefer larger sizes / svg
+  // 3. <link rel="...icon"> — prefer svg / largest declared size (fallback)
   const links = [];
   const linkRe = /<link[^>]+>/gi; let lm;
   while ((lm = linkRe.exec(html))) {
@@ -101,17 +118,6 @@ function candidatesFromHtml(html, baseUrl) {
     links.push({ href, score: isSvg ? 9999 : (sizes ? parseInt(sizes, 10) : 16) });
   }
   links.sort((a, b) => b.score - a.score).forEach(l => push(l.href));
-
-  // header <img> with "logo" in src/class/alt/id
-  const imgRe = /<img[^>]+>/gi; let im;
-  const logoImgs = [];
-  while ((im = imgRe.exec(html))) {
-    const tag = im[0];
-    if (!/logo/i.test(tag)) continue;
-    const src = (tag.match(/(?:data-src|src)=["']([^"']+)["']/i) || [])[1];
-    if (src && !/sprite|placeholder|spinner|loading/i.test(src)) logoImgs.push(src);
-  }
-  logoImgs.slice(0, 5).forEach(push);
 
   return out;
 }
@@ -130,11 +136,21 @@ async function resolveLogo(shop) {
   const html = await fetchText(home);
   const candidates = html ? candidatesFromHtml(html, home) : [];
 
-  // 2. always-available fallbacks appended last
-  candidates.push(`https://www.google.com/s2/favicons?domain=${domain}&sz=128`);
-  candidates.push(`${home}favicon.ico`);
-
+  // First pass: real-logo candidates, requiring a decent size (skip tiny favicons)
   for (const url of candidates) {
+    const img = await fetchBuffer(url);
+    if (img && img.buf.length >= 2500) return { ...img, from: url, domain };
+  }
+  // Second pass: accept ANY image from those candidates (small favicon ok)
+  for (const url of candidates) {
+    const img = await fetchBuffer(url);
+    if (img) return { ...img, from: url, domain };
+  }
+  // Final fallbacks: high-res Google favicon, then site favicon.ico
+  for (const url of [
+    `https://www.google.com/s2/favicons?domain=${domain}&sz=128`,
+    `${home}favicon.ico`,
+  ]) {
     const img = await fetchBuffer(url);
     if (img) return { ...img, from: url, domain };
   }
