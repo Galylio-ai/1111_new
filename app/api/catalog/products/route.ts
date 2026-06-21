@@ -15,8 +15,8 @@ export async function GET(req: NextRequest) {
 
   try {
     const pool = catalogPool();
-    const shopRes = await pool.query<{ id: number; name: string }>(
-      `SELECT id, name FROM shops WHERE slug = $1 OR shop_key = $1 LIMIT 1`,
+    const shopRes = await pool.query<{ id: number; name: string; logo_url: string | null }>(
+      `SELECT id, name, logo_url FROM shops WHERE slug = $1 OR shop_key = $1 LIMIT 1`,
       [shop]
     );
     if (!shopRes.rows.length) return NextResponse.json({ error: "shop not found" }, { status: 404 });
@@ -65,6 +65,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       shop: shopRes.rows[0].name,
+      logo: shopRes.rows[0].logo_url,
       total: parseInt(countRes.rows[0].total, 10),
       page, limit, items,
       categories: catsRes.rows.map(c => ({ name: c.top_category, count: parseInt(c.n, 10) })),

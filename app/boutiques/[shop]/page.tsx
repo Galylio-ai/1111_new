@@ -26,6 +26,7 @@ export default function ShopCatalogPage() {
   const { shop } = useParams<{ shop: string }>();
 
   const [shopName, setShopName]   = useState("");
+  const [shopLogo, setShopLogo]   = useState<string | null>(null);
   const [products, setProducts]   = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [total, setTotal]         = useState(0);
@@ -44,6 +45,7 @@ export default function ShopCatalogPage() {
       const res  = await fetch(`/api/catalog/products?${params}`);
       const data = await res.json();
       setShopName(data.shop ?? shop);
+      if (data.logo !== undefined) setShopLogo(data.logo);
       setProducts(data.items ?? []);
       setTotal(data.total ?? 0);
       if (data.categories) setCategories(data.categories);
@@ -76,8 +78,19 @@ export default function ShopCatalogPage() {
         <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 dark:border-white/[0.07] dark:bg-[#0d1220]">
           <div className="pointer-events-none absolute -left-12 -top-16 h-56 w-56 rounded-full bg-brand-gold/12 blur-3xl" />
           <div className="relative flex items-center gap-4">
-            <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-gold/20 to-brand-gold/5 text-2xl font-black text-brand-gold ring-1 ring-brand-gold/20">
-              {(shopName || shop).charAt(0).toUpperCase()}
+            {/* logo with letter-tile fallback (img hides itself on error) */}
+            <span className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white text-2xl font-black text-brand-gold ring-1 ring-brand-gold/20">
+              <span className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-brand-gold/20 to-brand-gold/5">
+                {(shopName || shop).charAt(0).toUpperCase()}
+              </span>
+              {shopLogo && (
+                <img
+                  src={shopLogo}
+                  alt={shopName || shop}
+                  className="relative max-h-[80%] max-w-[80%] object-contain"
+                  onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                />
+              )}
             </span>
             <div>
               <h1 className="text-2xl font-black capitalize tracking-tight text-slate-900 sm:text-3xl dark:text-white">
