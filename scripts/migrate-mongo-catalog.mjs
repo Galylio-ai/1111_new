@@ -106,9 +106,15 @@ async function migrateShop(mongoDb, client, shopKey, clusterTag) {
     let batch = [];
     const flush = async () => {
       if (!batch.length) return;
+      // dedup within the batch: Postgres rejects ON CONFLICT touching the same
+      // (shop_id, source_cluster, source_product_id) twice in one statement.
+      // Keep the last occurrence for each source id.
+      const byKey = new Map();
+      for (const p of batch) byKey.set(String(p.id ?? p.product_id ?? p._id), p);
+      const rows = [...byKey.values()];
       const vals = [];
       const ph = [];
-      batch.forEach((p, i) => {
+      rows.forEach((p, i) => {
         const b = i * 14;
         ph.push(`($${b+1},$${b+2},$${b+3},$${b+4},$${b+5},$${b+6},$${b+7},$${b+8},$${b+9},$${b+10},$${b+11},$${b+12},$${b+13},$${b+14})`);
         const nm = nameOf(p) || "(sans nom)";
@@ -134,7 +140,7 @@ async function migrateShop(mongoDb, client, shopKey, clusterTag) {
            available=EXCLUDED.available, updated_at=now()`,
         vals
       );
-      nProd += batch.length;
+      nProd += rows.length;
       batch = [];
     };
     for await (const p of cur) { batch.push(p); if (batch.length >= 500) await flush(); }
