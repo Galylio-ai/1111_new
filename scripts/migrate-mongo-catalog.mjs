@@ -76,6 +76,19 @@ function toDate(v) {
 }
 const nameOf  = p => p.name || p.title || null;
 const imageOf = p => p.image || (Array.isArray(p.images) && p.images[0]) || null;
+
+// Derive the shop's registrable domain from a product URL, then build a logo
+// URL via Clearbit (clean transparent PNG) — falls back to the site favicon.
+function domainFromUrl(url) {
+  try {
+    const h = new URL(url).hostname.replace(/^www\./, "");
+    return h || null;
+  } catch { return null; }
+}
+function logoForDomain(domain) {
+  if (!domain) return null;
+  return `https://logo.clearbit.com/${domain}?size=128`;
+}
 const isProductCol = n => /_products$/.test(n) && !/_summary_products$/.test(n);
 const shopOf = colName => colName.replace(/_products$/, "");
 
@@ -106,17 +119,23 @@ async function migrateShop(mongoDb, client, shopKey, clusterTag) {
     let batch = [];
     const flush = async () => {
       if (!batch.length) return;
-      // dedup within the batch: Postgres rejects ON CONFLICT touching the same
-      // (shop_id, source_cluster, source_product_id) twice in one statement.
-      // Keep the last occurrence for each source id.
+      // Dedup within the batch by source id, KEEPING THE NEWEST by _updated_at.
+      // (Postgres also rejects ON CONFLICT touching the same target twice in one
+      // statement, so per-statement dedup is mandatory regardless.)
       const byKey = new Map();
-      for (const p of batch) byKey.set(String(p.id ?? p.product_id ?? p._id), p);
+      for (const p of batch) {
+        const key = String(p.id ?? p.product_id ?? p._id);
+        const prev = byKey.get(key);
+        const pAt = toDate(p._updated_at)?.getTime() ?? 0;
+        const prevAt = prev ? (toDate(prev._updated_at)?.getTime() ?? 0) : -1;
+        if (!prev || pAt >= prevAt) byKey.set(key, p);
+      }
       const rows = [...byKey.values()];
       const vals = [];
       const ph = [];
       rows.forEach((p, i) => {
-        const b = i * 14;
-        ph.push(`($${b+1},$${b+2},$${b+3},$${b+4},$${b+5},$${b+6},$${b+7},$${b+8},$${b+9},$${b+10},$${b+11},$${b+12},$${b+13},$${b+14})`);
+        const b = i * 15;
+        ph.push(`(${Array.from({length:15},(_,k)=>`$${b+k+1}`).join(",")})`);
         const nm = nameOf(p) || "(sans nom)";
         let sl = slugify(nm) || `p-${p.id || p._id}`;
         while (slugSeen.has(sl)) sl = `${sl}-${(Math.random()*1e4|0)}`;
@@ -125,19 +144,25 @@ async function migrateShop(mongoDb, client, shopKey, clusterTag) {
           shopId, clusterTag, String(p.id ?? p.product_id ?? p._id), nm, sl,
           p.brand ?? null, imageOf(p), p.url ?? null,
           p.top_category ?? null, p.low_category ?? null, p.subcategory ?? null,
-          toNum(p.price), toNum(p.old_price), toBool(p)
+          toNum(p.price), toNum(p.old_price), toBool(p), toDate(p._updated_at)
         );
       });
       await client.query(
         `INSERT INTO products
            (shop_id, source_cluster, source_product_id, name, slug, brand, image, url,
-            top_category, low_category, subcategory, price, old_price, available)
+            top_category, low_category, subcategory, price, old_price, available, scraped_at)
          VALUES ${ph.join(",")}
-         ON CONFLICT (shop_id, source_cluster, source_product_id) DO UPDATE SET
-           name=EXCLUDED.name, brand=EXCLUDED.brand, image=EXCLUDED.image, url=EXCLUDED.url,
-           top_category=EXCLUDED.top_category, low_category=EXCLUDED.low_category,
-           subcategory=EXCLUDED.subcategory, price=EXCLUDED.price, old_price=EXCLUDED.old_price,
-           available=EXCLUDED.available, updated_at=now()`,
+         ON CONFLICT (shop_id, source_product_id) DO UPDATE SET
+           source_cluster=EXCLUDED.source_cluster, name=EXCLUDED.name, brand=EXCLUDED.brand,
+           image=EXCLUDED.image, url=EXCLUDED.url, top_category=EXCLUDED.top_category,
+           low_category=EXCLUDED.low_category, subcategory=EXCLUDED.subcategory,
+           price=EXCLUDED.price, old_price=EXCLUDED.old_price, available=EXCLUDED.available,
+           scraped_at=EXCLUDED.scraped_at, updated_at=now()
+         -- only overwrite when the incoming row is newer (newest scrape wins,
+         -- across batches AND across both clusters)
+         WHERE EXCLUDED.scraped_at IS NULL
+            OR products.scraped_at IS NULL
+            OR EXCLUDED.scraped_at >= products.scraped_at`,
         vals
       );
       nProd += rows.length;
@@ -147,10 +172,12 @@ async function migrateShop(mongoDb, client, shopKey, clusterTag) {
     await flush();
   }
 
-  // url → product_id map for this shop+cluster (for details/history joins)
+  // url → product_id map for this SHOP (products are deduped across clusters,
+  // so a product imported by c1 must still be resolvable when c2 supplies its
+  // details/history — look up by shop_id only, not cluster).
   const { rows: idRows } = await client.query(
-    `SELECT id, url, source_product_id FROM products WHERE shop_id=$1 AND source_cluster=$2`,
-    [shopId, clusterTag]
+    `SELECT id, url, source_product_id FROM products WHERE shop_id=$1`,
+    [shopId]
   );
   const byUrl = new Map(), bySrc = new Map();
   for (const r of idRows) { if (r.url) byUrl.set(r.url, r.id); if (r.source_product_id) bySrc.set(r.source_product_id, r.id); }
@@ -239,10 +266,22 @@ async function migrateShop(mongoDb, client, shopKey, clusterTag) {
     }
   }
 
-  // refresh product_count
+  // resolve a logo from any product url's domain (only set if not already set)
+  const { rows: urlRows } = await client.query(
+    `SELECT url FROM products WHERE shop_id=$1 AND url IS NOT NULL LIMIT 1`, [shopId]
+  );
+  const domain = urlRows.length ? domainFromUrl(urlRows[0].url) : null;
+  const logo = logoForDomain(domain);
+
+  // refresh product_count + logo + website
   await client.query(
-    `UPDATE shops SET product_count = (SELECT COUNT(*) FROM products WHERE shop_id=$1), updated_at=now() WHERE id=$1`,
-    [shopId]
+    `UPDATE shops
+       SET product_count = (SELECT COUNT(*) FROM products WHERE shop_id=$1),
+           website_url = COALESCE(website_url, $2),
+           logo_url    = COALESCE(logo_url, $3),
+           updated_at  = now()
+     WHERE id=$1`,
+    [shopId, domain ? `https://${domain}` : null, logo]
   );
 
   console.log(`    ${shopKey.padEnd(26)} products=${String(nProd).padStart(6)} details=${String(nDet).padStart(6)} priceHist=${nPh}`);
@@ -251,6 +290,14 @@ async function migrateShop(mongoDb, client, shopKey, clusterTag) {
 
 /* ── main ─────────────────────────────────────────────────────────────────── */
 async function main() {
+  const fresh = process.argv.includes("--fresh");
+  if (fresh) {
+    console.log("--fresh: dropping existing catalog tables...");
+    await pool.query(`
+      DROP TABLE IF EXISTS scrape_summaries, products_added, products_removed,
+        availability_history, price_history, product_details, products, shops CASCADE;
+    `);
+  }
   console.log("Applying schema...");
   await pool.query(`CREATE EXTENSION IF NOT EXISTS pg_trgm;`);
   await pool.query(readFileSync(path.join(__dirname, "catalog-schema.sql"), "utf8"));

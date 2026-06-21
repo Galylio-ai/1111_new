@@ -138,17 +138,19 @@ export default function BoutiquesPage() {
                   aria-label={`${shop.name} — voir le catalogue`}
                   className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-brand-gold/40 hover:shadow-[0_18px_40px_-12px_rgba(0,0,0,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/60 dark:border-white/[0.07] dark:bg-white/[0.02] dark:hover:shadow-[0_18px_44px_-12px_rgba(0,0,0,0.6)]"
                 >
-                  {/* logo panel */}
+                  {/* logo panel — letter tile sits underneath; logo img hides
+                      itself on error (broken/missing Clearbit logo) */}
                   <div className="relative flex h-28 items-center justify-center overflow-hidden border-b border-slate-100 bg-white dark:border-white/[0.06]">
                     <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-black/[0.03] to-transparent transition-transform duration-700 group-hover:translate-x-full dark:via-white/[0.06] motion-reduce:hidden" />
-                    {shop.logo ? (
+                    <span className="absolute flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-gold/20 to-brand-gold/5 text-xl font-black text-brand-gold">
+                      {shop.name.charAt(0).toUpperCase()}
+                    </span>
+                    {shop.logo && (
                       <img src={shop.logo} alt={shop.name}
-                        className="max-h-16 max-w-[70%] object-contain transition-transform duration-500 group-hover:scale-110 motion-reduce:group-hover:scale-100"
-                        loading="lazy" />
-                    ) : (
-                      <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-gold/20 to-brand-gold/5 text-xl font-black text-brand-gold">
-                        {shop.name.charAt(0).toUpperCase()}
-                      </span>
+                        className="relative max-h-16 max-w-[70%] bg-white object-contain transition-transform duration-500 group-hover:scale-110 motion-reduce:group-hover:scale-100"
+                        loading="lazy"
+                        onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                      />
                     )}
                   </div>
 

@@ -35,10 +35,12 @@ CREATE TABLE IF NOT EXISTS products (
   old_price       NUMERIC(14,3) NULL,
   available       BOOLEAN NULL,
   availability    TEXT NULL,                    -- raw label ("En stock", "IN_STOCK", ...)
+  scraped_at      TIMESTAMPTZ NULL,             -- Mongo _updated_at (used to keep newest)
   updated_at      TIMESTAMPTZ DEFAULT now(),
-  -- a product is unique per (shop, source product id, cluster); url is the
-  -- stable fallback key for joining details.
-  UNIQUE(shop_id, source_cluster, source_product_id)
+  -- A product is unique per (shop, source product id) REGARDLESS of which Mongo
+  -- cluster it came from — the same shop is scraped into both clusters, so we
+  -- dedup across them and keep the newest by scraped_at.
+  UNIQUE(shop_id, source_product_id)
 );
 
 CREATE TABLE IF NOT EXISTS product_details (
