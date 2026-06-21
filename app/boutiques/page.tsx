@@ -147,7 +147,7 @@ export default function BoutiquesPage() {
                     </span>
                     {shop.logo && (
                       <img src={shop.logo} alt={shop.name}
-                        className="relative max-h-16 max-w-[70%] bg-white object-contain transition-transform duration-500 group-hover:scale-110 motion-reduce:group-hover:scale-100"
+                        className="relative z-10 max-h-16 max-w-[70%] rounded bg-white object-contain p-1 transition-transform duration-500 group-hover:scale-110 motion-reduce:group-hover:scale-100"
                         loading="lazy"
                         onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                       />

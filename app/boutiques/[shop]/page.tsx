@@ -78,16 +78,17 @@ export default function ShopCatalogPage() {
         <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 dark:border-white/[0.07] dark:bg-[#0d1220]">
           <div className="pointer-events-none absolute -left-12 -top-16 h-56 w-56 rounded-full bg-brand-gold/12 blur-3xl" />
           <div className="relative flex items-center gap-4">
-            {/* logo with letter-tile fallback (img hides itself on error) */}
-            <span className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white text-2xl font-black text-brand-gold ring-1 ring-brand-gold/20">
-              <span className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-brand-gold/20 to-brand-gold/5">
+            {/* logo on a clean white tile; gold letter-tile shows only if no logo */}
+            <span className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-sm ring-1 ring-black/5">
+              {/* fallback letter (behind) */}
+              <span className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-brand-gold/20 to-brand-gold/5 text-2xl font-black text-brand-gold">
                 {(shopName || shop).charAt(0).toUpperCase()}
               </span>
               {shopLogo && (
                 <img
                   src={shopLogo}
                   alt={shopName || shop}
-                  className="relative max-h-[80%] max-w-[80%] object-contain"
+                  className="relative z-10 max-h-full max-w-full bg-white object-contain"
                   onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                 />
               )}
