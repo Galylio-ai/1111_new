@@ -1,7 +1,7 @@
 import { Pool } from "pg";
 
 declare global {
-  var __dbPools: { aliment?: Pool; para?: Pool; retail?: Pool } | undefined;
+  var __dbPools: { aliment?: Pool; para?: Pool; retail?: Pool; catalog?: Pool } | undefined;
 }
 
 const pools = globalThis.__dbPools ?? (globalThis.__dbPools = {});
@@ -25,6 +25,13 @@ export function retailPool(): Pool {
     pools.retail = new Pool({ connectionString: process.env.RETAIL_DB_URL, max: 3 });
   }
   return pools.retail;
+}
+
+export function catalogPool(): Pool {
+  if (!pools.catalog) {
+    pools.catalog = new Pool({ connectionString: process.env.CATALOG_DB_URL, max: 5 });
+  }
+  return pools.catalog;
 }
 
 export const CATALOGS = [

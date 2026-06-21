@@ -99,6 +99,27 @@ services:
       timeout: 5s
       retries: 5
 
+  catalog-postgres:
+    image: postgres:16.3-alpine3.20
+    container_name: catalog-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${CATALOG_DB_NAME}
+      POSTGRES_USER: ${CATALOG_DB_USER}
+      POSTGRES_PASSWORD: ${CATALOG_DB_PASSWORD}
+    # bound to localhost only — the migration script and Next.js run on the host
+    ports:
+      - "127.0.0.1:5437:5432"
+    volumes:
+      - catalog_postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${CATALOG_DB_USER} -d ${CATALOG_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   rabbitmq:
     image: rabbitmq:3.13.3-management-alpine
     container_name: rabbitmq
@@ -389,6 +410,7 @@ volumes:
   para_postgres_data:
   alimentation_postgres_data:
   fashion_postgres_data:
+  catalog_postgres_data:
   rabbitmq_data:
   uploads:
 
