@@ -1,9 +1,13 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ArrowLeftRight, Check, ChevronDown, Crown, ExternalLink, Loader2,
+  ArrowLeftRight, Check, Crown, ExternalLink, Info, Loader2,
   Plus, Search, ShieldCheck, Store, Trophy, X,
 } from "lucide-react";
+import {
+  PolarAngleAxis, PolarGrid, Radar, RadarChart, ResponsiveContainer,
+} from "recharts";
+import { radarScores, totalPoints } from "@/lib/compareDimensions";
 
 /* ────────────────────────────────────────────────────────────────────────── */
 /* Types                                                                        */
@@ -39,6 +43,8 @@ type Product = {
   shopCount: number;
   description: string | null;
   specs: Record<string, string>;
+  hasSpecs?: boolean;
+  specCount?: number;
 };
 
 /* ────────────────────────────────────────────────────────────────────────── */
@@ -343,6 +349,28 @@ export function VersusComparison({
     return rows;
   }, [a, b]);
 
+  // Both products have at least some specs → we can draw the radar.
+  const bothHaveSpecs = !!(a?.hasSpecs && b?.hasSpecs);
+
+  // Radar data (A vs B, 0–100 per dimension) + overall points.
+  const radar = useMemo(
+    () => (a && b && bothHaveSpecs ? radarScores(a.specs, b.specs) : []),
+    [a, b, bothHaveSpecs]
+  );
+  const points = useMemo(() => (radar.length ? totalPoints(radar) : null), [radar]);
+
+  // "Why is A better than B?" — bullet highlights from the spec face-off.
+  const highlights = useMemo(() => {
+    if (!a || !b) return { a: [] as { label: string; va: string; vb: string }[], b: [] as { label: string; va: string; vb: string }[] };
+    const ah: { label: string; va: string; vb: string }[] = [];
+    const bh: { label: string; va: string; vb: string }[] = [];
+    for (const r of specRows) {
+      if (r.winner === "A" && r.va && r.vb) ah.push({ label: r.key.replace(/_/g, " "), va: r.va, vb: r.vb });
+      else if (r.winner === "B" && r.va && r.vb) bh.push({ label: r.key.replace(/_/g, " "), va: r.va, vb: r.vb });
+    }
+    return { a: ah.slice(0, 8), b: bh.slice(0, 8) };
+  }, [a, b, specRows]);
+
   // Overall verdict: count spec wins + cheaper price.
   const verdict = useMemo(() => {
     if (!a || !b) return null;
@@ -441,6 +469,98 @@ export function VersusComparison({
             )}
           </section>
 
+          {/* ── Radar + highlights (versus.com style) ──────────────────────── */}
+          {bothHaveSpecs ? (
+            <section className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,420px)_1fr]">
+              {/* Radar + points */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-bg-card">
+                <div className="h-[320px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadarChart data={radar} outerRadius="72%">
+                      <PolarGrid stroke="#94a3b8" strokeOpacity={0.35} />
+                      <PolarAngleAxis
+                        dataKey="dimension"
+                        tick={{ fontSize: 11, fontWeight: 700, fill: "#64748b" }}
+                      />
+                      <Radar name={a!.name} dataKey="a" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.35} strokeWidth={2} />
+                      <Radar name={b!.name} dataKey="b" stroke="#e11d2d" fill="#e11d2d" fillOpacity={0.3} strokeWidth={2} />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
+                {points && (
+                  <div className="mt-2 grid grid-cols-2 gap-3 border-t border-slate-100 pt-4 dark:border-white/10">
+                    <div className="text-center">
+                      <div className="text-3xl font-black tabular-nums text-blue-500">{points.a}</div>
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">Points</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-3xl font-black tabular-nums text-brand-red">{points.b}</div>
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">Points</div>
+                    </div>
+                  </div>
+                )}
+                {/* legend */}
+                <div className="mt-3 flex items-center justify-center gap-4 text-[11px] font-semibold">
+                  <span className="flex items-center gap-1.5 text-slate-600 dark:text-white/70"><span className="h-2.5 w-2.5 rounded-full bg-blue-500" />{a!.name.slice(0, 18)}</span>
+                  <span className="flex items-center gap-1.5 text-slate-600 dark:text-white/70"><span className="h-2.5 w-2.5 rounded-full bg-brand-red" />{b!.name.slice(0, 18)}</span>
+                </div>
+              </div>
+
+              {/* Why is X better than Y */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-bg-card">
+                {verdict && verdict.side !== "tie" ? (
+                  <h3 className="mb-4 text-lg font-black text-slate-900 dark:text-white">
+                    Pourquoi <span className="text-emerald-600 dark:text-emerald-400">{(verdict.side === "A" ? a! : b!).name}</span> est meilleur ?
+                  </h3>
+                ) : (
+                  <h3 className="mb-4 text-lg font-black text-slate-900 dark:text-white">Points forts de chacun</h3>
+                )}
+
+                {highlights.a.length === 0 && highlights.b.length === 0 ? (
+                  <p className="text-sm text-slate-500 dark:text-white/55">
+                    Pas assez de caractéristiques numériques comparables pour dégager des avantages nets. Voir le tableau détaillé ci-dessous.
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {([["A", a!, highlights.a, "text-blue-500"], ["B", b!, highlights.b, "text-brand-red"]] as const).map(
+                      ([sideKey, prod, hl, color]) =>
+                        hl.length > 0 && (
+                          <div key={sideKey}>
+                            <div className={`mb-2 text-[11px] font-black uppercase tracking-wider ${color}`}>{prod.name}</div>
+                            <ul className="space-y-2">
+                              {hl.map((h, i) => (
+                                <li key={i} className="flex items-start gap-2 text-sm">
+                                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                                  <span className="text-slate-700 dark:text-white/80">
+                                    <span className="font-bold capitalize">{h.label}</span>{" "}
+                                    <span className="font-semibold text-slate-900 dark:text-white">{h.va}</span>
+                                    <span className="text-slate-400 dark:text-white/40"> vs {h.vb}</span>
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )
+                    )}
+                  </div>
+                )}
+              </div>
+            </section>
+          ) : (
+            // ── No specs on one/both sides → clear message ──
+            <section className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-300/50 bg-amber-50 px-5 py-4 text-sm dark:border-amber-500/20 dark:bg-amber-500/[0.06]">
+              <Info className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
+              <div>
+                <p className="font-bold text-amber-800 dark:text-amber-300">Caractéristiques techniques non disponibles</p>
+                <p className="mt-0.5 text-amber-700/80 dark:text-amber-200/70">
+                  {!a!.hasSpecs && !b!.hasSpecs
+                    ? "Aucun des deux produits n'a de fiche technique détaillée. La comparaison se limite au prix et aux boutiques."
+                    : `« ${(!a!.hasSpecs ? a! : b!).name} » n'a pas de fiche technique détaillée. Comparaison limitée au prix.`}
+                </p>
+              </div>
+            </section>
+          )}
+
           {/* ── Price face-off ─────────────────────────────────────────────── */}
           <section className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             {[a!, b!].map((p, i) => {
@@ -480,6 +600,7 @@ export function VersusComparison({
           </section>
 
           {/* ── Spec-by-spec ───────────────────────────────────────────────── */}
+          {specRows.length > 0 && (
           <section className="mt-8">
             <h2 className="mb-1 text-xl font-black tracking-tight text-slate-900 dark:text-white">
               Comparaison des caractéristiques
@@ -488,13 +609,7 @@ export function VersusComparison({
               La meilleure valeur de chaque ligne est surlignée en vert.
             </p>
 
-            {specRows.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center dark:border-white/10 dark:bg-bg-card">
-                <p className="text-sm text-slate-500 dark:text-white/55">
-                  Aucune caractéristique technique détaillée n'est disponible pour ces produits.
-                </p>
-              </div>
-            ) : (
+            {(
               <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-white/10 dark:bg-bg-card">
                 {/* sticky header with the two names */}
                 <div className="grid grid-cols-[1fr_1.2fr_1.2fr] border-b border-slate-200 bg-slate-50 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:border-white/10 dark:bg-bg-800 dark:text-white/50">
@@ -519,6 +634,26 @@ export function VersusComparison({
               </div>
             )}
           </section>
+          )}
+
+          {/* ── Descriptions ───────────────────────────────────────────────── */}
+          {(a!.description || b!.description) && (
+            <section className="mt-8">
+              <h2 className="mb-4 text-xl font-black tracking-tight text-slate-900 dark:text-white">Descriptions</h2>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {[a!, b!].map((p) => (
+                  <div key={p.slug + "-desc"} className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-bg-card">
+                    <div className="mb-2 text-[11px] font-black uppercase tracking-wider text-brand-gold">{p.name}</div>
+                    {p.description ? (
+                      <p className="whitespace-pre-line text-sm leading-relaxed text-slate-600 dark:text-white/70">{p.description}</p>
+                    ) : (
+                      <p className="text-sm italic text-slate-400 dark:text-white/40">Aucune description disponible pour ce produit.</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
         </>
       )}
     </div>

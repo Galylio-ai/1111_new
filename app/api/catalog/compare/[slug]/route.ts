@@ -66,14 +66,19 @@ export async function GET(
       [ids]
     );
 
-    let specs: SpecMap = {};
+    // Merge specs from EVERY shop listing of this model (union of keys) so a
+    // model sold by several shops gets the fullest spec set. The longest value
+    // wins on conflicting keys. Same idea for description (keep the longest).
+    const specs: SpecMap = {};
     let description: string | null = null;
     let brand: string | null = main.brand ?? null;
     for (const d of detRes.rows) {
       const s = normalizeSpecs(d.specifications);
-      // Merge, preferring the listing with the richest spec set.
-      if (Object.keys(s).length > Object.keys(specs).length) specs = s;
-      if (!description && (d.overview || d.description)) description = d.overview ?? d.description;
+      for (const [k, v] of Object.entries(s)) {
+        if (!specs[k] || v.length > specs[k].length) specs[k] = v;
+      }
+      const desc = d.overview ?? d.description;
+      if (desc && (!description || desc.length > description.length)) description = desc;
       if (!brand && d.brand) brand = d.brand;
     }
 
@@ -103,6 +108,8 @@ export async function GET(
       shopCount: offers.length,
       description,
       specs,
+      hasSpecs: Object.keys(specs).length > 0,
+      specCount: Object.keys(specs).length,
     });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
