@@ -96,8 +96,8 @@ export function Header() {
             </div>
           </Link>
 
-          {/* Nav (desktop) */}
-          <nav className="hidden lg:flex items-center gap-0.5 rounded-2xl border border-slate-200 bg-slate-50 p-1 dark:border-white/5 dark:bg-white/[0.02]">
+          {/* Nav (desktop) — xl+ so the 6 links + auth buttons never overflow */}
+          <nav className="hidden xl:flex items-center gap-0.5 rounded-2xl border border-slate-200 bg-slate-50 p-1 dark:border-white/5 dark:bg-white/[0.02]">
             {navLinks.map((n) => {
               const isActive = pathname === n.href || pathname.startsWith(n.href + "/");
               return (
@@ -132,9 +132,9 @@ export function Header() {
           {/* Actions */}
           <div className="flex items-center gap-1">
 
-            {/* Language switcher (sm+) */}
+            {/* Language switcher (xl+ to keep room for nav + auth buttons) */}
             <button
-              className="hidden sm:flex h-9 items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-700 hover:border-brand-gold/40 hover:bg-slate-50 hover:text-slate-900 transition dark:border-white/10 dark:bg-white/[0.03] dark:text-white/85 dark:hover:border-brand-gold/30 dark:hover:bg-white/[0.06] dark:hover:text-white"
+              className="hidden xl:flex h-9 items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-700 hover:border-brand-gold/40 hover:bg-slate-50 hover:text-slate-900 transition dark:border-white/10 dark:bg-white/[0.03] dark:text-white/85 dark:hover:border-brand-gold/30 dark:hover:bg-white/[0.06] dark:hover:text-white"
               aria-label="Langue"
             >
               <Globe className="h-3.5 w-3.5 text-brand-gold/80" />
@@ -146,14 +146,14 @@ export function Header() {
             <ThemeToggle />
 
             <button
-              className="relative flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition dark:text-white/80 dark:hover:bg-white/10 dark:hover:text-white"
+              className="relative hidden h-9 w-9 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition sm:flex dark:text-white/80 dark:hover:bg-white/10 dark:hover:text-white"
               aria-label="Favoris"
             >
               <Heart className="h-4 w-4" />
             </button>
 
             <button
-              className="relative flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition dark:text-white/80 dark:hover:bg-white/10 dark:hover:text-white"
+              className="relative hidden h-9 w-9 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition sm:flex dark:text-white/80 dark:hover:bg-white/10 dark:hover:text-white"
               aria-label="Notifications"
             >
               <Bell className="h-4 w-4" />
@@ -220,9 +220,9 @@ export function Header() {
               </>
             )}
 
-            {/* Hamburger (mobile) */}
+            {/* Hamburger — shown whenever the desktop nav is hidden (below xl) */}
             <button
-              className="lg:hidden flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-100 dark:border-white/10 dark:bg-white/[0.03] dark:text-white/80 dark:hover:bg-white/10 ml-1"
+              className="xl:hidden flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-100 dark:border-white/10 dark:bg-white/[0.03] dark:text-white/80 dark:hover:bg-white/10 ml-1"
               aria-label="Menu"
               onClick={() => setMenuOpen(true)}
             >
@@ -235,14 +235,14 @@ export function Header() {
       {/* Mobile drawer overlay */}
       {menuOpen && (
         <div
-          className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm xl:hidden"
           onClick={() => setMenuOpen(false)}
         />
       )}
 
       {/* Mobile drawer */}
       <aside
-        className={`fixed inset-y-0 right-0 z-[70] flex w-72 flex-col bg-white shadow-2xl transition-transform duration-300 ease-in-out dark:bg-[#0a0e1a] lg:hidden ${
+        className={`fixed inset-y-0 right-0 z-[70] flex w-72 flex-col bg-white shadow-2xl transition-transform duration-300 ease-in-out dark:bg-[#0a0e1a] xl:hidden ${
           menuOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >

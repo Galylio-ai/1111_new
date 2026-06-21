@@ -92,9 +92,9 @@ function PasswordStrength({ password }: { password: string }) {
 function Field({ label, badge, children }: { label: string; badge?: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white/35">
+      <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-white/35">
         {label}
-        {badge && <span className="rounded-full bg-white/8 px-1.5 py-0.5 text-[9px] font-semibold normal-case tracking-normal text-white/30">{badge}</span>}
+        {badge && <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-semibold normal-case tracking-normal text-slate-400 dark:bg-white/8 dark:text-white/30">{badge}</span>}
       </label>
       {children}
     </div>
@@ -142,8 +142,8 @@ export default function RegisterPage() {
   }
 
   const inputBase =
-    "w-full rounded-2xl border bg-white/[0.04] py-3 pl-12 pr-4 text-sm text-white placeholder:text-white/30 outline-none transition-all duration-200 focus:bg-white/[0.07] focus:ring-4";
-  const inputDefault = `${inputBase} border-white/10 focus:border-brand-gold/60 focus:ring-brand-gold/10`;
+    "w-full rounded-2xl border bg-slate-50 py-3 pl-12 pr-4 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-all duration-200 focus:bg-white focus:ring-4 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/30 dark:focus:bg-white/[0.07]";
+  const inputDefault = `${inputBase} border-slate-200 focus:border-brand-gold/60 focus:ring-brand-gold/10 dark:border-white/10`;
 
   const pwdMatchClass =
     confirmPwd && confirmPwd !== password
@@ -153,15 +153,16 @@ export default function RegisterPage() {
       : `${inputDefault} pr-12`;
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#070a14] px-4 py-10">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50 px-4 py-10 dark:bg-[#070a14]">
       {/* Background: ambient glows + grid + mascot watermark */}
-      <div className="pointer-events-none absolute -top-40 right-1/4 h-[36rem] w-[36rem] translate-x-1/2 rounded-full bg-brand-gold/12 blur-[140px]" />
-      <div className="pointer-events-none absolute -bottom-40 left-1/4 h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-brand-red/15 blur-[130px]" />
+      <div className="pointer-events-none absolute -top-40 right-1/4 h-[36rem] w-[36rem] translate-x-1/2 rounded-full bg-brand-gold/10 blur-[140px] dark:bg-brand-gold/12" />
+      <div className="pointer-events-none absolute -bottom-40 left-1/4 h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-brand-red/10 blur-[130px] dark:bg-brand-red/15" />
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.035]"
+        className="pointer-events-none absolute inset-0 opacity-[0.04] dark:opacity-[0.035]"
         style={{
-          backgroundImage: "linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)",
+          backgroundImage: "linear-gradient(currentColor 1px,transparent 1px),linear-gradient(90deg,currentColor 1px,transparent 1px)",
           backgroundSize: "44px 44px",
+          color: "#94a3b8",
         }}
       />
       <img
@@ -174,17 +175,17 @@ export default function RegisterPage() {
       <div className="relative z-10 w-full max-w-md">
         {/* Brand pill on top */}
         <div className="mb-6 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-white">
-            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-brand-red to-brand-redDark ring-1 ring-white/10">
+          <Link href="/" className="flex items-center gap-2 text-slate-900 dark:text-white">
+            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-brand-red to-brand-redDark ring-1 ring-black/5 dark:ring-white/10">
               <img src="/mascot.png" alt="" className="h-7 w-7 object-contain" />
             </span>
             <span className="text-lg font-black tracking-tight">
-              <span className="text-brand-gold">°</span>1111<span className="bg-gradient-to-r from-brand-gold to-amber-200 bg-clip-text text-transparent">.TN</span>
+              <span className="text-brand-gold">°</span>1111<span className="bg-gradient-to-r from-brand-goldDark to-amber-400 bg-clip-text text-transparent dark:from-brand-gold dark:to-amber-200">.TN</span>
             </span>
           </Link>
           <Link
             href="/login"
-            className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-xs font-semibold text-white/60 transition hover:border-brand-gold/40 hover:text-brand-gold"
+            className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-500 transition hover:border-brand-gold/40 hover:text-brand-gold dark:border-white/10 dark:bg-white/5 dark:text-white/60"
           >
             <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M10 12L6 8l4-4" />
@@ -193,16 +194,16 @@ export default function RegisterPage() {
           </Link>
         </div>
 
-        <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.7)] backdrop-blur-xl">
+        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_30px_80px_-30px_rgba(0,0,0,0.25)] dark:border-white/10 dark:bg-white/[0.03] dark:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.7)] dark:backdrop-blur-xl">
           {/* gold hairline */}
           <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-brand-gold/70 to-transparent" />
 
           <div className="p-7 sm:p-9">
             {/* Header */}
-            <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
+            <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl dark:text-white">
               Créez votre compte ✨
             </h1>
-            <p className="mt-1.5 text-sm text-white/45">
+            <p className="mt-1.5 text-sm text-slate-500 dark:text-white/45">
               Rejoignez 1111.tn et économisez sur tous vos achats.
             </p>
 
@@ -210,7 +211,7 @@ export default function RegisterPage() {
               {/* Full name */}
               <Field label="Nom complet">
                 <div className="group relative">
-                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/30 transition group-focus-within:text-brand-gold">
+                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 transition group-focus-within:text-brand-gold dark:text-white/30">
                     <IconPerson />
                   </span>
                   <input
@@ -227,7 +228,7 @@ export default function RegisterPage() {
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field label="E-mail" badge="ou tél.">
                   <div className="group relative">
-                    <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/30 transition group-focus-within:text-brand-gold">
+                    <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 transition group-focus-within:text-brand-gold dark:text-white/30">
                       <IconEnvelope />
                     </span>
                     <input
@@ -242,7 +243,7 @@ export default function RegisterPage() {
 
                 <Field label="Téléphone" badge="opt.">
                   <div className="group relative">
-                    <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/30 transition group-focus-within:text-brand-gold">
+                    <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 transition group-focus-within:text-brand-gold dark:text-white/30">
                       <IconPhone />
                     </span>
                     <input
@@ -263,21 +264,21 @@ export default function RegisterPage() {
               {/* Gouvernorat */}
               <Field label="Gouvernorat">
                 <div className="group relative">
-                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/30 transition group-focus-within:text-brand-gold">
+                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 transition group-focus-within:text-brand-gold dark:text-white/30">
                     <IconPin />
                   </span>
                   <select
                     required
                     value={state}
                     onChange={(e) => setState(e.target.value)}
-                    className="w-full appearance-none rounded-2xl border border-white/10 bg-white/[0.04] py-3 pl-12 pr-10 text-sm text-white outline-none transition-all duration-200 focus:border-brand-gold/60 focus:ring-4 focus:ring-brand-gold/10 dark:bg-[#0f1422] [&>option]:bg-[#0f1422]"
+                    className="w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-12 pr-10 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-brand-gold/60 focus:bg-white focus:ring-4 focus:ring-brand-gold/10 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:focus:bg-[#0f1422] [&>option]:bg-white dark:[&>option]:bg-[#0f1422]"
                   >
                     <option value="" disabled>Sélectionner…</option>
                     {TUNISIAN_STATES.map((s) => (
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </select>
-                  <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-white/30">
+                  <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/30">
                     <IconChevron />
                   </span>
                 </div>
@@ -286,7 +287,7 @@ export default function RegisterPage() {
               {/* Password */}
               <Field label="Mot de passe">
                 <div className="group relative">
-                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/30 transition group-focus-within:text-brand-gold">
+                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 transition group-focus-within:text-brand-gold dark:text-white/30">
                     <IconLock />
                   </span>
                   <input
@@ -298,7 +299,7 @@ export default function RegisterPage() {
                     className={`${inputDefault} pr-12`}
                   />
                   <button type="button" onClick={() => setShowPwd((v) => !v)} tabIndex={-1}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 transition hover:text-white/60">
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600 dark:text-white/30 dark:hover:text-white/60">
                     <IconEye off={showPwd} />
                   </button>
                 </div>
@@ -308,7 +309,7 @@ export default function RegisterPage() {
               {/* Confirm password */}
               <Field label="Confirmer le mot de passe">
                 <div className="group relative">
-                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/30 transition group-focus-within:text-brand-gold">
+                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 transition group-focus-within:text-brand-gold dark:text-white/30">
                     <IconLock />
                   </span>
                   <input
@@ -320,7 +321,7 @@ export default function RegisterPage() {
                     className={pwdMatchClass}
                   />
                   <button type="button" onClick={() => setShowConfirm((v) => !v)} tabIndex={-1}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 transition hover:text-white/60">
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600 dark:text-white/30 dark:hover:text-white/60">
                     <IconEye off={showConfirm} />
                   </button>
                 </div>
@@ -368,7 +369,7 @@ export default function RegisterPage() {
             </form>
 
             {/* Footer link */}
-            <p className="mt-7 text-center text-sm text-white/40">
+            <p className="mt-7 text-center text-sm text-slate-500 dark:text-white/40">
               Déjà inscrit ?{" "}
               <Link href="/login" className="font-bold text-brand-gold transition hover:text-amber-300">
                 Se connecter
@@ -377,7 +378,7 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <p className="mt-6 text-center text-[11px] text-white/20">
+        <p className="mt-6 text-center text-[11px] text-slate-400 dark:text-white/20">
           © 2025 1111.tn · Le moteur d'intelligence des prix en Tunisie
         </p>
       </div>

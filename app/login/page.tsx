@@ -65,15 +65,16 @@ export default function LoginPage() {
     "w-full rounded-2xl border border-slate-200 bg-slate-50 py-3.5 pl-12 pr-4 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-all duration-200 focus:border-brand-gold/60 focus:bg-white focus:ring-4 focus:ring-brand-gold/10 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/30 dark:focus:bg-white/[0.07]";
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#070a14] px-4 py-10">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50 px-4 py-10 dark:bg-[#070a14]">
       {/* Background: ambient glows + grid + mascot watermark */}
-      <div className="pointer-events-none absolute -top-40 left-1/4 h-[36rem] w-[36rem] -translate-x-1/2 rounded-full bg-brand-red/15 blur-[140px]" />
+      <div className="pointer-events-none absolute -top-40 left-1/4 h-[36rem] w-[36rem] -translate-x-1/2 rounded-full bg-brand-red/10 blur-[140px] dark:bg-brand-red/15" />
       <div className="pointer-events-none absolute -bottom-40 right-1/4 h-[34rem] w-[34rem] translate-x-1/2 rounded-full bg-brand-gold/10 blur-[130px]" />
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.035]"
+        className="pointer-events-none absolute inset-0 opacity-[0.04] dark:opacity-[0.035]"
         style={{
-          backgroundImage: "linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)",
+          backgroundImage: "linear-gradient(currentColor 1px,transparent 1px),linear-gradient(90deg,currentColor 1px,transparent 1px)",
           backgroundSize: "44px 44px",
+          color: "var(--grid, #94a3b8)",
         }}
       />
       <img
@@ -86,17 +87,17 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-md">
         {/* Brand pill on top */}
         <div className="mb-6 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-white">
-            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-brand-red to-brand-redDark ring-1 ring-white/10">
+          <Link href="/" className="flex items-center gap-2 text-slate-900 dark:text-white">
+            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-brand-red to-brand-redDark ring-1 ring-black/5 dark:ring-white/10">
               <img src="/mascot.png" alt="" className="h-7 w-7 object-contain" />
             </span>
             <span className="text-lg font-black tracking-tight">
-              <span className="text-brand-gold">°</span>1111<span className="bg-gradient-to-r from-brand-gold to-amber-200 bg-clip-text text-transparent">.TN</span>
+              <span className="text-brand-gold">°</span>1111<span className="bg-gradient-to-r from-brand-goldDark to-amber-400 bg-clip-text text-transparent dark:from-brand-gold dark:to-amber-200">.TN</span>
             </span>
           </Link>
           <Link
             href="/"
-            className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-xs font-semibold text-white/60 transition hover:border-brand-gold/40 hover:text-brand-gold"
+            className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-500 transition hover:border-brand-gold/40 hover:text-brand-gold dark:border-white/10 dark:bg-white/5 dark:text-white/60"
           >
             <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M10 12L6 8l4-4" />
@@ -105,21 +106,21 @@ export default function LoginPage() {
           </Link>
         </div>
 
-        <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.7)] backdrop-blur-xl">
+        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_30px_80px_-30px_rgba(0,0,0,0.25)] dark:border-white/10 dark:bg-white/[0.03] dark:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.7)] dark:backdrop-blur-xl">
           {/* gold hairline */}
           <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-brand-gold/70 to-transparent" />
 
           <div className="p-7 sm:p-9">
             {/* Header */}
-            <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
+            <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl dark:text-white">
               Bon retour 👋
             </h1>
-            <p className="mt-1.5 text-sm text-white/45">
+            <p className="mt-1.5 text-sm text-slate-500 dark:text-white/45">
               Connectez-vous pour suivre vos prix et alertes.
             </p>
 
             {/* Toggle */}
-            <div className="mt-7 grid grid-cols-2 gap-1 rounded-2xl border border-white/10 bg-white/[0.03] p-1">
+            <div className="mt-7 grid grid-cols-2 gap-1 rounded-2xl border border-slate-200 bg-slate-50 p-1 dark:border-white/10 dark:bg-white/[0.03]">
               {(["email", "phone"] as const).map((m) => (
                 <button
                   key={m}
@@ -127,8 +128,8 @@ export default function LoginPage() {
                   onClick={() => setMode(m)}
                   className={`rounded-xl py-2.5 text-sm font-semibold transition-all duration-200 ${
                     mode === m
-                      ? "bg-gradient-to-br from-brand-gold/20 to-brand-gold/5 text-brand-gold ring-1 ring-brand-gold/30"
-                      : "text-white/40 hover:text-white/70"
+                      ? "bg-gradient-to-br from-brand-gold/20 to-brand-gold/5 text-brand-goldDark ring-1 ring-brand-gold/30 dark:text-brand-gold"
+                      : "text-slate-400 hover:text-slate-600 dark:text-white/40 dark:hover:text-white/70"
                   }`}
                 >
                   {m === "email" ? "E-mail" : "Téléphone"}
@@ -139,7 +140,7 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} className="mt-5 space-y-4">
               {/* Identifier */}
               <div className="group relative">
-                <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/30 transition group-focus-within:text-brand-gold">
+                <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 transition group-focus-within:text-brand-gold dark:text-white/30">
                   {mode === "email" ? <IconEnvelope /> : <IconPhone />}
                 </span>
                 <input
@@ -155,7 +156,7 @@ export default function LoginPage() {
               {/* Password */}
               <div>
                 <div className="group relative">
-                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/30 transition group-focus-within:text-brand-gold">
+                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 transition group-focus-within:text-brand-gold dark:text-white/30">
                     <IconLock />
                   </span>
                   <input
@@ -170,7 +171,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={() => setShowPwd((v) => !v)}
                     tabIndex={-1}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 transition hover:text-white/60"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600 dark:text-white/30 dark:hover:text-white/60"
                   >
                     <IconEye off={showPwd} />
                   </button>
@@ -216,7 +217,7 @@ export default function LoginPage() {
             </form>
 
             {/* Footer link */}
-            <p className="mt-7 text-center text-sm text-white/40">
+            <p className="mt-7 text-center text-sm text-slate-500 dark:text-white/40">
               Pas encore de compte ?{" "}
               <Link href="/register" className="font-bold text-brand-gold transition hover:text-amber-300">
                 S'inscrire gratuitement
@@ -225,7 +226,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <p className="mt-6 text-center text-[11px] text-white/20">
+        <p className="mt-6 text-center text-[11px] text-slate-400 dark:text-white/20">
           © 2025 1111.tn · Le moteur d'intelligence des prix en Tunisie
         </p>
       </div>
