@@ -125,7 +125,7 @@ function ProductPicker({
       <div className="relative w-full">
         <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-bg-card">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 dark:border-white/10">
-            <img src={selected.img} alt={selected.name} className="h-full w-full object-contain" />
+            <img src={selected.img} alt={selected.name} referrerPolicy="no-referrer" className="h-full w-full object-contain" />
           </div>
           <div className="min-w-0 flex-1">
             <div className="text-[10px] font-black uppercase tracking-wider text-brand-gold">
@@ -187,7 +187,7 @@ function ProductPicker({
               className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-slate-50 dark:hover:bg-white/[0.05]"
             >
               <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1 dark:border-white/10">
-                <img src={r.img} alt={r.name} className="h-full w-full object-contain" />
+                <img src={r.img} alt={r.name} referrerPolicy="no-referrer" className="h-full w-full object-contain" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-[13px] font-semibold text-slate-900 dark:text-white">
@@ -256,7 +256,7 @@ function OfferList({ product }: { product: Product }) {
             <span className="flex items-center gap-2 min-w-0">
               {o.logo ? (
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-md bg-white p-0.5 ring-1 ring-slate-200 dark:ring-white/10">
-                  <img src={o.logo} alt={o.shop} className="h-full w-full object-contain" />
+                  <img src={o.logo} alt={o.shop} referrerPolicy="no-referrer" className="h-full w-full object-contain" />
                 </span>
               ) : (
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-100 text-[10px] font-black uppercase text-slate-600 dark:bg-white/10 dark:text-white/70">
@@ -547,7 +547,7 @@ function VsSide({ product, winner, align }: { product: Product; winner: boolean;
     <div className={`flex flex-col ${align === "right" ? "items-end text-right" : "items-start text-left"}`}>
       <div className="relative">
         <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 sm:h-32 sm:w-32 dark:border-white/10">
-          <img src={product.img} alt={product.name} className="h-full w-full object-contain" />
+          <img src={product.img} alt={product.name} referrerPolicy="no-referrer" className="h-full w-full object-contain" />
         </div>
         {winner && (
           <span className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full bg-brand-gold text-bg-900 shadow-lg">

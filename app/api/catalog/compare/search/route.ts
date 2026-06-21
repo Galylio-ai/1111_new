@@ -6,8 +6,8 @@ import { catalogPool } from "@/lib/db";
 // to power the versus-style "Comparaison" pickers. Returns the cheapest listing
 // per distinct product name so the same model from many shops shows once.
 
-// Category / name keywords that mark a product as "tech" (smartphone, PC, informatique).
-// Matched case-insensitively against top_category, low_category, subcategory and name.
+// Keywords that mark a product as "tech". Matched case-insensitively against
+// top_category / low_category / subcategory / name.
 const TECH_KEYWORDS = [
   "smartphone", "telephone", "téléphone", "phone", "mobile", "gsm",
   "tablette", "tablet", "ipad",
@@ -21,19 +21,6 @@ const TECH_KEYWORDS = [
   "imprimante", "scanner", "gaming",
 ];
 
-function buildTechFilter(startIdx: number): { sql: string; params: string[]; nextIdx: number } {
-  const fields = ["lower(p.top_category)", "lower(p.low_category)", "lower(p.subcategory)", "lower(p.name)"];
-  const ors: string[] = [];
-  const params: string[] = [];
-  let i = startIdx;
-  for (const kw of TECH_KEYWORDS) {
-    const ph = `$${i++}`;
-    params.push(`%${kw}%`);
-    ors.push(`(${fields.map((f) => `${f} LIKE ${ph}`).join(" OR ")})`);
-  }
-  return { sql: `(${ors.join(" OR ")})`, params, nextIdx: i };
-}
-
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const q = (searchParams.get("q") ?? "").trim().toLowerCase();
@@ -44,24 +31,32 @@ export async function GET(req: NextRequest) {
   try {
     const pool = catalogPool();
 
-    const where: string[] = ["lower(p.name) LIKE $1"];
-    const params: (string | number)[] = [`%${q}%`];
-    const tech = buildTechFilter(2);
-    where.push(tech.sql);
-    params.push(...tech.params);
-
-    // Group by normalized name so the same model across shops collapses to one
-    // pickable entry. We keep the row with the lowest price as the representative.
+    // $1 = name search pattern, $2 = tech-keyword array, $3 = limit.
+    // The tech filter is a single ANY(array) test against a concatenated
+    // haystack of the category fields + name — far simpler and faster than
+    // 200 individual LIKE clauses, and avoids placeholder-index bugs.
     const sql = `
-      SELECT DISTINCT ON (lower(p.name))
-             p.slug, p.name, p.brand, p.image, p.price, p.top_category,
-             COUNT(*) OVER (PARTITION BY lower(p.name)) AS shop_count
-      FROM products p
-      WHERE ${where.join(" AND ")} AND p.image IS NOT NULL
-      ORDER BY lower(p.name), p.price ASC NULLS LAST
-      LIMIT ${tech.nextIdx}
+      SELECT slug, name, brand, image, price, top_category, shop_count
+      FROM (
+        SELECT DISTINCT ON (lower(p.name))
+               p.slug, p.name, p.brand, p.image, p.price, p.top_category,
+               COUNT(*) OVER (PARTITION BY lower(p.name)) AS shop_count
+        FROM products p
+        WHERE p.name IS NOT NULL
+          AND p.image IS NOT NULL
+          AND lower(p.name) LIKE $1
+          AND lower(coalesce(p.top_category,'') || ' ' ||
+                    coalesce(p.low_category,'') || ' ' ||
+                    coalesce(p.subcategory,'') || ' ' ||
+                    coalesce(p.name,'')) LIKE ANY ($2::text[])
+        ORDER BY lower(p.name), p.price ASC NULLS LAST
+      ) t
+      ORDER BY t.shop_count DESC, t.price ASC NULLS LAST
+      LIMIT $3
     `;
-    const res = await pool.query(sql, [...params, limit]);
+
+    const patterns = TECH_KEYWORDS.map((k) => `%${k}%`);
+    const res = await pool.query(sql, [`%${q}%`, patterns, limit]);
 
     const items = res.rows.map((r: {
       slug: string; name: string; brand: string | null; image: string | null;
