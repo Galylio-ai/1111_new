@@ -1,0 +1,1612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>1111.tn — API Reference</title>
+  <style>
+    :root {
+      --gold: #f6c453;
+      --red: #e11d2d;
+      --bg: #0f1117;
+      --bg2: #181c27;
+      --bg3: #1e2333;
+      --border: #2a2f42;
+      --text: #e2e8f0;
+      --muted: #8a93ab;
+      --green: #10b981;
+      --blue: #3b82f6;
+      --purple: #8b5cf6;
+      --orange: #f97316;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* ── Layout ── */
+    .layout { display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 260px;
+      flex-shrink: 0;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 0 0 32px;
+    }
+    .sidebar-logo {
+      padding: 20px 20px 14px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 8px;
+    }
+    .sidebar-logo .brand {
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--gold);
+      letter-spacing: -0.5px;
+    }
+    .sidebar-logo .subtitle {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .sidebar-group { margin-top: 4px; }
+    .sidebar-group-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      padding: 10px 20px 4px;
+    }
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 20px;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 13px;
+      border-left: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .sidebar-link:hover { background: var(--bg3); color: var(--gold); border-left-color: var(--gold); }
+    .sidebar-link .method-pill {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+    .pill-get  { background: rgba(16,185,129,0.2); color: var(--green); }
+    .pill-post { background: rgba(246,196,83,0.2); color: var(--gold); }
+
+    /* ── Main content ── */
+    .main { flex: 1; min-width: 0; padding: 40px 48px 80px; max-width: 960px; }
+
+    .page-header { margin-bottom: 40px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+    .page-header h1 { font-size: 32px; font-weight: 900; color: var(--gold); letter-spacing: -0.5px; }
+    .page-header p { color: var(--muted); margin-top: 6px; font-size: 15px; }
+    .base-url {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 14px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-family: monospace;
+      font-size: 13px;
+    }
+    .base-url .label { color: var(--muted); font-family: inherit; }
+    .base-url .url { color: var(--gold); }
+
+    /* ── Section ── */
+    .section { margin-bottom: 56px; }
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--muted);
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Endpoint card ── */
+    .endpoint {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .endpoint-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+    }
+    .endpoint-header:hover { background: #222840; }
+    .method {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 5px;
+      flex-shrink: 0;
+    }
+    .method-GET  { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+    .method-POST { background: rgba(246,196,83,0.15); color: var(--gold); border: 1px solid rgba(246,196,83,0.3); }
+    .endpoint-path {
+      font-family: monospace;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      flex: 1;
+    }
+    .endpoint-path .param-seg { color: var(--gold); }
+    .endpoint-desc {
+      font-size: 12px;
+      color: var(--muted);
+      flex-shrink: 0;
+      max-width: 260px;
+      text-align: right;
+    }
+    .endpoint-body { padding: 18px; display: none; }
+    .endpoint-body.open { display: block; }
+
+    /* ── Tables ── */
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    th {
+      text-align: left;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+      padding: 6px 10px;
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      font-size: 13px;
+    }
+    tr:last-child td { border-bottom: none; }
+    td code {
+      font-family: monospace;
+      background: var(--bg3);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #a5b4fc;
+    }
+    .required { color: var(--red); font-size: 10px; font-weight: 700; margin-left: 4px; }
+    .optional { color: var(--muted); font-size: 10px; margin-left: 4px; }
+
+    /* ── Code block ── */
+    pre {
+      background: #0a0d14;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-family: 'Consolas', 'Fira Code', monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      overflow-x: auto;
+      color: #cdd6f4;
+      margin-top: 8px;
+    }
+    pre .k { color: #89dceb; }
+    pre .s { color: #a6e3a1; }
+    pre .n { color: #cba6f7; }
+    pre .c { color: var(--muted); font-style: italic; }
+
+    /* ── Labels ── */
+    .field-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      margin: 16px 0 6px;
+    }
+    .field-label:first-child { margin-top: 0; }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+    .tag-green  { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.25); }
+    .tag-red    { background: rgba(225,29,45,0.15);  color: #f87171; border: 1px solid rgba(225,29,45,0.25); }
+    .tag-gold   { background: rgba(246,196,83,0.15); color: var(--gold); border: 1px solid rgba(246,196,83,0.25); }
+    .tag-blue   { background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.25); }
+    .tag-purple { background: rgba(139,92,246,0.15); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.25); }
+
+    /* ── Info box ── */
+    .info-box {
+      background: rgba(246,196,83,0.07);
+      border: 1px solid rgba(246,196,83,0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: #d4af5a;
+      margin-bottom: 24px;
+    }
+    .info-box strong { color: var(--gold); }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ══════════════════ SIDEBAR ══════════════════ -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="brand">1111.tn</div>
+      <div class="subtitle">Flutter API Reference · v1.0</div>
+    </div>
+
+    <div class="sidebar-group">
+      <div class="sidebar-group-title">Overview</div>
+      <a class="sidebar-link" href="#overview">Base URL &amp; Auth</a>
+      <a class="sidebar-link" href="#pagination">Pagination</a>
+    </div>
+
+    <div class="sidebar-group">
+      <div class="sidebar-group-title">Authentication</div>
+      <a class="sidebar-link" href="#auth-register"><span class="method-pill pill-post">POST</span>/auth/register</a>
+      <a class="sidebar-link" href="#auth-login"><span class="method-pill pill-post">POST</span>/auth/login</a>
+      <a class="sidebar-link" href="#auth-google"><span class="method-pill pill-post">POST</span>/auth/google</a>
+      <a class="sidebar-link" href="#auth-refresh"><span class="method-pill pill-post">POST</span>/auth/refresh</a>
+      <a class="sidebar-link" href="#auth-logout"><span class="method-pill pill-post">POST</span>/auth/logout</a>
+      <a class="sidebar-link" href="#auth-verify-email"><span class="method-pill pill-post">POST</span>/auth/verify-email</a>
+      <a class="sidebar-link" href="#auth-resend-otp"><span class="method-pill pill-post">POST</span>/auth/resend-otp</a>
+      <a class="sidebar-link" href="#auth-forgot"><span class="method-pill pill-post">POST</span>/auth/forgot-password</a>
+      <a class="sidebar-link" href="#auth-reset"><span class="method-pill pill-post">POST</span>/auth/reset-password</a>
+    </div>
+
+    <div class="sidebar-group">
+      <div class="sidebar-group-title">User Profile</div>
+      <a class="sidebar-link" href="#user-me"><span class="method-pill pill-get">GET</span>/users/me</a>
+      <a class="sidebar-link" href="#user-me-update"><span class="method-pill pill-post">PATCH</span>/users/me</a>
+      <a class="sidebar-link" href="#user-avatar"><span class="method-pill pill-post">POST</span>/users/me/avatar</a>
+    </div>
+
+    <div class="sidebar-group">
+      <div class="sidebar-group-title">Search</div>
+      <a class="sidebar-link" href="#search"><span class="method-pill pill-get">GET</span>/api/search</a>
+    </div>
+
+    <div class="sidebar-group">
+      <div class="sidebar-group-title">Supermarché</div>
+      <a class="sidebar-link" href="#super-list"><span class="method-pill pill-get">GET</span>/api/super-products</a>
+      <a class="sidebar-link" href="#super-detail"><span class="method-pill pill-get">GET</span>/api/super-products/[slug]</a>
+    </div>
+
+    <div class="sidebar-group">
+      <div class="sidebar-group-title">Parapharmacie</div>
+      <a class="sidebar-link" href="#para-list"><span class="method-pill pill-get">GET</span>/api/para-products</a>
+      <a class="sidebar-link" href="#para-detail"><span class="method-pill pill-get">GET</span>/api/para-products/[slug]</a>
+    </div>
+
+    <div class="sidebar-group">
+      <div class="sidebar-group-title">Retail / Tech</div>
+      <a class="sidebar-link" href="#retail-list"><span class="method-pill pill-get">GET</span>/api/retail-products</a>
+      <a class="sidebar-link" href="#retail-detail"><span class="method-pill pill-get">GET</span>/api/retail-products/[slug]</a>
+    </div>
+
+    <div class="sidebar-group">
+      <div class="sidebar-group-title">Boutiques (Catalog)</div>
+      <a class="sidebar-link" href="#catalog-shops"><span class="method-pill pill-get">GET</span>/api/catalog/shops</a>
+      <a class="sidebar-link" href="#catalog-products"><span class="method-pill pill-get">GET</span>/api/catalog/products</a>
+      <a class="sidebar-link" href="#catalog-product-detail"><span class="method-pill pill-get">GET</span>/api/catalog/products/[slug]</a>
+      <a class="sidebar-link" href="#catalog-compare"><span class="method-pill pill-get">GET</span>/api/catalog/compare/[slug]</a>
+      <a class="sidebar-link" href="#catalog-compare-search"><span class="method-pill pill-get">GET</span>/api/catalog/compare/search</a>
+    </div>
+
+    <div class="sidebar-group">
+      <div class="sidebar-group-title">Categories</div>
+      <a class="sidebar-link" href="#categories"><span class="method-pill pill-get">GET</span>/api/categories</a>
+    </div>
+
+    <div class="sidebar-group">
+      <div class="sidebar-group-title">Panier (Couffin)</div>
+      <a class="sidebar-link" href="#couffin-search"><span class="method-pill pill-get">GET</span>/api/couffin/search</a>
+      <a class="sidebar-link" href="#couffin-compute"><span class="method-pill pill-post">POST</span>/api/couffin/compute</a>
+    </div>
+
+    <div class="sidebar-group">
+      <div class="sidebar-group-title">Stats &amp; Analytics</div>
+      <a class="sidebar-link" href="#market-index"><span class="method-pill pill-get">GET</span>/api/market-index</a>
+      <a class="sidebar-link" href="#stats-skus"><span class="method-pill pill-get">GET</span>/api/stats/total-skus</a>
+      <a class="sidebar-link" href="#stats-latest-added"><span class="method-pill pill-get">GET</span>/api/stats/latest-added</a>
+      <a class="sidebar-link" href="#stats-price-change"><span class="method-pill pill-get">GET</span>/api/stats/latest-price-change</a>
+      <a class="sidebar-link" href="#stats-illogical"><span class="method-pill pill-get">GET</span>/api/stats/illogical-promo</a>
+      <a class="sidebar-link" href="#stats-top-offers"><span class="method-pill pill-get">GET</span>/api/stats/top-offers</a>
+      <a class="sidebar-link" href="#basket-variation"><span class="method-pill pill-get">GET</span>/api/basket-variation</a>
+      <a class="sidebar-link" href="#para-shops-stats"><span class="method-pill pill-get">GET</span>/api/para-shops-stats</a>
+    </div>
+  </nav>
+
+  <!-- ══════════════════ MAIN ══════════════════ -->
+  <main class="main">
+    <div class="page-header">
+      <h1>1111.tn API Reference</h1>
+      <p>All endpoints consumed by the Flutter mobile app. All responses are JSON.</p>
+      <div class="base-url">
+        <span class="label">Base URL</span>
+        <span class="url">https://production.1111.tn</span>
+      </div>
+    </div>
+
+    <!-- ── Overview ── -->
+    <div class="section" id="overview">
+      <div class="section-title">Overview</div>
+      <div class="info-box" style="margin-bottom:12px">
+        <strong>Two base URLs:</strong> The backend (auth, users) runs on the gateway at port 3000. The product/stats APIs are served by the Next.js frontend.
+      </div>
+
+      <table style="margin-bottom:20px">
+        <tr><th>Service</th><th>Base URL</th><th>Auth required</th></tr>
+        <tr><td>Auth &amp; Users (gateway)</td><td><code>https://production.1111.tn:3000</code></td><td>Some endpoints</td></tr>
+        <tr><td>Products, Stats, Search (Next.js)</td><td><code>https://production.1111.tn</code></td><td>No</td></tr>
+      </table>
+
+      <div class="field-label">Authorization header (authenticated endpoints)</div>
+      <pre><span class="c">// Add to every request that requires login:</span>
+Authorization: Bearer &lt;access_token&gt;</pre>
+
+      <div class="field-label">Error response format (gateway)</div>
+      <pre>{
+  <span class="s">"success"</span>: <span class="k">false</span>,
+  <span class="s">"message"</span>: <span class="s">"Error description"</span>
+}</pre>
+
+      <div class="field-label">Error response format (Next.js APIs)</div>
+      <pre>{
+  <span class="s">"error"</span>: <span class="s">"Error message string"</span>
+}</pre>
+
+      <div class="field-label" id="pagination">Pagination (product list endpoints)</div>
+      <pre><span class="c">// List endpoints support these common query params:</span>
+page   <span class="c">// integer, 0-based offset (default: 0)</span>
+limit  <span class="c">// integer, items per page (default: 24, max: 48)</span>
+
+<span class="c">// Response always includes:</span>
+{
+  <span class="s">"total"</span>: <span class="n">1234</span>,
+  <span class="s">"page"</span>:  <span class="n">0</span>,
+  <span class="s">"limit"</span>: <span class="n">24</span>,
+  <span class="s">"items"</span>: [ ... ]
+}</pre>
+    </div>
+
+    <!-- ══════════════════ AUTH ══════════════════ -->
+    <div class="section" id="auth-section">
+      <div class="section-title">Authentication</div>
+
+      <div class="info-box">
+        <strong>Base URL:</strong> <code style="color:var(--gold);background:rgba(246,196,83,0.1);padding:1px 6px;border-radius:4px">https://production.1111.tn:3000/api/auth</code><br><br>
+        Public endpoints (no token needed): <code style="color:var(--gold);background:rgba(246,196,83,0.1);padding:1px 6px;border-radius:4px">register</code>, <code style="color:var(--gold);background:rgba(246,196,83,0.1);padding:1px 6px;border-radius:4px">login</code>, <code style="color:var(--gold);background:rgba(246,196,83,0.1);padding:1px 6px;border-radius:4px">google</code>, <code style="color:var(--gold);background:rgba(246,196,83,0.1);padding:1px 6px;border-radius:4px">refresh</code>, <code style="color:var(--gold);background:rgba(246,196,83,0.1);padding:1px 6px;border-radius:4px">forgot-password</code>, <code style="color:var(--gold);background:rgba(246,196,83,0.1);padding:1px 6px;border-radius:4px">reset-password</code><br>
+        Protected (require <code style="color:var(--gold);background:rgba(246,196,83,0.1);padding:1px 6px;border-radius:4px">Authorization: Bearer &lt;access_token&gt;</code>): <code style="color:var(--gold);background:rgba(246,196,83,0.1);padding:1px 6px;border-radius:4px">verify-email</code>, <code style="color:var(--gold);background:rgba(246,196,83,0.1);padding:1px 6px;border-radius:4px">resend-otp</code>
+      </div>
+
+      <!-- Register -->
+      <div class="endpoint" id="auth-register">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-POST">POST</span>
+          <span class="endpoint-path">/auth/register</span>
+          <span class="endpoint-desc">Create a new user account</span>
+        </div>
+        <div class="endpoint-body open">
+          <p style="color:var(--muted);margin-bottom:12px">Registers a new user. Sends a welcome email + 6-digit OTP verification code. Returns tokens immediately so the user can use the app before verifying.</p>
+          <div class="field-label">Request Body (JSON)</div>
+          <table>
+            <tr><th>Field</th><th>Type</th><th>Rules</th></tr>
+            <tr><td><code>full_name</code> <span class="required">required</span></td><td>string</td><td>2–100 chars</td></tr>
+            <tr><td><code>email</code> <span class="optional">optional*</span></td><td>string</td><td>Valid email. Either email or phone required.</td></tr>
+            <tr><td><code>phone</code> <span class="optional">optional*</span></td><td>string</td><td>Tunisian format: <code>+216XXXXXXXX</code></td></tr>
+            <tr><td><code>password</code> <span class="required">required</span></td><td>string</td><td>8–128 chars</td></tr>
+            <tr><td><code>state</code> <span class="required">required</span></td><td>string</td><td>One of 24 Tunisian governorates (e.g. <code>Tunis</code>, <code>Sfax</code>, <code>Sousse</code>…)</td></tr>
+          </table>
+          <div class="field-label">Response <span class="tag tag-green">201</span></div>
+          <pre>{
+  <span class="s">"success"</span>: <span class="k">true</span>,
+  <span class="s">"message"</span>: <span class="s">"Registration successful"</span>,
+  <span class="s">"data"</span>: {
+    <span class="s">"user"</span>: {
+      <span class="s">"id"</span>:                <span class="s">"uuid"</span>,
+      <span class="s">"full_name"</span>:         <span class="s">"Wala Naghmouchiwala"</span>,
+      <span class="s">"email"</span>:             <span class="s">"wala@example.com"</span>,
+      <span class="s">"phone"</span>:             <span class="k">null</span>,
+      <span class="s">"google_id"</span>:         <span class="k">null</span>,
+      <span class="s">"avatar_url"</span>:        <span class="k">null</span>,
+      <span class="s">"role"</span>:              <span class="s">"user"</span>,
+      <span class="s">"state"</span>:             <span class="s">"Tunis"</span>,
+      <span class="s">"is_email_verified"</span>: <span class="k">false</span>,
+      <span class="s">"is_active"</span>:         <span class="k">true</span>
+    },
+    <span class="s">"access_token"</span>:  <span class="s">"eyJhbGci..."</span>,   <span class="c">// JWT, short-lived (~15 min)</span>
+    <span class="s">"refresh_token"</span>: <span class="s">"selector.secret"</span>, <span class="c">// long-lived, store securely</span>
+    <span class="s">"redirect_to"</span>:   <span class="s">"front-office"</span>    <span class="c">// "front-office" | "back-office"</span>
+  }
+}</pre>
+          <div class="field-label">Error codes</div>
+          <table>
+            <tr><th>Status</th><th>Message</th></tr>
+            <tr><td><span class="tag tag-red">409</span></td><td>Email already in use / Phone already in use</td></tr>
+            <tr><td><span class="tag tag-red">400</span></td><td>Validation error (missing fields, bad format)</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- Login -->
+      <div class="endpoint" id="auth-login">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-POST">POST</span>
+          <span class="endpoint-path">/auth/login</span>
+          <span class="endpoint-desc">Login with email/phone + password</span>
+        </div>
+        <div class="endpoint-body open">
+          <div class="field-label">Request Body (JSON)</div>
+          <table>
+            <tr><th>Field</th><th>Type</th><th>Rules</th></tr>
+            <tr><td><code>email</code> <span class="optional">optional*</span></td><td>string</td><td>Either email or phone required</td></tr>
+            <tr><td><code>phone</code> <span class="optional">optional*</span></td><td>string</td><td><code>+216XXXXXXXX</code></td></tr>
+            <tr><td><code>password</code> <span class="required">required</span></td><td>string</td><td>Min 1 char</td></tr>
+          </table>
+          <div class="field-label">Response <span class="tag tag-green">200</span></div>
+          <pre>{
+  <span class="s">"success"</span>: <span class="k">true</span>,
+  <span class="s">"message"</span>: <span class="s">"Login successful"</span>,
+  <span class="s">"data"</span>: {
+    <span class="s">"user"</span>:          { <span class="c">/* same user object as register */</span> },
+    <span class="s">"access_token"</span>:  <span class="s">"eyJhbGci..."</span>,
+    <span class="s">"refresh_token"</span>: <span class="s">"selector.secret"</span>,
+    <span class="s">"redirect_to"</span>:   <span class="s">"front-office"</span>
+  }
+}</pre>
+          <div class="field-label">Error codes</div>
+          <table>
+            <tr><th>Status</th><th>Message</th></tr>
+            <tr><td><span class="tag tag-red">401</span></td><td>Invalid credentials</td></tr>
+            <tr><td><span class="tag tag-red">403</span></td><td>Account disabled</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- Google -->
+      <div class="endpoint" id="auth-google">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-POST">POST</span>
+          <span class="endpoint-path">/auth/google</span>
+          <span class="endpoint-desc">Login / register with Google OAuth</span>
+        </div>
+        <div class="endpoint-body">
+          <p style="color:var(--muted);margin-bottom:12px">Use Google Sign-In SDK on mobile to get an <code>id_token</code>, then send it here. Creates the account if it doesn't exist yet.</p>
+          <div class="field-label">Request Body (JSON)</div>
+          <table>
+            <tr><th>Field</th><th>Type</th><th>Rules</th></tr>
+            <tr><td><code>id_token</code> <span class="required">required</span></td><td>string</td><td>Google ID token from the OAuth flow</td></tr>
+            <tr><td><code>state</code> <span class="optional">optional</span></td><td>string</td><td>Tunisian governorate (required on first registration)</td></tr>
+          </table>
+          <div class="field-label">Response <span class="tag tag-green">200</span></div>
+          <pre>{
+  <span class="s">"success"</span>: <span class="k">true</span>,
+  <span class="s">"data"</span>: {
+    <span class="s">"user"</span>:          { <span class="c">/* user object, is_email_verified: true */</span> },
+    <span class="s">"access_token"</span>:  <span class="s">"eyJhbGci..."</span>,
+    <span class="s">"refresh_token"</span>: <span class="s">"selector.secret"</span>,
+    <span class="s">"redirect_to"</span>:   <span class="s">"front-office"</span>
+  }
+}</pre>
+          <div class="field-label">Error codes</div>
+          <table>
+            <tr><th>Status</th><th>Message</th></tr>
+            <tr><td><span class="tag tag-red">400</span></td><td>Invalid Google token</td></tr>
+            <tr><td><span class="tag tag-red">403</span></td><td>Google email must be verified / Account disabled</td></tr>
+            <tr><td><span class="tag tag-red">503</span></td><td>Google OAuth not configured</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- Refresh -->
+      <div class="endpoint" id="auth-refresh">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-POST">POST</span>
+          <span class="endpoint-path">/auth/refresh</span>
+          <span class="endpoint-desc">Rotate tokens using refresh token</span>
+        </div>
+        <div class="endpoint-body">
+          <p style="color:var(--muted);margin-bottom:12px">Exchanges a valid refresh token for a new access + refresh token pair. The old refresh token is immediately revoked (rotation). Call this when the access token expires.</p>
+          <div class="field-label">Request Body (JSON)</div>
+          <table>
+            <tr><th>Field</th><th>Type</th><th>Rules</th></tr>
+            <tr><td><code>refresh_token</code> <span class="required">required</span></td><td>string</td><td>The refresh token from login/register</td></tr>
+          </table>
+          <div class="field-label">Response <span class="tag tag-green">200</span></div>
+          <pre>{
+  <span class="s">"success"</span>: <span class="k">true</span>,
+  <span class="s">"data"</span>: {
+    <span class="s">"access_token"</span>:  <span class="s">"eyJhbGci..."</span>,   <span class="c">// new access token</span>
+    <span class="s">"refresh_token"</span>: <span class="s">"selector.secret"</span>  <span class="c">// new refresh token — save this, old one is dead</span>
+  }
+}</pre>
+          <div class="field-label">Error codes</div>
+          <table>
+            <tr><th>Status</th><th>Message</th></tr>
+            <tr><td><span class="tag tag-red">401</span></td><td>Invalid or expired refresh token</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- Logout -->
+      <div class="endpoint" id="auth-logout">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-POST">POST</span>
+          <span class="endpoint-path">/auth/logout</span>
+          <span class="endpoint-desc">Revoke refresh token (logout)</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="field-label">Request Body (JSON)</div>
+          <table>
+            <tr><th>Field</th><th>Type</th><th>Rules</th></tr>
+            <tr><td><code>refresh_token</code> <span class="required">required</span></td><td>string</td><td>The refresh token to revoke</td></tr>
+          </table>
+          <div class="field-label">Response <span class="tag tag-green">200</span></div>
+          <pre>{
+  <span class="s">"success"</span>: <span class="k">true</span>,
+  <span class="s">"message"</span>: <span class="s">"Logged out"</span>
+}</pre>
+          <p style="color:var(--muted);margin-top:8px;font-size:12px">Always returns 200 even if the token was already revoked or invalid — no information is leaked.</p>
+        </div>
+      </div>
+
+      <!-- Verify email -->
+      <div class="endpoint" id="auth-verify-email">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-POST">POST</span>
+          <span class="endpoint-path">/auth/verify-email</span>
+          <span class="endpoint-desc">Verify email with 6-digit OTP</span>
+        </div>
+        <div class="endpoint-body">
+          <p style="color:var(--muted);margin-bottom:12px">Requires a valid <strong>Authorization: Bearer &lt;access_token&gt;</strong> header. The OTP is emailed after registration.</p>
+          <div class="field-label">Headers</div>
+          <table>
+            <tr><th>Header</th><th>Value</th></tr>
+            <tr><td><code>Authorization</code></td><td><code>Bearer &lt;access_token&gt;</code></td></tr>
+          </table>
+          <div class="field-label">Request Body (JSON)</div>
+          <table>
+            <tr><th>Field</th><th>Type</th><th>Rules</th></tr>
+            <tr><td><code>otp</code> <span class="required">required</span></td><td>string</td><td>Exactly 6 digits</td></tr>
+          </table>
+          <div class="field-label">Response <span class="tag tag-green">200</span></div>
+          <pre>{ <span class="s">"success"</span>: <span class="k">true</span>, <span class="s">"message"</span>: <span class="s">"Email verified"</span> }</pre>
+          <div class="field-label">Error codes</div>
+          <table>
+            <tr><th>Status</th><th>Message</th></tr>
+            <tr><td><span class="tag tag-red">400</span></td><td>OTP not found or expired / Invalid OTP / OTP invalidated — request a new one</td></tr>
+            <tr><td><span class="tag tag-red">401</span></td><td>Unauthorized (missing token)</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- Resend OTP -->
+      <div class="endpoint" id="auth-resend-otp">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-POST">POST</span>
+          <span class="endpoint-path">/auth/resend-otp</span>
+          <span class="endpoint-desc">Resend email verification OTP</span>
+        </div>
+        <div class="endpoint-body">
+          <p style="color:var(--muted);margin-bottom:12px">Requires <strong>Authorization: Bearer &lt;access_token&gt;</strong>. Silently does nothing if already verified.</p>
+          <div class="field-label">Headers</div>
+          <table>
+            <tr><th>Header</th><th>Value</th></tr>
+            <tr><td><code>Authorization</code></td><td><code>Bearer &lt;access_token&gt;</code></td></tr>
+          </table>
+          <div class="field-label">Response <span class="tag tag-green">200</span></div>
+          <pre>{ <span class="s">"success"</span>: <span class="k">true</span>, <span class="s">"message"</span>: <span class="s">"OTP sent if applicable"</span> }</pre>
+        </div>
+      </div>
+
+      <!-- Forgot password -->
+      <div class="endpoint" id="auth-forgot">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-POST">POST</span>
+          <span class="endpoint-path">/auth/forgot-password</span>
+          <span class="endpoint-desc">Send password reset OTP by email</span>
+        </div>
+        <div class="endpoint-body">
+          <p style="color:var(--muted);margin-bottom:12px">Always returns 200 even if the email doesn't exist — prevents user enumeration.</p>
+          <div class="field-label">Request Body (JSON)</div>
+          <table>
+            <tr><th>Field</th><th>Type</th><th>Rules</th></tr>
+            <tr><td><code>email</code> <span class="required">required</span></td><td>string</td><td>Valid email address</td></tr>
+          </table>
+          <div class="field-label">Response <span class="tag tag-green">200</span></div>
+          <pre>{ <span class="s">"success"</span>: <span class="k">true</span>, <span class="s">"message"</span>: <span class="s">"If that email exists, a reset OTP has been sent"</span> }</pre>
+        </div>
+      </div>
+
+      <!-- Reset password -->
+      <div class="endpoint" id="auth-reset">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-POST">POST</span>
+          <span class="endpoint-path">/auth/reset-password</span>
+          <span class="endpoint-desc">Reset password with OTP</span>
+        </div>
+        <div class="endpoint-body">
+          <p style="color:var(--muted);margin-bottom:12px">Validates the OTP from the reset email, sets the new password, and revokes all existing refresh tokens (forces logout everywhere).</p>
+          <div class="field-label">Request Body (JSON)</div>
+          <table>
+            <tr><th>Field</th><th>Type</th><th>Rules</th></tr>
+            <tr><td><code>email</code> <span class="required">required</span></td><td>string</td><td>Same email used in forgot-password</td></tr>
+            <tr><td><code>otp</code> <span class="required">required</span></td><td>string</td><td>6-digit code from email</td></tr>
+            <tr><td><code>new_password</code> <span class="required">required</span></td><td>string</td><td>8–128 chars</td></tr>
+          </table>
+          <div class="field-label">Response <span class="tag tag-green">200</span></div>
+          <pre>{ <span class="s">"success"</span>: <span class="k">true</span>, <span class="s">"message"</span>: <span class="s">"Password reset successful"</span> }</pre>
+          <div class="field-label">Error codes</div>
+          <table>
+            <tr><th>Status</th><th>Message</th></tr>
+            <tr><td><span class="tag tag-red">400</span></td><td>Invalid or expired reset code (also returned for wrong email — no enumeration)</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- Token usage note -->
+      <div style="background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.25);border-radius:8px;padding:14px 16px;font-size:13px;color:#93c5fd;margin-top:4px">
+        <strong style="color:#60a5fa">Token usage in Flutter:</strong><br>
+        1. Store <code>access_token</code> in memory, <code>refresh_token</code> in secure storage (flutter_secure_storage).<br>
+        2. Add <code>Authorization: Bearer &lt;access_token&gt;</code> to every authenticated request.<br>
+        3. On 401, call <code>POST /auth/refresh</code> → save the new token pair → retry the original request.<br>
+        4. On logout, call <code>POST /auth/logout</code> then clear secure storage.
+      </div>
+    </div>
+
+    <!-- ══════════════════ USERS ══════════════════ -->
+    <div class="section" id="users-section">
+      <div class="section-title">User Profile</div>
+
+      <div class="info-box">
+        <strong>Base URL:</strong> <code style="color:var(--gold);background:rgba(246,196,83,0.1);padding:1px 6px;border-radius:4px">https://production.1111.tn:3000/api/users</code><br><br>
+        All endpoints require <code style="color:var(--gold);background:rgba(246,196,83,0.1);padding:1px 6px;border-radius:4px">Authorization: Bearer &lt;access_token&gt;</code>.
+      </div>
+
+      <!-- GET /me -->
+      <div class="endpoint" id="user-me">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-GET">GET</span>
+          <span class="endpoint-path">/users/me</span>
+          <span class="endpoint-desc">Get current user profile</span>
+        </div>
+        <div class="endpoint-body open">
+          <div class="field-label">Headers</div>
+          <table>
+            <tr><th>Header</th><th>Value</th></tr>
+            <tr><td><code>Authorization</code></td><td><code>Bearer &lt;access_token&gt;</code></td></tr>
+          </table>
+          <div class="field-label">Response <span class="tag tag-green">200</span></div>
+          <pre>{
+  <span class="s">"success"</span>: <span class="k">true</span>,
+  <span class="s">"data"</span>: {
+    <span class="s">"id"</span>:                <span class="s">"uuid"</span>,
+    <span class="s">"full_name"</span>:         <span class="s">"Wala Naghmouchiwala"</span>,
+    <span class="s">"email"</span>:             <span class="s">"wala@example.com"</span>,
+    <span class="s">"phone"</span>:             <span class="k">null</span>,
+    <span class="s">"avatar_url"</span>:        <span class="k">null</span>,
+    <span class="s">"role"</span>:              <span class="s">"user"</span>,
+    <span class="s">"state"</span>:             <span class="s">"Tunis"</span>,
+    <span class="s">"is_email_verified"</span>: <span class="k">true</span>,
+    <span class="s">"is_active"</span>:         <span class="k">true</span>,
+    <span class="s">"created_at"</span>:        <span class="s">"2026-06-22T10:00:00Z"</span>
+  }
+}</pre>
+        </div>
+      </div>
+
+      <!-- PATCH /me -->
+      <div class="endpoint" id="user-me-update">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-POST">PATCH</span>
+          <span class="endpoint-path">/users/me</span>
+          <span class="endpoint-desc">Update current user profile</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="field-label">Headers</div>
+          <table>
+            <tr><th>Header</th><th>Value</th></tr>
+            <tr><td><code>Authorization</code></td><td><code>Bearer &lt;access_token&gt;</code></td></tr>
+          </table>
+          <div class="field-label">Request Body (JSON) — all fields optional</div>
+          <table>
+            <tr><th>Field</th><th>Type</th><th>Rules</th></tr>
+            <tr><td><code>full_name</code></td><td>string</td><td>2–100 chars</td></tr>
+            <tr><td><code>phone</code></td><td>string</td><td>Tunisian format <code>+216XXXXXXXX</code></td></tr>
+            <tr><td><code>state</code></td><td>string</td><td>One of 24 Tunisian governorates</td></tr>
+          </table>
+          <div class="field-label">Response <span class="tag tag-green">200</span></div>
+          <pre>{
+  <span class="s">"success"</span>: <span class="k">true</span>,
+  <span class="s">"data"</span>: { <span class="c">/* updated user object */</span> }
+}</pre>
+        </div>
+      </div>
+
+      <!-- POST /me/avatar -->
+      <div class="endpoint" id="user-avatar">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-POST">POST</span>
+          <span class="endpoint-path">/users/me/avatar</span>
+          <span class="endpoint-desc">Upload profile avatar</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="field-label">Headers</div>
+          <table>
+            <tr><th>Header</th><th>Value</th></tr>
+            <tr><td><code>Authorization</code></td><td><code>Bearer &lt;access_token&gt;</code></td></tr>
+            <tr><td><code>Content-Type</code></td><td><code>multipart/form-data</code></td></tr>
+          </table>
+          <div class="field-label">Form Data</div>
+          <table>
+            <tr><th>Field</th><th>Type</th><th>Notes</th></tr>
+            <tr><td><code>avatar</code> <span class="required">required</span></td><td>file</td><td>Image file (JPG, PNG, WebP)</td></tr>
+          </table>
+          <div class="field-label">Response <span class="tag tag-green">200</span></div>
+          <pre>{
+  <span class="s">"success"</span>: <span class="k">true</span>,
+  <span class="s">"data"</span>: {
+    <span class="s">"avatar_url"</span>: <span class="s">"https://production.1111.tn:3000/uploads/avatar-uuid.jpg"</span>
+  }
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ SEARCH ══════════════════ -->
+    <div class="section" id="search-section">
+      <div class="section-title">Search</div>
+
+      <div class="endpoint" id="search">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-GET">GET</span>
+          <span class="endpoint-path">/api/search</span>
+          <span class="endpoint-desc">Cross-catalog full-text search</span>
+        </div>
+        <div class="endpoint-body open">
+          <p style="color:var(--muted);margin-bottom:12px">Searches across supermarché, parapharmacie and retail simultaneously. Use this as the main search bar.</p>
+          <div class="field-label">Query Parameters</div>
+          <table>
+            <tr><th>Param</th><th>Type</th><th>Description</th></tr>
+            <tr><td><code>q</code> <span class="required">required</span></td><td>string</td><td>Search term (product name or brand)</td></tr>
+            <tr><td><code>limit</code> <span class="optional">optional</span></td><td>integer</td><td>Max results (default: 20, max: 60)</td></tr>
+          </table>
+          <div class="field-label">Response</div>
+          <pre>{
+  <span class="s">"total"</span>: <span class="n">42</span>,
+  <span class="s">"items"</span>: [
+    {
+      <span class="s">"id"</span>:       <span class="s">"para-123"</span>,
+      <span class="s">"slug"</span>:     <span class="s">"nivea-body-lotion-400ml"</span>,
+      <span class="s">"name"</span>:     <span class="s">"Nivea Body Lotion 400ml"</span>,
+      <span class="s">"brand"</span>:    <span class="s">"Nivea"</span>,
+      <span class="s">"img"</span>:      <span class="s">"https://..."</span>,
+      <span class="s">"price"</span>:    <span class="n">12.500</span>,
+      <span class="s">"oldPrice"</span>: <span class="n">15.000</span>,     <span class="c">// null if no promo</span>
+      <span class="s">"store"</span>:    <span class="s">"Parashop"</span>,
+      <span class="s">"source"</span>:   <span class="s">"para"</span>        <span class="c">// "para" | "retail" | "super"</span>
+    }
+  ]
+}</pre>
+          <div class="field-label">Navigate to product</div>
+          <pre><span class="c">// Use source + slug to build the detail URL:</span>
+para   → /api/para-products/{slug}
+retail → /api/retail-products/{slug}
+super  → /api/super-products/{slug}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ SUPERMARCHÉ ══════════════════ -->
+    <div class="section" id="super-section">
+      <div class="section-title">Supermarché</div>
+
+      <div class="endpoint" id="super-list">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-GET">GET</span>
+          <span class="endpoint-path">/api/super-products</span>
+          <span class="endpoint-desc">List supermarket products</span>
+        </div>
+        <div class="endpoint-body open">
+          <div class="field-label">Query Parameters</div>
+          <table>
+            <tr><th>Param</th><th>Type</th><th>Description</th></tr>
+            <tr><td><code>q</code> <span class="optional">optional</span></td><td>string</td><td>Search by name or brand</td></tr>
+            <tr><td><code>shop</code> <span class="optional">optional</span></td><td>string</td><td>Filter by shop name (e.g. <code>Carrefour</code>)</td></tr>
+            <tr><td><code>page</code> <span class="optional">optional</span></td><td>integer</td><td>Page offset (default: 0)</td></tr>
+            <tr><td><code>limit</code> <span class="optional">optional</span></td><td>integer</td><td>Items per page (default: 24, max: 48)</td></tr>
+          </table>
+          <div class="field-label">Response</div>
+          <pre>{
+  <span class="s">"total"</span>: <span class="n">69003</span>,
+  <span class="s">"page"</span>:  <span class="n">0</span>,
+  <span class="s">"limit"</span>: <span class="n">24</span>,
+  <span class="s">"items"</span>: [
+    {
+      <span class="s">"name"</span>:      <span class="s">"Huile d'olive Rivière d'Or 1L"</span>,
+      <span class="s">"brand"</span>:     <span class="s">"Rivière d'Or"</span>,
+      <span class="s">"category"</span>:  <span class="s">"Huiles"</span>,
+      <span class="s">"img"</span>:       <span class="s">"https://..."</span>,
+      <span class="s">"slug"</span>:      <span class="s">"huile-olive-riviere-dor-1l"</span>,
+      <span class="s">"minPrice"</span>:  <span class="n">8.500</span>,
+      <span class="s">"maxPrice"</span>:  <span class="n">9.200</span>,
+      <span class="s">"shopNames"</span>: [<span class="s">"Carrefour"</span>, <span class="s">"Monoprix"</span>],
+      <span class="s">"discount"</span>:  <span class="n">15</span>           <span class="c">// percent, null if no promo</span>
+    }
+  ]
+}</pre>
+        </div>
+      </div>
+
+      <div class="endpoint" id="super-detail">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-GET">GET</span>
+          <span class="endpoint-path">/api/super-products/<span class="param-seg">{slug}</span></span>
+          <span class="endpoint-desc">Supermarket product detail</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="field-label">URL Parameters</div>
+          <table>
+            <tr><th>Param</th><th>Description</th></tr>
+            <tr><td><code>slug</code> <span class="required">required</span></td><td>Product slug from list endpoint</td></tr>
+          </table>
+          <div class="field-label">Response</div>
+          <pre>{
+  <span class="s">"name"</span>:       <span class="s">"Huile d'olive Rivière d'Or 1L"</span>,
+  <span class="s">"brand"</span>:      <span class="s">"Rivière d'Or"</span>,
+  <span class="s">"category"</span>:   <span class="s">"Supermarché"</span>,
+  <span class="s">"img"</span>:        <span class="s">"https://..."</span>,
+  <span class="s">"images"</span>:     [<span class="s">"https://..."</span>, <span class="s">"https://..."</span>],
+  <span class="s">"reference"</span>:  <span class="s">"REF-12345"</span>,          <span class="c">// null if unavailable</span>
+  <span class="s">"slug"</span>:       <span class="s">"huile-olive-riviere-dor-1l"</span>,
+  <span class="s">"minPrice"</span>:   <span class="n">8.500</span>,
+  <span class="s">"maxPrice"</span>:   <span class="n">9.200</span>,
+  <span class="s">"shopNames"</span>:  [<span class="s">"Carrefour"</span>, <span class="s">"Monoprix"</span>],
+  <span class="s">"discount"</span>:   <span class="n">15</span>,
+  <span class="s">"shopPrices"</span>: { <span class="s">"Carrefour"</span>: <span class="n">8.500</span>, <span class="s">"Monoprix"</span>: <span class="n">9.200</span> },
+  <span class="s">"shopUrls"</span>:   { <span class="s">"Carrefour"</span>: <span class="s">"https://..."</span> },
+  <span class="s">"related"</span>: [
+    { <span class="s">"name"</span>: <span class="s">"..."</span>, <span class="s">"brand"</span>: <span class="s">"..."</span>, <span class="s">"img"</span>: <span class="s">"..."</span>, <span class="s">"minPrice"</span>: <span class="n">7.0</span>, <span class="s">"slug"</span>: <span class="s">"..."</span>, <span class="s">"discount"</span>: <span class="k">null</span> }
+  ]
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ PARAPHARMACIE ══════════════════ -->
+    <div class="section" id="para-section">
+      <div class="section-title">Parapharmacie</div>
+
+      <div class="endpoint" id="para-list">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-GET">GET</span>
+          <span class="endpoint-path">/api/para-products</span>
+          <span class="endpoint-desc">List pharmacy / beauty products</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="field-label">Query Parameters</div>
+          <table>
+            <tr><th>Param</th><th>Type</th><th>Description</th></tr>
+            <tr><td><code>q</code> <span class="optional">optional</span></td><td>string</td><td>Search by name or brand</td></tr>
+            <tr><td><code>cat</code> <span class="optional">optional</span></td><td>string</td><td>Filter by category name</td></tr>
+            <tr><td><code>shop</code> <span class="optional">optional</span></td><td>string</td><td>Filter by shop name</td></tr>
+            <tr><td><code>page</code> <span class="optional">optional</span></td><td>integer</td><td>Page offset (default: 0)</td></tr>
+            <tr><td><code>limit</code> <span class="optional">optional</span></td><td>integer</td><td>Items per page (default: 24, max: 48)</td></tr>
+          </table>
+          <div class="field-label">Response</div>
+          <pre>{
+  <span class="s">"total"</span>: <span class="n">12787</span>,
+  <span class="s">"page"</span>:  <span class="n">0</span>,
+  <span class="s">"limit"</span>: <span class="n">24</span>,
+  <span class="s">"items"</span>: [
+    {
+      <span class="s">"name"</span>:      <span class="s">"Bioderma Sensibio H2O 500ml"</span>,
+      <span class="s">"brand"</span>:     <span class="s">"Bioderma"</span>,
+      <span class="s">"category"</span>:  <span class="s">"Soins visage"</span>,
+      <span class="s">"img"</span>:       <span class="s">"https://..."</span>,
+      <span class="s">"slug"</span>:      <span class="s">"bioderma-sensibio-h2o-500ml"</span>,
+      <span class="s">"minPrice"</span>:  <span class="n">32.000</span>,
+      <span class="s">"maxPrice"</span>:  <span class="n">38.500</span>,
+      <span class="s">"shopNames"</span>: [<span class="s">"Parashop"</span>, <span class="s">"Beautystore"</span>],
+      <span class="s">"discount"</span>:  <span class="k">null</span>
+    }
+  ]
+}</pre>
+        </div>
+      </div>
+
+      <div class="endpoint" id="para-detail">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-GET">GET</span>
+          <span class="endpoint-path">/api/para-products/<span class="param-seg">{slug}</span></span>
+          <span class="endpoint-desc">Pharmacy product detail</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="field-label">URL Parameters</div>
+          <table>
+            <tr><th>Param</th><th>Description</th></tr>
+            <tr><td><code>slug</code> <span class="required">required</span></td><td>Product slug</td></tr>
+          </table>
+          <div class="field-label">Response</div>
+          <pre>{
+  <span class="s">"name"</span>:         <span class="s">"Bioderma Sensibio H2O 500ml"</span>,
+  <span class="s">"brand"</span>:        <span class="s">"Bioderma"</span>,
+  <span class="s">"category"</span>:     <span class="s">"Soins visage"</span>,
+  <span class="s">"img"</span>:          <span class="s">"https://..."</span>,
+  <span class="s">"images"</span>:       [<span class="s">"https://..."</span>],
+  <span class="s">"reference"</span>:    <span class="s">"BIO-500"</span>,
+  <span class="s">"slug"</span>:         <span class="s">"bioderma-sensibio-h2o-500ml"</span>,
+  <span class="s">"description"</span>:  <span class="s">"..."</span>,
+  <span class="s">"specs"</span>:        { <span class="s">"Volume"</span>: <span class="s">"500ml"</span>, <span class="s">"Type de peau"</span>: <span class="s">"Sensible"</span> },
+  <span class="s">"minPrice"</span>:     <span class="n">32.000</span>,
+  <span class="s">"maxPrice"</span>:     <span class="n">38.500</span>,
+  <span class="s">"shopNames"</span>:    [<span class="s">"Parashop"</span>, <span class="s">"Beautystore"</span>],
+  <span class="s">"discount"</span>:     <span class="k">null</span>,
+  <span class="s">"shopPrices"</span>:   { <span class="s">"Parashop"</span>: <span class="n">32.000</span>, <span class="s">"Beautystore"</span>: <span class="n">38.500</span> },
+  <span class="s">"shopUrls"</span>:     { <span class="s">"Parashop"</span>: <span class="s">"https://..."</span> },
+  <span class="s">"related"</span>:      [ ... ]
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ RETAIL ══════════════════ -->
+    <div class="section" id="retail-section">
+      <div class="section-title">Retail / Tech</div>
+
+      <div class="endpoint" id="retail-list">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-GET">GET</span>
+          <span class="endpoint-path">/api/retail-products</span>
+          <span class="endpoint-desc">List tech / retail products</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="field-label">Query Parameters</div>
+          <table>
+            <tr><th>Param</th><th>Type</th><th>Description</th></tr>
+            <tr><td><code>q</code> <span class="optional">optional</span></td><td>string</td><td>Search by name or brand</td></tr>
+            <tr><td><code>cat</code> <span class="optional">optional</span></td><td>string</td><td>Filter by category</td></tr>
+            <tr><td><code>shop</code> <span class="optional">optional</span></td><td>string</td><td>Filter by shop name</td></tr>
+            <tr><td><code>page</code> <span class="optional">optional</span></td><td>integer</td><td>Page offset (default: 0)</td></tr>
+            <tr><td><code>limit</code> <span class="optional">optional</span></td><td>integer</td><td>Items per page (default: 24, max: 48)</td></tr>
+          </table>
+          <div class="field-label">Response</div>
+          <pre><span class="c">// Same shape as /api/super-products</span>
+{
+  <span class="s">"total"</span>: <span class="n">11313</span>,
+  <span class="s">"page"</span>:  <span class="n">0</span>,
+  <span class="s">"limit"</span>: <span class="n">24</span>,
+  <span class="s">"items"</span>: [
+    {
+      <span class="s">"name"</span>:      <span class="s">"Samsung Galaxy S24 128GB"</span>,
+      <span class="s">"brand"</span>:     <span class="s">"Samsung"</span>,
+      <span class="s">"category"</span>:  <span class="s">"Smartphones"</span>,
+      <span class="s">"img"</span>:       <span class="s">"https://..."</span>,
+      <span class="s">"slug"</span>:      <span class="s">"samsung-galaxy-s24-128gb"</span>,
+      <span class="s">"minPrice"</span>:  <span class="n">1899.000</span>,
+      <span class="s">"maxPrice"</span>:  <span class="n">2100.000</span>,
+      <span class="s">"shopNames"</span>: [<span class="s">"Mytek"</span>, <span class="s">"Tunisianet"</span>],
+      <span class="s">"discount"</span>:  <span class="n">10</span>
+    }
+  ]
+}</pre>
+        </div>
+      </div>
+
+      <div class="endpoint" id="retail-detail">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-GET">GET</span>
+          <span class="endpoint-path">/api/retail-products/<span class="param-seg">{slug}</span></span>
+          <span class="endpoint-desc">Retail product detail</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="field-label">URL Parameters</div>
+          <table>
+            <tr><th>Param</th><th>Description</th></tr>
+            <tr><td><code>slug</code> <span class="required">required</span></td><td>Product slug</td></tr>
+          </table>
+          <div class="field-label">Response</div>
+          <pre><span class="c">// Same shape as /api/super-products/{slug}</span>
+{
+  <span class="s">"name"</span>:       <span class="s">"Samsung Galaxy S24 128GB"</span>,
+  <span class="s">"brand"</span>:      <span class="s">"Samsung"</span>,
+  <span class="s">"category"</span>:   <span class="s">"Smartphones"</span>,
+  <span class="s">"img"</span>:        <span class="s">"https://..."</span>,
+  <span class="s">"images"</span>:     [<span class="s">"https://..."</span>],
+  <span class="s">"reference"</span>:  <span class="s">"SM-S24-128"</span>,
+  <span class="s">"slug"</span>:       <span class="s">"samsung-galaxy-s24-128gb"</span>,
+  <span class="s">"minPrice"</span>:   <span class="n">1899.000</span>,
+  <span class="s">"maxPrice"</span>:   <span class="n">2100.000</span>,
+  <span class="s">"shopNames"</span>:  [<span class="s">"Mytek"</span>, <span class="s">"Tunisianet"</span>],
+  <span class="s">"discount"</span>:   <span class="n">10</span>,
+  <span class="s">"shopPrices"</span>: { <span class="s">"Mytek"</span>: <span class="n">1899.000</span>, <span class="s">"Tunisianet"</span>: <span class="n">2100.000</span> },
+  <span class="s">"shopUrls"</span>:   { <span class="s">"Mytek"</span>: <span class="s">"https://..."</span> },
+  <span class="s">"related"</span>:    [ ... ]
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ BOUTIQUES / CATALOG ══════════════════ -->
+    <div class="section" id="catalog-section">
+      <div class="section-title">Boutiques (Catalog)</div>
+
+      <div class="endpoint" id="catalog-shops">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-GET">GET</span>
+          <span class="endpoint-path">/api/catalog/shops</span>
+          <span class="endpoint-desc">List all boutiques / shops</span>
+        </div>
+        <div class="endpoint-body">
+          <p style="color:var(--muted);margin-bottom:12px">Returns all active shops with their product count and available categories. Use to build the boutique browser.</p>
+          <div class="field-label">Response</div>
+          <pre>{
+  <span class="s">"total"</span>: <span class="n">24</span>,
+  <span class="s">"shops"</span>: [
+    {
+      <span class="s">"slug"</span>:       <span class="s">"mytek"</span>,
+      <span class="s">"key"</span>:        <span class="s">"mytek"</span>,
+      <span class="s">"name"</span>:       <span class="s">"Mytek"</span>,
+      <span class="s">"logo"</span>:       <span class="s">"https://..."</span>,       <span class="c">// null if no logo</span>
+      <span class="s">"count"</span>:      <span class="n">4320</span>,                <span class="c">// total products</span>
+      <span class="s">"categories"</span>: [<span class="s">"Smartphones"</span>, <span class="s">"Laptops"</span>, <span class="s">"TV"</span>]
+    }
+  ]
+}</pre>
+        </div>
+      </div>
+
+      <div class="endpoint" id="catalog-products">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-GET">GET</span>
+          <span class="endpoint-path">/api/catalog/products</span>
+          <span class="endpoint-desc">Browse a shop's catalog</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="field-label">Query Parameters</div>
+          <table>
+            <tr><th>Param</th><th>Type</th><th>Description</th></tr>
+            <tr><td><code>shop</code> <span class="required">required</span></td><td>string</td><td>Shop slug (e.g. <code>mytek</code>, <code>tunisianet</code>)</td></tr>
+            <tr><td><code>q</code> <span class="optional">optional</span></td><td>string</td><td>Search within shop catalog</td></tr>
+            <tr><td><code>cat</code> <span class="optional">optional</span></td><td>string</td><td>Filter by top category name</td></tr>
+            <tr><td><code>page</code> <span class="optional">optional</span></td><td>integer</td><td>Page offset (default: 0)</td></tr>
+            <tr><td><code>limit</code> <span class="optional">optional</span></td><td>integer</td><td>Items per page (default: 24, max: 48)</td></tr>
+          </table>
+          <div class="field-label">Response</div>
+          <pre>{
+  <span class="s">"shop"</span>:  <span class="s">"Mytek"</span>,
+  <span class="s">"logo"</span>:  <span class="s">"https://..."</span>,
+  <span class="s">"total"</span>: <span class="n">4320</span>,
+  <span class="s">"page"</span>:  <span class="n">0</span>,
+  <span class="s">"limit"</span>: <span class="n">24</span>,
+  <span class="s">"categories"</span>: [
+    { <span class="s">"name"</span>: <span class="s">"Smartphones"</span>, <span class="s">"count"</span>: <span class="n">320</span> }
+  ],
+  <span class="s">"items"</span>: [
+    {
+      <span class="s">"slug"</span>:      <span class="s">"samsung-galaxy-s24-128gb"</span>,
+      <span class="s">"name"</span>:      <span class="s">"Samsung Galaxy S24 128GB"</span>,
+      <span class="s">"brand"</span>:     <span class="s">"Samsung"</span>,
+      <span class="s">"img"</span>:       <span class="s">"https://..."</span>,
+      <span class="s">"price"</span>:     <span class="n">1899.000</span>,
+      <span class="s">"oldPrice"</span>:  <span class="n">2100.000</span>,    <span class="c">// null if no promo</span>
+      <span class="s">"available"</span>: <span class="k">true</span>,
+      <span class="s">"category"</span>:  <span class="s">"Smartphones"</span>,
+      <span class="s">"discount"</span>:  <span class="n">10</span>
+    }
+  ]
+}</pre>
+        </div>
+      </div>
+
+      <div class="endpoint" id="catalog-product-detail">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-GET">GET</span>
+          <span class="endpoint-path">/api/catalog/products/<span class="param-seg">{slug}</span></span>
+          <span class="endpoint-desc">Full catalog product detail + price history</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="field-label">URL Parameters</div>
+          <table>
+            <tr><th>Param</th><th>Description</th></tr>
+            <tr><td><code>slug</code> <span class="required">required</span></td><td>Product slug</td></tr>
+          </table>
+          <div class="field-label">Query Parameters</div>
+          <table>
+            <tr><th>Param</th><th>Type</th><th>Description</th></tr>
+            <tr><td><code>shop</code> <span class="optional">optional</span></td><td>string</td><td>Restrict to a specific shop slug</td></tr>
+          </table>
+          <div class="field-label">Response</div>
+          <pre>{
+  <span class="s">"name"</span>:         <span class="s">"Samsung Galaxy S24 128GB"</span>,
+  <span class="s">"brand"</span>:        <span class="s">"Samsung"</span>,
+  <span class="s">"shop"</span>:         <span class="s">"Mytek"</span>,
+  <span class="s">"shopSlug"</span>:     <span class="s">"mytek"</span>,
+  <span class="s">"url"</span>:          <span class="s">"https://www.mytek.tn/..."</span>,
+  <span class="s">"img"</span>:          <span class="s">"https://..."</span>,
+  <span class="s">"images"</span>:       [<span class="s">"https://..."</span>],
+  <span class="s">"price"</span>:        <span class="n">1899.000</span>,
+  <span class="s">"oldPrice"</span>:     <span class="n">2100.000</span>,
+  <span class="s">"discount"</span>:     <span class="n">10</span>,
+  <span class="s">"available"</span>:    <span class="k">true</span>,
+  <span class="s">"availability"</span>: <span class="s">"En stock"</span>,
+  <span class="s">"category"</span>:     { <span class="s">"top"</span>: <span class="s">"Téléphonie"</span>, <span class="s">"low"</span>: <span class="s">"Smartphones"</span>, <span class="s">"sub"</span>: <span class="s">"Android"</span> },
+  <span class="s">"sku"</span>:          <span class="s">"SM-S24-BLK"</span>,
+  <span class="s">"barcode"</span>:      <span class="s">"8806095076430"</span>,
+  <span class="s">"overview"</span>:     <span class="s">"..."</span>,
+  <span class="s">"description"</span>:  <span class="s">"..."</span>,
+  <span class="s">"specifications"</span>: { <span class="s">"RAM"</span>: <span class="s">"8GB"</span>, <span class="s">"Stockage"</span>: <span class="s">"128GB"</span> },
+  <span class="s">"priceHistory"</span>: [
+    { <span class="s">"price"</span>: <span class="n">2100.000</span>, <span class="s">"date"</span>: <span class="s">"2025-01-15T00:00:00Z"</span> },
+    { <span class="s">"price"</span>: <span class="n">1899.000</span>, <span class="s">"date"</span>: <span class="s">"2025-06-01T00:00:00Z"</span> }
+  ],
+  <span class="s">"related"</span>: [
+    { <span class="s">"slug"</span>: <span class="s">"..."</span>, <span class="s">"name"</span>: <span class="s">"..."</span>, <span class="s">"img"</span>: <span class="s">"..."</span>, <span class="s">"price"</span>: <span class="n">1700.000</span> }
+  ]
+}</pre>
+        </div>
+      </div>
+
+      <div class="endpoint" id="catalog-compare">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-GET">GET</span>
+          <span class="endpoint-path">/api/catalog/compare/<span class="param-seg">{slug}</span></span>
+          <span class="endpoint-desc">Compare tech product across all shops</span>
+        </div>
+        <div class="endpoint-body">
+          <p style="color:var(--muted);margin-bottom:12px">Returns all shops selling this product with their price, for side-by-side comparison.</p>
+          <div class="field-label">URL Parameters</div>
+          <table>
+            <tr><th>Param</th><th>Description</th></tr>
+            <tr><td><code>slug</code> <span class="required">required</span></td><td>Product slug</td></tr>
+          </table>
+          <div class="field-label">Response</div>
+          <pre>{
+  <span class="s">"slug"</span>:      <span class="s">"samsung-galaxy-s24-128gb"</span>,
+  <span class="s">"name"</span>:      <span class="s">"Samsung Galaxy S24 128GB"</span>,
+  <span class="s">"brand"</span>:     <span class="s">"Samsung"</span>,
+  <span class="s">"img"</span>:       <span class="s">"https://..."</span>,
+  <span class="s">"category"</span>:  { <span class="s">"top"</span>: <span class="s">"Téléphonie"</span>, <span class="s">"low"</span>: <span class="s">"Smartphones"</span>, <span class="s">"sub"</span>: <span class="s">"Android"</span> },
+  <span class="s">"minPrice"</span>:  <span class="n">1899.000</span>,
+  <span class="s">"maxPrice"</span>:  <span class="n">2100.000</span>,
+  <span class="s">"shopCount"</span>: <span class="n">4</span>,
+  <span class="s">"offers"</span>: [
+    {
+      <span class="s">"shop"</span>:     <span class="s">"Mytek"</span>,
+      <span class="s">"shopSlug"</span>: <span class="s">"mytek"</span>,
+      <span class="s">"logo"</span>:     <span class="s">"https://..."</span>,
+      <span class="s">"price"</span>:    <span class="n">1899.000</span>,
+      <span class="s">"url"</span>:      <span class="s">"https://www.mytek.tn/..."</span>
+    }
+  ],
+  <span class="s">"description"</span>: <span class="s">"..."</span>,
+  <span class="s">"specs"</span>:       { <span class="s">"RAM"</span>: <span class="s">"8GB"</span>, <span class="s">"Stockage"</span>: <span class="s">"128GB"</span> },
+  <span class="s">"hasSpecs"</span>:    <span class="k">true</span>,
+  <span class="s">"specCount"</span>:   <span class="n">12</span>
+}</pre>
+        </div>
+      </div>
+
+      <div class="endpoint" id="catalog-compare-search">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-GET">GET</span>
+          <span class="endpoint-path">/api/catalog/compare/search</span>
+          <span class="endpoint-desc">Search products for comparison</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="field-label">Query Parameters</div>
+          <table>
+            <tr><th>Param</th><th>Type</th><th>Description</th></tr>
+            <tr><td><code>q</code> <span class="required">required</span></td><td>string</td><td>Search query (min 2 chars)</td></tr>
+            <tr><td><code>limit</code> <span class="optional">optional</span></td><td>integer</td><td>Max results (default: 10, max: 20)</td></tr>
+          </table>
+          <div class="field-label">Response</div>
+          <pre>{
+  <span class="s">"items"</span>: [
+    {
+      <span class="s">"slug"</span>:      <span class="s">"samsung-galaxy-s24-128gb"</span>,
+      <span class="s">"name"</span>:      <span class="s">"Samsung Galaxy S24 128GB"</span>,
+      <span class="s">"brand"</span>:     <span class="s">"Samsung"</span>,
+      <span class="s">"img"</span>:       <span class="s">"https://..."</span>,
+      <span class="s">"price"</span>:     <span class="n">1899.000</span>,
+      <span class="s">"category"</span>:  <span class="s">"Smartphones"</span>,
+      <span class="s">"shopCount"</span>: <span class="n">4</span>
+    }
+  ]
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ CATEGORIES ══════════════════ -->
+    <div class="section" id="categories-section">
+      <div class="section-title">Categories</div>
+
+      <div class="endpoint" id="categories">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-GET">GET</span>
+          <span class="endpoint-path">/api/categories</span>
+          <span class="endpoint-desc">All product categories</span>
+        </div>
+        <div class="endpoint-body open">
+          <div class="field-label">Response</div>
+          <pre>{
+  <span class="s">"retail"</span>: [
+    { <span class="s">"id"</span>: <span class="n">1</span>, <span class="s">"name"</span>: <span class="s">"Smartphones"</span>, <span class="s">"sub_count"</span>: <span class="s">"12"</span> }
+  ],
+  <span class="s">"para"</span>: [
+    { <span class="s">"id"</span>: <span class="n">5</span>, <span class="s">"name"</span>: <span class="s">"Soins visage"</span>, <span class="s">"sub_count"</span>: <span class="s">"8"</span> }
+  ]
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ COUFFIN / PANIER ══════════════════ -->
+    <div class="section" id="couffin-section">
+      <div class="section-title">Panier Intelligent (Couffin)</div>
+
+      <div class="endpoint" id="couffin-search">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-GET">GET</span>
+          <span class="endpoint-path">/api/couffin/search</span>
+          <span class="endpoint-desc">Search products to add to basket</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="field-label">Query Parameters</div>
+          <table>
+            <tr><th>Param</th><th>Type</th><th>Description</th></tr>
+            <tr><td><code>q</code> <span class="required">required</span></td><td>string</td><td>Product search (min 2 chars)</td></tr>
+            <tr><td><code>limit</code> <span class="optional">optional</span></td><td>integer</td><td>Max results (default: 10, max: 20)</td></tr>
+          </table>
+          <div class="field-label">Response</div>
+          <pre>{
+  <span class="s">"items"</span>: [
+    {
+      <span class="s">"id"</span>:        <span class="n">1042</span>,
+      <span class="s">"name"</span>:      <span class="s">"Lait demi-écrémé Viva 1L"</span>,
+      <span class="s">"brand"</span>:     <span class="s">"Viva"</span>,
+      <span class="s">"img"</span>:       <span class="s">"https://..."</span>,
+      <span class="s">"minPrice"</span>:  <span class="n">1.900</span>,
+      <span class="s">"maxPrice"</span>:  <span class="n">2.100</span>,
+      <span class="s">"shopCount"</span>: <span class="n">5</span>
+    }
+  ]
+}</pre>
+        </div>
+      </div>
+
+      <div class="endpoint" id="couffin-compute">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-POST">POST</span>
+          <span class="endpoint-path">/api/couffin/compute</span>
+          <span class="endpoint-desc">Optimise basket — find cheapest shop mix</span>
+        </div>
+        <div class="endpoint-body open">
+          <p style="color:var(--muted);margin-bottom:12px">Computes total cost per shop for a list of products, and finds the cheapest possible mix (buying each item at its cheapest source).</p>
+          <div class="field-label">Request Body (JSON)</div>
+          <pre>{
+  <span class="s">"items"</span>: [
+    { <span class="s">"id"</span>: <span class="n">1042</span>, <span class="s">"qty"</span>: <span class="n">2</span> },
+    { <span class="s">"id"</span>: <span class="n">876</span>  }              <span class="c">// qty defaults to 1</span>
+  ]
+}</pre>
+          <div class="field-label">Response</div>
+          <pre>{
+  <span class="s">"items"</span>: [
+    { <span class="s">"id"</span>: <span class="n">1042</span>, <span class="s">"name"</span>: <span class="s">"Lait demi-écrémé Viva 1L"</span>, <span class="s">"img"</span>: <span class="s">"..."</span>, <span class="s">"qty"</span>: <span class="n">2</span>, <span class="s">"found"</span>: <span class="k">true</span> }
+  ],
+  <span class="s">"shops"</span>: [
+    {
+      <span class="s">"shopKey"</span>:    <span class="s">"carrefour"</span>,
+      <span class="s">"shop"</span>:       <span class="s">"Carrefour"</span>,
+      <span class="s">"total"</span>:      <span class="n">18.450</span>,
+      <span class="s">"covered"</span>:    <span class="n">2</span>,           <span class="c">// items found in this shop</span>
+      <span class="s">"totalItems"</span>: <span class="n">2</span>,
+      <span class="s">"lines"</span>: [
+        { <span class="s">"id"</span>: <span class="n">1042</span>, <span class="s">"price"</span>: <span class="n">1.950</span> }
+      ]
+    }
+  ],
+  <span class="s">"cheapestMix"</span>: {
+    <span class="s">"total"</span>:      <span class="n">15.200</span>,
+    <span class="s">"covered"</span>:    <span class="n">2</span>,
+    <span class="s">"totalItems"</span>: <span class="n">2</span>,
+    <span class="s">"lines"</span>: [
+      { <span class="s">"id"</span>: <span class="n">1042</span>, <span class="s">"name"</span>: <span class="s">"Lait demi-écrémé Viva 1L"</span>, <span class="s">"qty"</span>: <span class="n">2</span>, <span class="s">"shop"</span>: <span class="s">"Monoprix"</span>, <span class="s">"price"</span>: <span class="n">1.800</span> }
+    ]
+  }
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ STATS ══════════════════ -->
+    <div class="section" id="stats-section">
+      <div class="section-title">Stats &amp; Analytics</div>
+
+      <div class="endpoint" id="market-index">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-GET">GET</span>
+          <span class="endpoint-path">/api/market-index</span>
+          <span class="endpoint-desc">Market overview — index, promos, top shops</span>
+        </div>
+        <div class="endpoint-body open">
+          <p style="color:var(--muted);margin-bottom:12px">The main dashboard data source. Returns the 1111.tn market index, aggregate stats and the top 5 shops by promotion count.</p>
+          <div class="field-label">Response</div>
+          <pre>{
+  <span class="s">"index"</span>:          <span class="n">101.42</span>,        <span class="c">// today's market index (~100 = baseline)</span>
+  <span class="s">"yesterdayIndex"</span>: <span class="n">100.26</span>,
+  <span class="s">"topShops"</span>: [
+    {
+      <span class="s">"x"</span>:        <span class="s">"Carrefour"</span>,   <span class="c">// shop name</span>
+      <span class="s">"y"</span>:        <span class="n">3240</span>,          <span class="c">// active promo count</span>
+      <span class="s">"products"</span>: <span class="n">18500</span>,
+      <span class="s">"savings"</span>:  <span class="n">412300</span>         <span class="c">// total savings in DT</span>
+    }
+  ],
+  <span class="s">"stats"</span>: {
+    <span class="s">"totalProducts"</span>:  <span class="n">93103</span>,
+    <span class="s">"totalPrices"</span>:    <span class="n">159011</span>,
+    <span class="s">"totalPromos"</span>:    <span class="n">26080</span>,
+    <span class="s">"totalSavingsDT"</span>: <span class="n">1414956</span>,
+    <span class="s">"totalShops"</span>:     <span class="n">32</span>,
+    <span class="s">"avgDiscountPct"</span>: <span class="n">17.9</span>,
+    <span class="s">"breakdown"</span>: {
+      <span class="s">"alimentation"</span>: { <span class="s">"products"</span>: <span class="n">69003</span>, <span class="s">"promos"</span>: <span class="n">12000</span>, <span class="s">"savingsDT"</span>: <span class="n">800000</span> },
+      <span class="s">"para"</span>:         { <span class="s">"products"</span>: <span class="n">12787</span>, <span class="s">"promos"</span>: <span class="n">4000</span>,  <span class="s">"savingsDT"</span>: <span class="n">300000</span> },
+      <span class="s">"retail"</span>:       { <span class="s">"products"</span>: <span class="n">11313</span>, <span class="s">"promos"</span>: <span class="n">10080</span>, <span class="s">"savingsDT"</span>: <span class="n">314956</span> }
+    }
+  }
+}</pre>
+        </div>
+      </div>
+
+      <div class="endpoint" id="stats-skus">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-GET">GET</span>
+          <span class="endpoint-path">/api/stats/total-skus</span>
+          <span class="endpoint-desc">Total indexed products by catalog</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="field-label">Response</div>
+          <pre>{
+  <span class="s">"total"</span>: <span class="n">93103</span>,
+  <span class="s">"breakdown"</span>: {
+    <span class="s">"alimentation"</span>: <span class="n">69003</span>,
+    <span class="s">"para"</span>:         <span class="n">12787</span>,
+    <span class="s">"retail"</span>:       <span class="n">11313</span>
+  }
+}</pre>
+        </div>
+      </div>
+
+      <div class="endpoint" id="stats-latest-added">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-GET">GET</span>
+          <span class="endpoint-path">/api/stats/latest-added</span>
+          <span class="endpoint-desc">Most recently added product</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="field-label">Response</div>
+          <pre>{
+  <span class="s">"item"</span>: {
+    <span class="s">"catalog"</span>:     <span class="s">"Parapharmacie"</span>,
+    <span class="s">"catalogPath"</span>: <span class="s">"parapharmacie"</span>,
+    <span class="s">"name"</span>:        <span class="s">"Vichy Dercos Anti-Chute Shampooing 400ml"</span>,
+    <span class="s">"brand"</span>:       <span class="s">"Vichy"</span>,
+    <span class="s">"slug"</span>:        <span class="s">"vichy-dercos-anti-chute-400ml"</span>,
+    <span class="s">"image"</span>:       <span class="s">"https://..."</span>,
+    <span class="s">"price"</span>:       <span class="n">38.500</span>,
+    <span class="s">"shopName"</span>:    <span class="s">"Parashop"</span>,
+    <span class="s">"createdAt"</span>:   <span class="s">"2025-06-20T14:32:00Z"</span>
+  }                                      <span class="c">// null if nothing found</span>
+}</pre>
+        </div>
+      </div>
+
+      <div class="endpoint" id="stats-price-change">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-GET">GET</span>
+          <span class="endpoint-path">/api/stats/latest-price-change</span>
+          <span class="endpoint-desc">Most recent price change detected</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="field-label">Response</div>
+          <pre>{
+  <span class="s">"item"</span>: {
+    <span class="s">"catalog"</span>:     <span class="s">"Supermarché"</span>,
+    <span class="s">"catalogPath"</span>: <span class="s">"supermarche"</span>,
+    <span class="s">"name"</span>:        <span class="s">"Huile Végétale Slama 1L"</span>,
+    <span class="s">"brand"</span>:       <span class="s">"Slama"</span>,
+    <span class="s">"slug"</span>:        <span class="s">"huile-vegetale-slama-1l"</span>,
+    <span class="s">"image"</span>:       <span class="s">"https://..."</span>,
+    <span class="s">"shopName"</span>:    <span class="s">"Carrefour"</span>,
+    <span class="s">"oldPrice"</span>:    <span class="n">7.200</span>,
+    <span class="s">"newPrice"</span>:    <span class="n">6.500</span>,
+    <span class="s">"changedAt"</span>:   <span class="s">"2025-06-21T09:15:00Z"</span>
+  }
+}</pre>
+        </div>
+      </div>
+
+      <div class="endpoint" id="stats-illogical">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-GET">GET</span>
+          <span class="endpoint-path">/api/stats/illogical-promo</span>
+          <span class="endpoint-desc">Detect fake / inflated "ancien prix" claims</span>
+        </div>
+        <div class="endpoint-body">
+          <p style="color:var(--muted);margin-bottom:12px">Returns the most flagrant case where a shop's claimed "regular price" is significantly above the real market floor — exposing misleading discount claims.</p>
+          <div class="field-label">Detection Criteria</div>
+          <table>
+            <tr><th>Rule</th><th>Value</th></tr>
+            <tr><td>Min shops selling same product</td><td>≥ 3</td></tr>
+            <tr><td>Claimed regular_price vs market floor</td><td>&gt; 1.6×</td></tr>
+            <tr><td>Claimed discount</td><td>≥ 25%</td></tr>
+            <tr><td>Offender's current price vs market floor</td><td>≤ 1.15×</td></tr>
+          </table>
+          <div class="field-label">Response</div>
+          <pre>{
+  <span class="s">"item"</span>: {
+    <span class="s">"catalog"</span>:            <span class="s">"Retail"</span>,
+    <span class="s">"catalogPath"</span>:        <span class="s">"comparateur"</span>,
+    <span class="s">"name"</span>:               <span class="s">"Gel Douche X 500ml"</span>,
+    <span class="s">"brand"</span>:              <span class="s">"X"</span>,
+    <span class="s">"slug"</span>:               <span class="s">"gel-douche-x-500ml"</span>,
+    <span class="s">"image"</span>:              <span class="s">"https://..."</span>,
+    <span class="s">"shopName"</span>:           <span class="s">"SomeShop"</span>,
+    <span class="s">"oldPrice"</span>:           <span class="n">45.000</span>,   <span class="c">// inflated "regular price"</span>
+    <span class="s">"currentPrice"</span>:       <span class="n">18.500</span>,   <span class="c">// current price at offender</span>
+    <span class="s">"honestMin"</span>:          <span class="n">17.900</span>,   <span class="c">// real market min across all shops</span>
+    <span class="s">"claimedDiscountPct"</span>: <span class="n">59</span>,        <span class="c">// what they claim (-59%)</span>
+    <span class="s">"effectiveDiscountPct"</span>: <span class="n">3</span>,       <span class="c">// real saving vs market (~3%)</span>
+    <span class="s">"changedAt"</span>:          <span class="s">"2025-06-19T08:00:00Z"</span>
+  }
+}</pre>
+        </div>
+      </div>
+
+      <div class="endpoint" id="stats-top-offers">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-GET">GET</span>
+          <span class="endpoint-path">/api/stats/top-offers</span>
+          <span class="endpoint-desc">Featured tech deals (smartphones, gaming)</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="field-label">Response</div>
+          <pre>{
+  <span class="s">"offers"</span>: [
+    {
+      <span class="s">"id"</span>:       <span class="n">1</span>,
+      <span class="s">"name"</span>:     <span class="s">"iPhone 15 128GB"</span>,
+      <span class="s">"slug"</span>:     <span class="s">"iphone-15-128gb"</span>,
+      <span class="s">"kind"</span>:     <span class="s">"smartphone"</span>,      <span class="c">// "smartphone" | "gaming"</span>
+      <span class="s">"brand"</span>:    <span class="s">"Apple"</span>,
+      <span class="s">"img"</span>:      <span class="s">"https://..."</span>,
+      <span class="s">"minPrice"</span>: <span class="s">"3 499 DT"</span>,
+      <span class="s">"maxPrice"</span>: <span class="s">"3 799 DT"</span>,
+      <span class="s">"savings"</span>:  <span class="s">"300 DT"</span>,
+      <span class="s">"offers"</span>: [
+        { <span class="s">"shop"</span>: <span class="s">"Mytek"</span>, <span class="s">"price"</span>: <span class="s">"3 499 DT"</span>, <span class="s">"url"</span>: <span class="s">"https://..."</span> }
+      ]
+    }
+  ]
+}</pre>
+        </div>
+      </div>
+
+      <div class="endpoint" id="basket-variation">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-GET">GET</span>
+          <span class="endpoint-path">/api/basket-variation</span>
+          <span class="endpoint-desc">Weekly basket price comparison across shops</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="field-label">Response</div>
+          <pre>{
+  <span class="s">"basketSize"</span>: <span class="n">24</span>,
+  <span class="s">"economy"</span>:    <span class="s">"12,400 DT"</span>,
+  <span class="s">"enseignes"</span>: [
+    { <span class="s">"name"</span>: <span class="s">"Carrefour"</span>, <span class="s">"price"</span>: <span class="s">"87,200 DT"</span>, <span class="s">"diff"</span>: <span class="s">"−12,400 DT"</span>, <span class="s">"best"</span>: <span class="k">true</span> }
+  ],
+  <span class="s">"veille"</span>: [
+    { <span class="s">"name"</span>: <span class="s">"Huile Végétale 1L"</span>, <span class="s">"price"</span>: <span class="s">"6,500 DT"</span>, <span class="s">"change"</span>: <span class="s">"−9,7%"</span>, <span class="s">"down"</span>: <span class="k">true</span> }
+  ],
+  <span class="s">"alert"</span>: {
+    <span class="s">"name"</span>:     <span class="s">"Lait Viva 1L"</span>,
+    <span class="s">"brand"</span>:    <span class="s">"Viva"</span>,
+    <span class="s">"shop"</span>:     <span class="s">"Monoprix"</span>,
+    <span class="s">"price"</span>:    <span class="s">"1,800 DT"</span>,
+    <span class="s">"oldPrice"</span>: <span class="s">"2,100 DT"</span>,
+    <span class="s">"change"</span>:   <span class="s">"−14,3%"</span>,
+    <span class="s">"down"</span>:     <span class="k">true</span>,
+    <span class="s">"saved"</span>:    <span class="s">"0,300 DT"</span>,
+    <span class="s">"slug"</span>:     <span class="s">"lait-viva-1l"</span>,
+    <span class="s">"href"</span>:     <span class="s">"/supermarche/lait-viva-1l"</span>,
+    <span class="s">"img"</span>:      <span class="s">"https://..."</span>
+  }
+}</pre>
+        </div>
+      </div>
+
+      <div class="endpoint" id="para-shops-stats">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method method-GET">GET</span>
+          <span class="endpoint-path">/api/para-shops-stats</span>
+          <span class="endpoint-desc">Pharmacy shop ranking &amp; scores</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="field-label">Response</div>
+          <pre>{
+  <span class="s">"shops"</span>: [
+    {
+      <span class="s">"shop"</span>:          <span class="s">"parashop"</span>,
+      <span class="s">"displayName"</span>:   <span class="s">"Parashop"</span>,
+      <span class="s">"products"</span>:      <span class="n">4200</span>,
+      <span class="s">"avgPrice"</span>:      <span class="n">28.500</span>,
+      <span class="s">"cheapestCount"</span>: <span class="n">1200</span>,       <span class="c">// products where it's cheapest</span>
+      <span class="s">"promoCount"</span>:    <span class="n">340</span>,
+      <span class="s">"promoPct"</span>:      <span class="n">8.1</span>,         <span class="c">// % products on promo</span>
+      <span class="s">"availability"</span>:  <span class="n">94.2</span>,        <span class="c">// % in stock</span>
+      <span class="s">"score"</span>:         <span class="n">82</span>,          <span class="c">// 0-100 composite score</span>
+      <span class="s">"rank"</span>:          <span class="n">1</span>,
+      <span class="s">"logo"</span>:          <span class="s">"https://..."</span>,
+      <span class="s">"visitors"</span>:      <span class="n">15000</span>
+    }
+  ]
+}</pre>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  function toggle(header) {
+    const body = header.nextElementSibling;
+    body.classList.toggle('open');
+  }
+</script>
+</body>
+</html>

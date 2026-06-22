@@ -59,7 +59,7 @@ export function Observatoire() {
           <img
             src="/banner2.png"
             alt="1111.tn · Mobile · COMPAREZ"
-            className="block h-full w-full object-cover transition duration-700 group-hover:scale-[1.015]"
+            className="block h-full w-full object-cover object-center transition duration-700 group-hover:scale-[1.015]"
           />
 
           {/* Edge gradient so the CTA reads regardless of the artwork */}
