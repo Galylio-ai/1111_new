@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import { BarChart3, Coins, Flame, Package, Search, TrendingUp } from "lucide-react";
+import { BarChart3, Flame, Package, Search, Store, TrendingUp } from "lucide-react";
 import Link from "next/link";
-import { SparkArea } from "./charts/SparkArea";
+import { PromosBars, PromoPoint } from "./charts/PromosBars";
 import { SearchModal } from "./SearchModal";
 
 const tags = ["climatiseur", "iphone 15", "samsung", "machine à laver", "parfum", "laptop"];
@@ -16,12 +16,13 @@ function fmt(n: number) {
 type MarketData = {
   index: number;
   yesterdayIndex: number;
-  sparkline: { x: string; y: number }[];
+  topShops: PromoPoint[];
   stats: {
     totalProducts: number;
     totalPrices: number;
     totalPromos: number;
     totalSavingsDT: number;
+    totalShops: number;
     avgDiscountPct: number;
   };
 };
@@ -29,8 +30,8 @@ type MarketData = {
 const FALLBACK: MarketData = {
   index: 100,
   yesterdayIndex: 99,
-  sparkline: Array.from({ length: 13 }, (_, i) => ({ x: `${(i * 2).toString().padStart(2, "0")}h`, y: 100 + i * 0.05 })),
-  stats: { totalProducts: 93105, totalPrices: 159011, totalPromos: 26080, totalSavingsDT: 1414956, avgDiscountPct: 17.9 },
+  topShops: [],
+  stats: { totalProducts: 93105, totalPrices: 159011, totalPromos: 26080, totalSavingsDT: 1414956, totalShops: 0, avgDiscountPct: 17.9 },
 };
 
 export function Hero() {
@@ -78,12 +79,6 @@ export function Hero() {
       label: "Réduction moyenne",
       desc: "Rabais moyen constaté sur toutes les promotions actives dans nos bases",
       icon: BarChart3, color: "text-yellow-400",
-    },
-    {
-      value: fmt(data.stats.totalSavingsDT) + " DT",
-      label: "Économies potentielles",
-      desc: "Cumul de toutes les baisses de prix actives vs prix de référence",
-      icon: Coins, color: "text-emerald-400",
     },
   ];
 
@@ -163,10 +158,16 @@ export function Hero() {
           </div>
 
           <div className="mt-1">
-            <SparkArea data={data.sparkline} stroke={up ? "#f6c453" : "#ef4444"} height={130} showAxis />
+            <div className="mb-1 flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/50">
+                Top boutiques en promo
+              </span>
+              <span className="text-[10px] text-slate-400 dark:text-white/40">survol pour détails</span>
+            </div>
+            <PromosBars data={data.topShops} height={130} />
           </div>
 
-          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
             {stats.map((s) => (
               <div
                 key={s.label}

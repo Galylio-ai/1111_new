@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { catalogPool } from "@/lib/db";
 
+function sanitizeImage(raw: string | null | undefined): string {
+  if (!raw) return "";
+  const matches = String(raw).match(/https?:\/\/\S+\.(?:jpg|jpeg|png|webp|gif|avif)(?:\?[^\s"']*)?/gi);
+  if (matches && matches.length) return matches[matches.length - 1];
+  return String(raw).trim().split(/\s+/).pop() ?? "";
+}
+
+function sanitizeText(raw: string | null | undefined): string {
+  if (!raw) return "";
+  return String(raw).replace(/chevron_right/gi, "").replace(/\s+/g, " ").trim();
+}
+
 // GET /api/catalog/products/[slug]?shop=tunisianet
 // Single product detail: listing + details + price history + related.
 export async function GET(
@@ -50,20 +62,29 @@ export async function GET(
     const price = p.price != null ? parseFloat(p.price) : null;
     const old   = p.old_price != null ? parseFloat(p.old_price) : null;
 
+    const cleanImg = sanitizeImage(p.image);
+    const cleanImages = Array.isArray(d.images) && d.images.length
+      ? d.images.map((x: string) => sanitizeImage(x)).filter(Boolean)
+      : (cleanImg ? [cleanImg] : []);
+
     return NextResponse.json({
-      name: p.name,
-      brand: d.brand ?? p.brand ?? "",
+      name: sanitizeText(p.name),
+      brand: sanitizeText(d.brand ?? p.brand),
       shop: p.shop_name,
       shopSlug: p.shop_slug,
       url: p.url,
-      img: p.image ?? "",
-      images: Array.isArray(d.images) ? d.images : (p.image ? [p.image] : []),
+      img: cleanImg,
+      images: cleanImages,
       price,
       oldPrice: old,
       discount: old && price && old > price ? Math.round((1 - price / old) * 100) : null,
       available: p.available,
       availability: p.availability,
-      category: { top: p.top_category, low: p.low_category, sub: p.subcategory },
+      category: {
+        top: sanitizeText(p.top_category),
+        low: sanitizeText(p.low_category),
+        sub: sanitizeText(p.subcategory),
+      },
       sku: d.sku ?? null,
       barcode: d.barcode ?? null,
       overview: d.overview ?? null,
@@ -72,7 +93,9 @@ export async function GET(
       storeAvailability: d.store_availability ?? null,
       priceHistory: histRes.rows.map(h => ({ price: parseFloat(h.price), date: h.recorded_at })),
       related: relRes.rows.map(r => ({
-        slug: r.slug, name: r.name, img: r.image ?? "",
+        slug: r.slug,
+        name: sanitizeText(r.name),
+        img: sanitizeImage(r.image),
         price: r.price != null ? parseFloat(r.price) : null,
       })),
     });

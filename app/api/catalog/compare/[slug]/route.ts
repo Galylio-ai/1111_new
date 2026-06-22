@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { catalogPool } from "@/lib/db";
 
+function sanitizeImage(raw: string | null | undefined): string {
+  if (!raw) return "";
+  const matches = String(raw).match(/https?:\/\/\S+\.(?:jpg|jpeg|png|webp|gif|avif)(?:\?[^\s"']*)?/gi);
+  if (matches && matches.length) return matches[matches.length - 1];
+  return String(raw).trim().split(/\s+/).pop() ?? "";
+}
+function sanitizeText(raw: string | null | undefined): string {
+  if (!raw) return "";
+  return String(raw).replace(/chevron_right/gi, "").replace(/\s+/g, " ").trim();
+}
+
 // GET /api/catalog/compare/[slug]
 // One side of a versus comparison: the product, its merged specs, and every
 // shop that carries it (cheapest first) so the UI can show specs + where to buy.
@@ -98,10 +109,14 @@ export async function GET(
 
     return NextResponse.json({
       slug,
-      name: main.name,
-      brand: brand ?? "",
-      img: main.image ?? "",
-      category: { top: main.top_category, low: main.low_category, sub: main.subcategory },
+      name: sanitizeText(main.name),
+      brand: sanitizeText(brand),
+      img: sanitizeImage(main.image),
+      category: {
+        top: sanitizeText(main.top_category),
+        low: sanitizeText(main.low_category),
+        sub: sanitizeText(main.subcategory),
+      },
       minPrice,
       maxPrice,
       offers,

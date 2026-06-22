@@ -19,10 +19,37 @@ type Row = {
   changedAt: string;
 };
 
+const IMAGE_WHITELIST = `
+  image_url ~ '^https?://'
+  AND (
+    image_url ILIKE 'https://clusteraz.flesk.fr/%'
+    OR image_url ILIKE 'https://cdn.monoprix.tn/%'
+    OR image_url ILIKE 'https://beautystore.tn/%'
+    OR image_url ILIKE 'https://parashop.tn/%'
+    OR image_url ILIKE 'https://www.parashop.tn/%'
+    OR image_url ILIKE 'https://pharma-shop.tn/%'
+    OR image_url ILIKE 'https://pharmashop.tn/%'
+    OR image_url ILIKE 'https://www.tunisianet.com.tn/%'
+    OR image_url ILIKE 'https://www.mytek.tn/%'
+    OR image_url ILIKE 'https://spacenet.tn/%'
+    OR image_url ILIKE 'https://agora.tn/%'
+    OR image_url ILIKE 'https://www.sbsinformatique.com/%'
+    OR image_url ILIKE 'https://www.carrefour.tn/%'
+    OR image_url ILIKE 'https://www.mapara.tn/%'
+    OR image_url ILIKE 'https://www.paraexpert.tn/%'
+    OR image_url ILIKE 'https://parafendri.tn/%'
+    OR image_url ILIKE 'https://www.cosmetique.tn/%'
+    OR image_url ILIKE 'https://www.pharmacie-elfarabi.tn/%'
+    OR image_url ILIKE 'https://parahouse.tn/%'
+    OR image_url ILIKE 'https://paraland.tn/%'
+  )
+`;
+
 // Detect fake "ancien prix" claims from current data (no history needed):
-//   - At least 3 distinct shops sell the product (so we have a market floor to compare against)
-//   - Shop's regular_price > 1.4 * min(current_price) across all shops for that product
+//   - At least 3 distinct shops sell the product (so we have a market floor)
+//   - Shop's regular_price > 1.4 * min(current_price) across all shops
 //   - regular_price > current_price (must look like a discount)
+//   - Product MUST have at least one whitelisted image so the card renders cleanly
 //
 // Picks the most flagrant lie (largest gap between claimed regular and honest market min).
 const SQL = `
@@ -48,8 +75,10 @@ const SQL = `
     WHERE sp.regular_price IS NOT NULL
       AND sp.current_price IS NOT NULL
       AND pp.shop_count >= 3
-      AND sp.regular_price > pp.min_current * 1.4
+      AND sp.regular_price > pp.min_current * 1.6
       AND sp.regular_price > sp.current_price
+      AND sp.current_price <= pp.min_current * 1.15  -- offender's price must also be near the market floor
+      AND (1.0 - (sp.current_price / sp.regular_price)) >= 0.25  -- claimed discount must be at least 25%
   )
   SELECT
     p.name,
@@ -62,30 +91,7 @@ const SQL = `
     su.updated_at,
     (
       SELECT image_url FROM product_images
-      WHERE product_id = p.id
-        AND image_url ~ '^https?://'
-        AND (
-          image_url ILIKE 'https://clusteraz.flesk.fr/%'
-          OR image_url ILIKE 'https://cdn.monoprix.tn/%'
-          OR image_url ILIKE 'https://beautystore.tn/%'
-          OR image_url ILIKE 'https://parashop.tn/%'
-          OR image_url ILIKE 'https://www.parashop.tn/%'
-          OR image_url ILIKE 'https://pharma-shop.tn/%'
-          OR image_url ILIKE 'https://pharmashop.tn/%'
-          OR image_url ILIKE 'https://www.tunisianet.com.tn/%'
-          OR image_url ILIKE 'https://www.mytek.tn/%'
-          OR image_url ILIKE 'https://spacenet.tn/%'
-          OR image_url ILIKE 'https://agora.tn/%'
-          OR image_url ILIKE 'https://www.sbsinformatique.com/%'
-          OR image_url ILIKE 'https://www.carrefour.tn/%'
-          OR image_url ILIKE 'https://www.mapara.tn/%'
-          OR image_url ILIKE 'https://www.paraexpert.tn/%'
-          OR image_url ILIKE 'https://parafendri.tn/%'
-          OR image_url ILIKE 'https://www.cosmetique.tn/%'
-          OR image_url ILIKE 'https://www.pharmacie-elfarabi.tn/%'
-          OR image_url ILIKE 'https://parahouse.tn/%'
-          OR image_url ILIKE 'https://paraland.tn/%'
-        )
+      WHERE product_id = p.id AND ${IMAGE_WHITELIST}
       ORDER BY id ASC
       LIMIT 1
     ) AS image
@@ -93,6 +99,10 @@ const SQL = `
   JOIN products p ON p.id = su.product_id
   JOIN shops    s ON s.id = su.shop_id
   LEFT JOIN brands b ON b.id = p.brand_id
+  WHERE EXISTS (
+    SELECT 1 FROM product_images
+    WHERE product_id = p.id AND ${IMAGE_WHITELIST}
+  )
   ORDER BY (su.regular_price - su.honest_min) DESC, su.updated_at DESC
   LIMIT 1
 `;

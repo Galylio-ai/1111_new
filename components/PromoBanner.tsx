@@ -25,7 +25,7 @@ export function PromoBanner() {
           rel="noopener noreferrer"
           className="btn-gold absolute right-3 top-3 z-10 shadow-lg sm:right-4 sm:top-4"
         >
-          Voir les offres →
+          Téléchargez →
         </a>
       </div>
     </section>

@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { catalogPool } from "@/lib/db";
 
+function sanitizeImage(raw: string | null | undefined): string {
+  if (!raw) return "";
+  const matches = String(raw).match(/https?:\/\/\S+\.(?:jpg|jpeg|png|webp|gif|avif)(?:\?[^\s"']*)?/gi);
+  if (matches && matches.length) return matches[matches.length - 1];
+  return String(raw).trim().split(/\s+/).pop() ?? "";
+}
+function sanitizeText(raw: string | null | undefined): string {
+  if (!raw) return "";
+  return String(raw).replace(/chevron_right/gi, "").replace(/\s+/g, " ").trim();
+}
+
 // GET /api/catalog/compare/search?q=oneplus&limit=10
 // Searches the catalog for TECH products only (smartphones / PC / informatique)
 // to power the versus-style "Comparaison" pickers. Returns the cheapest listing
@@ -63,11 +74,11 @@ export async function GET(req: NextRequest) {
       price: string | null; top_category: string | null; shop_count: string;
     }) => ({
       slug: r.slug,
-      name: r.name,
-      brand: r.brand ?? "",
-      img: r.image ?? "",
+      name: sanitizeText(r.name),
+      brand: sanitizeText(r.brand),
+      img: sanitizeImage(r.image),
       price: r.price != null ? parseFloat(r.price) : null,
-      category: r.top_category ?? "",
+      category: sanitizeText(r.top_category),
       shopCount: parseInt(r.shop_count, 10) || 1,
     }));
 

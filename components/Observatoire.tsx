@@ -57,8 +57,8 @@ export function Observatoire() {
           className="group relative block overflow-hidden rounded-2xl border border-red-500/40 shadow-card transition hover:border-red-400/70 hover:shadow-[0_0_32px_-8px_rgba(239,68,68,0.55)]"
         >
           <img
-            src="/ooredoo.png"
-            alt="Ooredoo · La Fibre · −50% sur votre abonnement"
+            src="/banner2.png"
+            alt="1111.tn · Mobile · COMPAREZ"
             className="block h-full w-full object-cover transition duration-700 group-hover:scale-[1.015]"
           />
 
@@ -67,7 +67,7 @@ export function Observatoire() {
 
           {/* Floating CTA */}
           <div className="pointer-events-none absolute right-4 top-1/2 hidden -translate-y-1/2 md:block">
-            <span className="btn-gold pointer-events-auto shadow-lg">J'en profite →</span>
+            <span className="btn-gold pointer-events-auto shadow-lg">Téléchargez →</span>
           </div>
 
           {/* Hover shimmer sweep */}

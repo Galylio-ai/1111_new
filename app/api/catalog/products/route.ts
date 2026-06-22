@@ -1,6 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { catalogPool } from "@/lib/db";
 
+// Pulls the last valid image URL out of a possibly-corrupted string.
+// The migration imported some rows where the scraper concatenated two URLs with
+// runs of whitespace (e.g. "https://agora.tn/fr/   https://agora.tn/fr/49281...jpg\n   ").
+// We grab the trailing usable URL and trim.
+function sanitizeImage(raw: string | null | undefined): string {
+  if (!raw) return "";
+  const matches = String(raw).match(/https?:\/\/\S+\.(?:jpg|jpeg|png|webp|gif|avif)(?:\?[^\s"']*)?/gi);
+  if (matches && matches.length) return matches[matches.length - 1];
+  // Fallback: trim, drop everything past the first whitespace
+  return String(raw).trim().split(/\s+/).pop() ?? "";
+}
+
+function sanitizeText(raw: string | null | undefined): string {
+  if (!raw) return "";
+  return String(raw)
+    .replace(/chevron_right/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 // GET /api/catalog/products?shop=tunisianet&page=0&limit=24&q=...&cat=...
 // Per-shop catalog browse with search + top_category filter + pagination.
 export async function GET(req: NextRequest) {
@@ -52,13 +72,13 @@ export async function GET(req: NextRequest) {
       const old   = r.old_price != null ? parseFloat(r.old_price) : null;
       return {
         slug: r.slug,
-        name: r.name,
-        brand: r.brand ?? "",
-        img: r.image ?? "",
+        name: sanitizeText(r.name),
+        brand: sanitizeText(r.brand),
+        img: sanitizeImage(r.image),
         price,
         oldPrice: old,
         available: r.available,
-        category: r.top_category,
+        category: sanitizeText(r.top_category),
         discount: old && price && old > price ? Math.round((1 - price / old) * 100) : null,
       };
     });
@@ -68,7 +88,7 @@ export async function GET(req: NextRequest) {
       logo: shopRes.rows[0].logo_url,
       total: parseInt(countRes.rows[0].total, 10),
       page, limit, items,
-      categories: catsRes.rows.map(c => ({ name: c.top_category, count: parseInt(c.n, 10) })),
+      categories: catsRes.rows.map(c => ({ name: sanitizeText(c.top_category), count: parseInt(c.n, 10) })),
     });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
