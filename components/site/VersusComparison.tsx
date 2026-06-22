@@ -407,7 +407,7 @@ export function VersusComparison({
   return (
     <div className="mx-auto max-w-[1100px] px-3 sm:px-4">
       {/* ── Pickers ──────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 items-stretch gap-3 sm:grid-cols-[1fr_auto_1fr]">
+      <div className="grid grid-cols-1 items-stretch gap-3 md:grid-cols-[1fr_auto_1fr]">
         <ProductPicker side="A" selected={a} onSelect={(s) => load(s, setA, setLoadingA)} onClear={() => setA(null)} />
         <div className="flex items-center justify-center">
           <button
@@ -416,8 +416,8 @@ export function VersusComparison({
             aria-label="Inverser les produits"
             className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-brand-red to-brand-red/80 text-sm font-black text-white shadow-lg ring-2 ring-white transition hover:scale-105 disabled:opacity-40 dark:ring-bg-900"
           >
-            <span className="hidden sm:block">VS</span>
-            <ArrowLeftRight className="h-4 w-4 sm:hidden" />
+            <ArrowLeftRight className="h-4 w-4 md:hidden" />
+            <span className="hidden md:block">VS</span>
           </button>
         </div>
         <ProductPicker side="B" selected={b} onSelect={(s) => load(s, setB, setLoadingB)} onClear={() => setB(null)} />
@@ -449,7 +449,7 @@ export function VersusComparison({
       {ready && (
         <>
           <section className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-bg-card">
-            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 p-5 sm:gap-6 sm:p-8">
+            <div className="grid grid-cols-1 items-center gap-4 p-5 sm:grid-cols-[1fr_auto_1fr] sm:gap-6 sm:p-8">
               <VsSide product={a!} winner={verdict?.side === "A"} align="right" />
               <div className="flex flex-col items-center gap-2">
                 <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-brand-red to-brand-red/80 text-base font-black text-white shadow-lg sm:h-16 sm:w-16 sm:text-2xl">
@@ -638,10 +638,10 @@ export function VersusComparison({
               La meilleure valeur de chaque ligne est surlignée en vert.
             </p>
 
-            {(
-              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-white/10 dark:bg-bg-card">
-                {/* sticky header with the two names */}
-                <div className="grid grid-cols-[1fr_1.2fr_1.2fr] border-b border-slate-200 bg-slate-50 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:border-white/10 dark:bg-bg-800 dark:text-white/50">
+            <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white dark:border-white/10 dark:bg-bg-card">
+              <div className="min-w-[480px]">
+                {/* header with the two names */}
+                <div className="grid grid-cols-[minmax(120px,1fr)_1.2fr_1.2fr] border-b border-slate-200 bg-slate-50 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:border-white/10 dark:bg-bg-800 dark:text-white/50">
                   <div className="px-4 py-3">Caractéristique</div>
                   <div className="truncate px-4 py-3 text-slate-900 dark:text-white">{a!.name}</div>
                   <div className="truncate px-4 py-3 text-slate-900 dark:text-white">{b!.name}</div>
@@ -649,7 +649,7 @@ export function VersusComparison({
                 {specRows.map((r, idx) => (
                   <div
                     key={r.key}
-                    className={`grid grid-cols-[1fr_1.2fr_1.2fr] text-sm ${
+                    className={`grid grid-cols-[minmax(120px,1fr)_1.2fr_1.2fr] text-sm ${
                       idx % 2 ? "bg-slate-50/50 dark:bg-white/[0.015]" : ""
                     }`}
                   >
@@ -661,7 +661,7 @@ export function VersusComparison({
                   </div>
                 ))}
               </div>
-            )}
+            </div>
           </section>
           )}
 
@@ -708,9 +708,9 @@ function SpecCell({ value, highlight, dim }: { value: string | undefined; highli
 
 function VsSide({ product, winner, align }: { product: Product; winner: boolean; align: "left" | "right" }) {
   return (
-    <div className={`flex flex-col ${align === "right" ? "items-end text-right" : "items-start text-left"}`}>
+    <div className={`flex flex-col items-center text-center sm:${align === "right" ? "items-end text-right" : "items-start text-left"}`}>
       <div className="relative">
-        <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 sm:h-32 sm:w-32 dark:border-white/10">
+        <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 sm:h-32 sm:w-32 dark:border-white/10">
           <img src={product.img} alt={product.name} referrerPolicy="no-referrer" className="h-full w-full object-contain" />
         </div>
         {winner && (
@@ -724,7 +724,7 @@ function VsSide({ product, winner, align }: { product: Product; winner: boolean;
           {product.brand}
         </div>
       )}
-      <h2 className="mt-0.5 line-clamp-2 max-w-[180px] text-sm font-black leading-tight text-slate-900 sm:max-w-[240px] sm:text-base dark:text-white">
+      <h2 className="mt-0.5 line-clamp-3 w-full max-w-[200px] text-sm font-black leading-tight text-slate-900 sm:max-w-[240px] sm:text-base dark:text-white">
         {product.name}
       </h2>
       <div className="mt-2 flex items-baseline gap-1">

@@ -25,17 +25,30 @@ type Product = {
   shopPrices: Record<string, number> | null;
 };
 
-// Real shop logos (files in /public/logos/)
-const shopLogos: Record<string, string> = {
-  parashop: "/logos/parashop.png",
-  parahouse: "/logos/parahouse.jpg",
-  parafendri: "/logos/parafendri.png",
-  mytek: "/logos/mytek.png",
-  spacenet: "/logos/spacenet.svg",
-  tunisianet: "/logos/tunisianet.png",
-  technopro: "/logos/technopro.jpg",
-  jumbo: "/logos/jumbo.png",
-  mg: "/logos/mg.png",
+// Scraped shop logos in /public/shop-logos/. Keyed by normalized shop key
+// (lowercase, non-alphanumerics stripped) → filename. Covers every shop we
+// scraped a logo for during the Boutiques import.
+const SHOP_LOGO_FILES: Record<string, string> = {
+  acspace: "acspace.webp", affariyet: "affariyet.webp", agora: "agora.png",
+  allani: "allani.jpg", batam: "batam.svg", beautystore: "beautystore.jpg",
+  benzartielectromenager: "benzarti-electromenager.png", bestbuytunisie: "bestbuytunisie.png",
+  bill: "bill.svg", bstech: "bstech.webp", carrefour: "carrefour.png",
+  carthagoinformatique: "carthagoinformatique.png", chaktech: "chaktech.png",
+  darty: "darty.jpg", dokani: "dokani.png", drest: "drest.png", elfarabi: "el_farabi.jpg",
+  electrobennjima: "electrobennjima.png", electrochaabani: "electrochaabani.png",
+  emh: "emh.png", expertgaming: "expert_gaming.png", gamershop: "gamershop.png",
+  geant: "geant.png", graiet: "graiet.png", ikitchen: "ikitchen.png", imag: "imag.png",
+  ispace: "ispace.png", itechstore: "itechstore.jpg", jmb: "jmb.png", jumbo: "jumbo.jpg",
+  kamounhome: "kamounhome.png", krichen: "krichen.png", lamode: "lamode.png",
+  maalejaudio: "maalejaudio.png", mageekstore: "mageekstore.jpg", mapara: "mapara.png",
+  megapc: "megapc.png", mytek: "mytek.png", parafendri: "parafendri.png",
+  parashop: "parashop.webp", pharmacieplus: "pharmacieplus.png", pharmashop: "pharmashop.png",
+  promouv: "promouv.jpg", psstore: "psstore.png", qsnet: "qsnet.webp", sbs: "sbs.png",
+  scoop: "scoop.png", sigshop: "sigshop.png", skymill: "skymill.png", spacenet: "spacenet.svg",
+  taktek: "taktek.jpg", techgate: "techgate.png", techland: "techland.png",
+  technopro: "technopro.jpg", tokyostore: "tokyo_store.png", topbureau: "topbureau.jpg",
+  tunewtec: "tunewtec.webp", tunisianet: "tunisianet.jpg", wiki: "wiki.png",
+  yatoo: "yatoo.jpg", zoom: "zoom.jpg",
 };
 
 const shopSearchUrls: Record<string, string> = {
@@ -60,7 +73,11 @@ function normalizeKey(s: string) {
 }
 
 function shopLogo(name: string): string | null {
-  return shopLogos[normalizeKey(name)] ?? null;
+  // strip ALL non-alphanumerics (incl. underscores/spaces) so "El Farabi",
+  // "el_farabi" and "elfarabi" all resolve to the same key.
+  const key = name.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]/g, "");
+  const file = SHOP_LOGO_FILES[key];
+  return file ? `/shop-logos/${file}` : null;
 }
 
 function shopUrl(shopKey: string, productName: string): string {
