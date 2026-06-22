@@ -1,7 +1,7 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { ArrowRight, ChevronRight, Loader2, Search, Store, X } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -22,8 +22,9 @@ type Category = { name: string; count: number };
 const LIMIT = 24;
 const fmt = (n: number) => n.toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 3 });
 
-export default function ShopCatalogPage() {
+function ShopCatalogInner() {
   const { shop } = useParams<{ shop: string }>();
+  const searchParams = useSearchParams();
 
   const [shopName, setShopName]   = useState("");
   const [shopLogo, setShopLogo]   = useState<string | null>(null);
@@ -32,7 +33,7 @@ export default function ShopCatalogPage() {
   const [total, setTotal]         = useState(0);
   const [page, setPage]           = useState(0);
   const [loading, setLoading]     = useState(true);
-  const [activeCat, setActiveCat] = useState("");
+  const [activeCat, setActiveCat] = useState(searchParams.get("cat") ?? "");
   const [search, setSearch]       = useState("");
   const [query, setQuery]         = useState("");
 
@@ -255,5 +256,23 @@ export default function ShopCatalogPage() {
 
       <Footer />
     </main>
+  );
+}
+
+export default function ShopCatalogPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-white dark:bg-[#0a0e1a]">
+          <Header />
+          <div className="flex items-center justify-center py-40">
+            <Loader2 className="h-8 w-8 animate-spin text-brand-gold" />
+          </div>
+          <Footer />
+        </main>
+      }
+    >
+      <ShopCatalogInner />
+    </Suspense>
   );
 }
