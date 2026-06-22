@@ -70,56 +70,51 @@ export async function GET() {
       best: i === 0,
     }));
 
-    // 3. Veille: pick VEILLE_SIZE most-universal products and show min current price.
-    //    Change% is derived from spread (min vs max) as a proxy — flagged "down" when min < avg.
+    // 3. Veille: products sold in 3+ shops with the biggest price spread between shops.
+    //    This surfaces real market tension — items where shops genuinely disagree on price.
+    //    show min price + spread% (max-min)/max so the user sees the savings opportunity.
     const veilleRes = await pool.query<{
-      id: number;
       name: string;
       min_price: string;
       max_price: string;
-      avg_price: string;
+      shop_count: string;
     }>(
-      `SELECT p.id, p.name,
+      `SELECT p.name,
               MIN(sp.current_price) AS min_price,
               MAX(sp.current_price) AS max_price,
-              AVG(sp.current_price) AS avg_price
+              COUNT(DISTINCT sp.shop_id)::text AS shop_count
        FROM products p
        JOIN shop_prices sp ON sp.product_id = p.id
+       WHERE sp.current_price > 0
        GROUP BY p.id, p.name
-       HAVING COUNT(DISTINCT sp.shop_id) >= 2
-       ORDER BY COUNT(DISTINCT sp.shop_id) DESC, p.id
+       HAVING COUNT(DISTINCT sp.shop_id) >= 3
+         AND MAX(sp.current_price) > 0
+         AND (MAX(sp.current_price) - MIN(sp.current_price)) / MAX(sp.current_price) >= 0.05
+       ORDER BY (MAX(sp.current_price) - MIN(sp.current_price)) / MAX(sp.current_price) DESC
        LIMIT $1`,
       [VEILLE_SIZE]
     );
 
     const veille = veilleRes.rows.map((r) => {
       const min = parseFloat(r.min_price) || 0;
-      const avg = parseFloat(r.avg_price) || 0;
-      const pct = avg > 0 ? Math.round(((min - avg) / avg) * 1000) / 10 : 0;
-      const down = pct <= 0;
+      const max = parseFloat(r.max_price) || min;
+      // spread %: how much cheaper is the cheapest shop vs the most expensive
+      const pct = max > 0 ? -((max - min) / max) * 100 : 0;
       return {
         name: r.name,
         price: formatMillimes(min),
-        change: `${pct > 0 ? "+" : ""}${pct.toFixed(1)}%`,
-        down,
+        change: `${pct.toFixed(1)}%`,
+        down: true, // always "down" — showing the saving vs worst price
       };
     });
 
-    // 4. Cheapest "Lait 1/2 écrémé" (slug: lait-1-2-ecreme) for the price-alert card.
-    //    Find the product whose slug matches, then return the cheapest shop offer.
-    const TARGET_SLUG = "lait-1-2-ecreme";
-    const slugify = (s: string) =>
-      s
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[̀-ͯ]/g, "")
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, "");
+    // 4. Fromage fondu triangles for the price-alert card — sold in 6 shops with real spread.
+    const TARGET_SLUG = "fromage-fondu-triangles";
 
     const candidates = await pool.query<{ id: number; name: string }>(
-      `SELECT id, name FROM products WHERE lower(name) LIKE '%lait%'`
+      `SELECT id, name FROM products WHERE lower(name) LIKE '%fromage%fondu%'`
     );
-    const target = candidates.rows.find((r) => slugify(r.name) === TARGET_SLUG);
+    const target = candidates.rows[0] ?? null;
 
     let milkRes: { rows: Array<{ name: string; brand: string; shop: string; min_price: string; max_price: string; avg_price: string; img: string | null }> } = { rows: [] };
     if (target) {
@@ -177,7 +172,7 @@ export async function GET() {
         min: formatMillimes(min),
         max: formatMillimes(max),
         slug: TARGET_SLUG,
-        href: `/supermarche/${TARGET_SLUG}`,
+        href: `/supermarche/fromage-fondu-triangles`,
         img: r.img ?? null,
       };
     }

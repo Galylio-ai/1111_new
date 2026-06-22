@@ -1,7 +1,8 @@
 "use client";
 import { AlertTriangle, Database, Tag } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
 
 function formatNumber(n: number): string {
   return n.toLocaleString("fr-FR").replace(/ /g, " ");
@@ -85,6 +86,72 @@ function ProductThumb({ src, label }: { src: string | null; label: string }) {
       ) : (
         <div className="flex h-full w-full items-center justify-center text-2xl text-slate-300 dark:text-white/20" aria-label={label}>📦</div>
       )}
+    </div>
+  );
+}
+
+function SkuCounter() {
+  const [total, setTotal] = useState(350000);
+  const [display, setDisplay] = useState(0);
+  const raf = useRef<number>(0);
+
+  useEffect(() => {
+    fetch("/api/stats/total-skus")
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.total) setTotal(d.total); })
+      .catch(() => {});
+  }, []);
+
+  // Phase 1: count up from 0 → total in ~8s
+  // Phase 2: once reached, tick +1 every 500ms forever
+  useEffect(() => {
+    if (total === 0) return;
+    let current = 0;
+    let slowMode = false;
+    let slowTimer: ReturnType<typeof setTimeout>;
+    const step = total / (8000 / 16);
+
+    function tick() {
+      if (slowMode) return;
+      current += step;
+      if (current >= total) {
+        current = total;
+        setDisplay(total);
+        slowMode = true;
+        // tick +1 every 500ms
+        function slowTick() {
+          current += 1;
+          setDisplay(Math.round(current));
+          slowTimer = setTimeout(slowTick, 500);
+        }
+        slowTimer = setTimeout(slowTick, 500);
+        return;
+      }
+      setDisplay(Math.round(current));
+      raf.current = requestAnimationFrame(tick);
+    }
+    raf.current = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(raf.current);
+      clearTimeout(slowTimer);
+    };
+  }, [total]);
+
+  return (
+    <div className="card card-pad flex flex-col items-center justify-center text-center">
+      <Database className="h-5 w-5 text-brand-gold" />
+      <div className="mt-1 text-[11px] font-bold uppercase tracking-wider text-brand-gold">
+        Nombre total de SKU
+      </div>
+      <div className="text-[11px] text-slate-600 dark:text-white/60">dans notre base</div>
+      <div className="mt-2 text-4xl font-black tracking-tight tabular-nums text-slate-900 dark:text-white">
+        +{formatNumber(display)}
+      </div>
+      <div className="mt-1 text-[11px] text-slate-600 dark:text-white/60">
+        SKU uniques analysés
+        <br />
+        sur tous les sites scrappés
+      </div>
     </div>
   );
 }
@@ -192,21 +259,7 @@ export function StatRow() {
         </div>
 
         {/* Nombre total SKU */}
-        <div className="card card-pad flex flex-col items-center justify-center text-center">
-          <Database className="h-5 w-5 text-brand-gold" />
-          <div className="mt-1 text-[11px] font-bold uppercase tracking-wider text-brand-gold">
-            Nombre total de SKU
-          </div>
-          <div className="text-[11px] text-slate-600 dark:text-white/60">dans notre base</div>
-          <div className="mt-2 text-4xl font-black tracking-tight text-slate-900 dark:text-white">
-            +350 000
-          </div>
-          <div className="mt-1 text-[11px] text-slate-600 dark:text-white/60">
-            SKU uniques analysés
-            <br />
-            sur tous les sites scrappés
-          </div>
-        </div>
+        <SkuCounter />
 
         {/* Promotions illogiques */}
         <div className="card card-pad">

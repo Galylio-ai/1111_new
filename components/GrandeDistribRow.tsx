@@ -269,22 +269,22 @@ export function GrandeDistribRow() {
           <div className="relative mt-3 flex items-center gap-3 rounded-xl border border-slate-200 bg-bg-700 p-2.5 dark:border-white/5 dark:bg-bg-800">
             <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white ring-1 ring-slate-200 dark:ring-white/10">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-400/15 via-transparent to-brand-red/10" />
-              {alert?.img ? (
+              {(alert?.img ?? "https://clusteraz.flesk.fr/images/100016181.jpg") ? (
                 <img
-                  src={alert.img}
-                  alt={alert.name}
+                  src={alert?.img ?? "https://clusteraz.flesk.fr/images/100016181.jpg"}
+                  alt={alert?.name ?? "Fromage fondu triangles"}
                   className="relative h-full w-full object-contain p-1 animate-float drop-shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
                 />
               ) : (
-                <span className="relative animate-float text-4xl">🥛</span>
+                <span className="relative animate-float text-4xl">🧀</span>
               )}
             </div>
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-semibold text-slate-900 dark:text-white">
-                {alert?.name ?? "Lait Délice 1L"}
+                {alert?.name ?? "Fromage fondu triangles"}
               </div>
               <div className="truncate text-[11px] text-slate-500 dark:text-white/50">
-                {alert?.brand || "Demi-écrémé · UHT"}
+                {alert?.brand || "PRESIDENT"}
               </div>
             </div>
           </div>
@@ -294,18 +294,18 @@ export function GrandeDistribRow() {
             <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-white/40">Prix actuel</div>
             <div className="mt-0.5 flex items-baseline gap-2">
               <span className="text-4xl font-black tabular-nums text-slate-900 dark:text-white">
-                {alert?.price ?? "2.080"}
+                {alert?.price ?? "3.150"}
               </span>
               <span className="text-sm font-bold text-brand-gold">DT</span>
               <span className="ml-auto inline-flex items-center gap-0.5 rounded-md bg-emerald-500/15 px-1.5 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-300">
                 <ArrowDownRight className="h-3 w-3" />
-                {alert?.change ?? "−7.5%"}
+                {alert?.change ?? "−12%"}
               </span>
             </div>
             <div className="text-[11px] text-slate-500 dark:text-white/50">
-              Moyenne : <span className="line-through">{alert?.oldPrice ?? "2.250"} DT</span>
+              Moyenne : <span className="line-through">{alert?.oldPrice ?? "3.570"} DT</span>
               <span className="mx-1.5 text-slate-300 dark:text-white/20">·</span>
-              <span className="text-emerald-600 dark:text-emerald-300">Économie {alert?.saved ?? "0.170"} DT</span>
+              <span className="text-emerald-600 dark:text-emerald-300">Économie {alert?.saved ?? "0.420"} DT</span>
             </div>
           </div>
 
@@ -313,10 +313,10 @@ export function GrandeDistribRow() {
           <div className="relative mt-3">
             <div className="mb-1 flex items-center justify-between text-[10px] text-slate-400 dark:text-white/40">
               <span className="font-semibold uppercase tracking-wider">Plage des prix</span>
-              <span className="tabular-nums">Min {alert?.min ?? "2.05"} · Max {alert?.max ?? "2.25"}</span>
+              <span className="tabular-nums">Min {alert?.min ?? "3.15"} · Max {alert?.max ?? "3.57"}</span>
             </div>
             <div className="flex h-12 items-end gap-1">
-              {[2.25, 2.22, 2.18, 2.20, 2.15, 2.10, 2.08].map((v, i, arr) => {
+              {[3.57, 3.55, 3.53, 3.53, 3.50, 3.49, 3.15].map((v, i, arr) => {
                 const min = Math.min(...arr);
                 const max = Math.max(...arr);
                 const h = ((v - min) / (max - min)) * 100;
@@ -369,7 +369,7 @@ export function GrandeDistribRow() {
 
           {/* Actions */}
           <div className="relative mt-auto pt-3">
-            <Link href={alert?.href ?? "/alertes"} className="btn-primary w-full">Voir l'offre</Link>
+            <Link href={alert?.href ?? "/supermarche/fromage-fondu-triangles"} className="btn-primary w-full">Voir l'offre</Link>
             <Link href="/alertes" className="mt-1.5 block w-full rounded-lg py-1.5 text-center text-xs font-medium text-slate-500 hover:text-slate-900 dark:text-white/60 dark:hover:text-white">
               Me rappeler plus tard
             </Link>
