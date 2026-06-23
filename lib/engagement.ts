@@ -9,11 +9,7 @@ import { catalogPool } from "@/lib/db";
 
 let ensured: Promise<void> | null = null;
 
-export function ensureEngagementSchema(): Promise<void> {
-  if (!ensured) {
-    ensured = (async () => {
-      const pool = catalogPool();
-      await pool.query(`
+const SCHEMA_SQL = `
         CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
         -- Favorites: a saved product. We store a snapshot (name/img/price/shop)
@@ -72,7 +68,12 @@ export function ensureEngagementSchema(): Promise<void> {
           created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
         );
         CREATE INDEX IF NOT EXISTS idx_user_notifications_user ON user_notifications(user_id, read, created_at DESC);
-      `);
+`;
+
+export function ensureEngagementSchema(): Promise<void> {
+  if (!ensured) {
+    ensured = (async () => {
+      await catalogPool().query(SCHEMA_SQL);
     })().catch((e) => {
       // Reset so a transient failure can retry on the next request.
       ensured = null;
@@ -80,4 +81,14 @@ export function ensureEngagementSchema(): Promise<void> {
     });
   }
   return ensured;
+}
+
+// One-time maintenance: drop the tables and recreate them with the current
+// schema (used to migrate an old UUID user_id to TEXT). Bypasses the memo.
+export async function resetEngagementSchema(): Promise<void> {
+  await catalogPool().query(
+    `DROP TABLE IF EXISTS user_favorites, user_alerts, user_notifications CASCADE;`
+  );
+  await catalogPool().query(SCHEMA_SQL);
+  ensured = Promise.resolve(); // mark as ensured for the rest of this process
 }
