@@ -7,8 +7,6 @@ const PLAY_STORE_URL =
 
 const SLIDES = [
   { src: "/banner.png",  href: "/promotions" },
-  { src: "/banner2.png", href: "/promotions" },
-  { src: "/banner3.png", href: "/promotions" },
 ];
 
 const INTERVAL = 4000;
