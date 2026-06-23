@@ -21,7 +21,7 @@ jinja_env = Environment(
 
 SUBJECTS = {
     "welcome": "Welcome!",
-    "email_verification": "Verify your email",
+    "email_verification": "Code de verification 1111.tn",
     "password_reset": "Password reset OTP",
     "notification": "Notification",
 }

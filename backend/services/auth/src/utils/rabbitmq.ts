@@ -71,22 +71,38 @@ function scheduleReconnect(): void {
 }
 
 export async function connectRabbitMQ(): Promise<void> {
-  await setup();
+  try {
+    await setup();
+  } catch (err) {
+    scheduleReconnect();
+    throw err;
+  }
 }
 
 export async function publishMail(
   routingKey: string,
   payload: { to: string; name: string; data: Record<string, unknown> },
-): Promise<void> {
+): Promise<boolean> {
   if (!channel) {
     logger.warn('RabbitMQ channel not ready; skipping mail publish', {
       routingKey,
       to: payload.to,
     });
-    return;
+    return false;
   }
-  channel.publish(EXCHANGE, routingKey, Buffer.from(JSON.stringify(payload)), {
-    persistent: true,
-    contentType: 'application/json',
-  });
+  try {
+    return channel.publish(EXCHANGE, routingKey, Buffer.from(JSON.stringify(payload)), {
+      persistent: true,
+      contentType: 'application/json',
+    });
+  } catch (err) {
+    logger.error('RabbitMQ mail publish failed', {
+      routingKey,
+      to: payload.to,
+      error: (err as Error).message,
+    });
+    channel = null;
+    scheduleReconnect();
+    return false;
+  }
 }

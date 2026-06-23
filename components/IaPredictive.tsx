@@ -1,20 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import { BrainCircuit, Package, Sparkles, Store, Tag, Zap } from "lucide-react";
+import { BrainCircuit, Package, ReceiptText, SearchCheck, ShieldCheck, Sparkles, Store, Truck, Wrench, Zap } from "lucide-react";
 import Link from "next/link";
-
-type Discount = {
-  name: string;
-  catalog: string;
-  catalogPath: string;
-  slug: string;
-  shop: string;
-  img: string | null;
-  currentPrice: number;
-  regularPrice: number;
-  discountPct: number;
-  saving: number;
-};
 
 type CatalogStats = {
   catalog: string;
@@ -39,15 +26,10 @@ function fmtDT(n: number): string {
 }
 
 export function IaPredictive() {
-  const [discounts, setDiscounts] = useState<Discount[]>([]);
   const [catalogs, setCatalogs] = useState<CatalogStats[]>([]);
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/stats/biggest-discounts")
-      .then((r) => r.json())
-      .then((d) => { if (!cancelled && Array.isArray(d?.items)) setDiscounts(d.items); })
-      .catch(() => {});
     fetch("/api/stats/catalog-summary")
       .then((r) => r.json())
       .then((d) => { if (!cancelled && Array.isArray(d?.catalogs)) setCatalogs(d.catalogs); })
@@ -252,61 +234,42 @@ export function IaPredictive() {
           </Link>
         </div>
 
-        {/* TOP RÉDUCTIONS INFORMATIQUE */}
+        {/* CHECKLIST ACHAT INFORMATIQUE */}
         <div className="card card-pad">
           <div className="mb-2 flex items-center gap-2">
-            <Tag className="h-4 w-4 text-blue-500" />
-            <span className="section-title">Top réductions informatique</span>
+            <SearchCheck className="h-4 w-4 text-blue-500" />
+            <span className="section-title">Avant d'acheter en tech</span>
           </div>
           <div className="mb-2 text-[10px] text-slate-400 dark:text-white/40">
-            PC, imprimantes, écrans · économies les plus élevées
+            Les points à vérifier avant de choisir une boutique
           </div>
 
-          {discounts.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 p-3 text-center text-[11px] text-slate-400 dark:border-white/10 dark:bg-white/[0.02] dark:text-white/40">
-              Chargement…
-            </div>
-          ) : (
-            <ul className="space-y-1.5">
-              {discounts.slice(0, 4).map((d) => (
-                <li key={`${d.catalog}-${d.slug}`}>
-                  <Link
-                    href={`${d.catalogPath}/${d.slug}`}
-                    className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1.5 transition hover:border-blue-400/40 hover:bg-blue-50/40 dark:border-white/5 dark:bg-bg-800 dark:hover:border-blue-400/40 dark:hover:bg-blue-500/[0.04]"
-                  >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md bg-white ring-1 ring-slate-200 dark:ring-white/10">
-                      {d.img ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={d.img} alt={d.name} className="h-full w-full object-contain p-0.5" />
-                      ) : (
-                        <span className="text-sm">💻</span>
-                      )}
+          <ul className="space-y-1.5">
+            {[
+              { icon: ReceiptText, label: "Prix final", text: "Comparez livraison, TVA et frais de paiement." },
+              { icon: ShieldCheck, label: "Garantie", text: "Vérifiez la durée, le SAV et les conditions d'échange." },
+              { icon: Wrench, label: "Compatibilité", text: "RAM, SSD, ports, écran et chargeur doivent correspondre au besoin." },
+              { icon: Truck, label: "Disponibilité", text: "Confirmez le stock réel avant de commander." },
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <li key={item.label} className="rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-white/5 dark:bg-bg-800">
+                  <div className="flex items-start gap-2">
+                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-300">
+                      <Icon className="h-3.5 w-3.5" />
+                    </span>
+                    <div className="min-w-0 leading-tight">
+                      <div className="text-[11px] font-bold text-slate-900 dark:text-white">{item.label}</div>
+                      <div className="mt-0.5 text-[10px] leading-snug text-slate-500 dark:text-white/55">{item.text}</div>
                     </div>
-                    <div className="min-w-0 flex-1 leading-tight">
-                      <div className="truncate text-[11px] font-semibold text-slate-900 dark:text-white">{d.name}</div>
-                      <div className="mt-0.5 flex items-center gap-1.5 text-[9px] text-slate-500 dark:text-white/55">
-                        <span className="rounded-sm border border-blue-400/30 bg-blue-500/15 px-1 py-px font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">
-                          Tech
-                        </span>
-                        <span className="truncate">{d.shop}</span>
-                      </div>
-                    </div>
-                    <div className="shrink-0 text-right leading-tight">
-                      <div className="rounded-md bg-red-500/15 px-1.5 py-0.5 text-[11px] font-black tabular-nums text-red-600 dark:text-red-300">
-                        −{d.discountPct}%
-                      </div>
-                      <div className="mt-0.5 text-[9px] tabular-nums text-emerald-600 dark:text-emerald-300">
-                        {fmtCompact(Math.round(d.currentPrice))} DT
-                      </div>
-                    </div>
-                  </Link>
+                  </div>
                 </li>
-              ))}
-            </ul>
-          )}
+              );
+            })}
+          </ul>
 
           <Link className="mt-3 inline-block text-xs font-medium text-brand-gold hover:underline" href="/retail">
-            Voir tout l&apos;informatique
+            Comparer les prix informatique
           </Link>
         </div>
       </div>

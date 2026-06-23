@@ -45,14 +45,6 @@ type IllogicalPromo = {
   href: string;
 };
 
-const CHAMPIONS_FALLBACK: Champion[] = [
-  { shop: "Aziza",    cheapestCount: 412, totalProducts: 1820, winRate: 23 },
-  { shop: "MG",       cheapestCount: 358, totalProducts: 1640, winRate: 22 },
-  { shop: "Carrefour", cheapestCount: 281, totalProducts: 2150, winRate: 13 },
-  { shop: "Monoprix", cheapestCount: 224, totalProducts: 1980, winRate: 11 },
-  { shop: "Géant",    cheapestCount: 189, totalProducts: 1750, winRate: 11 },
-];
-
 function shopLogoSrc(shop: string): string | null {
   const key = shop.trim().toLowerCase();
   if (key.includes("aziza")) return "/aziza-logo.jpg";
@@ -78,6 +70,8 @@ export function GrandeDistribRow() {
     distributionEnseignes.map((e) => ({ name: e.name, price: e.price, diff: e.diff, best: e.best }))
   );
   const [champions, setChampions] = useState<Champion[]>([]);
+  const [championsLoading, setChampionsLoading] = useState(true);
+  const [championsError, setChampionsError] = useState(false);
   const [basketSize, setBasketSize] = useState<number>(29);
   const [economy, setEconomy] = useState<string>("8.370");
   const [alert, setAlert] = useState<AlertData | null>(null);
@@ -96,10 +90,18 @@ export function GrandeDistribRow() {
       })
       .catch(() => {});
 
-    fetch("/api/stats/cheapest-champions")
+    setChampionsLoading(true);
+    setChampionsError(false);
+    fetch("/api/stats/cheapest-champions", { cache: "no-store" })
       .then((r) => r.json())
-      .then((d) => { if (!cancelled && Array.isArray(d?.champions)) setChampions(d.champions as Champion[]); })
-      .catch(() => {});
+      .then((d) => {
+        if (cancelled) return;
+        if (d?.error) setChampionsError(true);
+        if (Array.isArray(d?.champions)) setChampions(d.champions as Champion[]);
+        else setChampionsError(true);
+      })
+      .catch(() => { if (!cancelled) setChampionsError(true); })
+      .finally(() => { if (!cancelled) setChampionsLoading(false); });
 
     fetch("/api/stats/illogical-promo")
       .then((r) => r.json())
@@ -227,14 +229,35 @@ export function GrandeDistribRow() {
           </div>
 
           <ul className="mt-3 space-y-2">
-            {(champions.length > 0 ? champions : CHAMPIONS_FALLBACK).map((c, i) => {
+            {championsLoading && Array.from({ length: 5 }).map((_, i) => (
+              <li key={`champion-loading-${i}`} className="rounded-xl border border-slate-200 bg-slate-50 p-2 dark:border-white/5 dark:bg-bg-800">
+                <div className="flex animate-pulse items-center gap-2.5">
+                  <span className="h-6 w-6 rounded-full bg-slate-200 dark:bg-white/10" />
+                  <span className="h-8 w-8 rounded-lg bg-slate-200 dark:bg-white/10" />
+                  <div className="min-w-0 flex-1 space-y-1.5">
+                    <div className="h-3 w-24 rounded bg-slate-200 dark:bg-white/10" />
+                    <div className="h-2.5 w-32 rounded bg-slate-200 dark:bg-white/10" />
+                  </div>
+                  <span className="h-5 w-10 rounded bg-slate-200 dark:bg-white/10" />
+                </div>
+                <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-white/10" />
+              </li>
+            ))}
+
+            {!championsLoading && (championsError || champions.length === 0) && (
+              <li className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-3 text-center text-[11px] text-slate-500 dark:border-white/10 dark:bg-bg-800 dark:text-white/50">
+                Données backend indisponibles pour le moment.
+              </li>
+            )}
+
+            {!championsLoading && champions.map((c, i) => {
               const logo = shopLogoSrc(c.shop);
               const rankBg =
                 i === 0 ? "bg-gradient-to-br from-yellow-400 to-amber-600 text-yellow-950" :
                 i === 1 ? "bg-gradient-to-br from-slate-300 to-slate-500 text-slate-900" :
                 i === 2 ? "bg-gradient-to-br from-orange-400 to-orange-700 text-orange-50" :
                           "bg-slate-200 text-slate-600 dark:bg-white/10 dark:text-white/70";
-              const maxWins = Math.max(...(champions.length > 0 ? champions : CHAMPIONS_FALLBACK).map((x) => x.cheapestCount));
+              const maxWins = Math.max(...champions.map((x) => x.cheapestCount));
               const barPct = maxWins > 0 ? (c.cheapestCount / maxWins) * 100 : 0;
               return (
                 <li key={c.shop} className="rounded-xl border border-slate-200 bg-slate-50 p-2 dark:border-white/5 dark:bg-bg-800">
@@ -255,7 +278,7 @@ export function GrandeDistribRow() {
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-xs font-semibold text-slate-900 dark:text-white">{c.shop}</div>
                       <div className="text-[10px] text-slate-500 dark:text-white/55">
-                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">{c.cheapestCount}</span> meilleurs prix sur {c.totalProducts} produits
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">{c.cheapestCount}</span> meilleurs prix sur {c.totalProducts} produits comparables
                       </div>
                     </div>
                     <div className="text-right leading-tight">

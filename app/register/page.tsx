@@ -133,7 +133,7 @@ export default function RegisterPage() {
         password,
         state,
       });
-      router.push("/profil");
+      router.push(email ? `/verify-email?email=${encodeURIComponent(email)}` : "/profil");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erreur lors de l'inscription");
     } finally {

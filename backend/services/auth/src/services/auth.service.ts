@@ -59,6 +59,8 @@ export function redirectForRole(role: string): RedirectIntent {
   return role === 'admin' || role === 'super_admin' ? 'back-office' : 'front-office';
 }
 
+const otpTtlMinutes = Math.max(1, Math.round(config.otpTtlMs / 60000));
+
 // ---------------------------------------------------------------------------
 // issueTokenPair
 //
@@ -143,10 +145,10 @@ export async function register(body: {
       name: body.full_name,
       data: {},
     });
-    void publishMail('mail.verification', {
+    await publishMail('mail.verification', {
       to: body.email,
       name: body.full_name,
-      data: { otp },
+      data: { otp, otp_ttl_minutes: otpTtlMinutes },
     });
   }
 
@@ -343,10 +345,10 @@ export async function resendOtp(userId: string): Promise<void> {
     expires_at: expiresAt,
   });
 
-  void publishMail('mail.verification', {
+  await publishMail('mail.verification', {
     to: user.email,
     name: user.full_name,
-    data: { otp },
+    data: { otp, otp_ttl_minutes: otpTtlMinutes },
   });
 }
 

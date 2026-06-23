@@ -12,7 +12,7 @@ const indices = [
     value: "104.2",
     change: "+ 1.9%",
     up: true,
-    img: "/Inflation e-commerce.png",
+    img: "/Inflation e-commerceBg.png",
     imgSize: "h-12 w-12",
     iconBg: "from-blue-500/40 to-blue-700/30 ring-blue-400/30",
     impact: "Moyen",
@@ -28,7 +28,7 @@ const indices = [
     value: "102.7",
     change: "− 0.6%",
     up: false,
-    img: "/volatilité.png",
+    img: "/VolatilitéBg.png",
     imgSize: "h-11 w-11",
     iconBg: "from-cyan-500/40 to-cyan-700/30 ring-cyan-400/30",
     impact: "Élevé",
@@ -78,19 +78,17 @@ const META_DESC =
   "Il représente la santé globale du marché e-commerce tunisien — au-dessus de 100, " +
   "le marché est dynamique et favorable aux consommateurs.";
 
-const MYTEK_CACHE = "https://mk-media.mytek.tn/media/catalog/product/cache/7683d28f7d5b38a73a8ad2bb0d1aa983";
-
 const catIcons = [
   // Smartphones — Samsung Galaxy S25 Ultra
-  { img: `${MYTEK_CACHE}/s/m/smartphone-samsung-galaxy-s25-ultra-5g-12go-256go-noir-titanium-h.jpg`, grad: "from-blue-500 to-blue-700" },
+  { img: "/SmartphoneBg.png", grad: "from-blue-500 to-blue-700" },
   // Informatique — MacBook Air M1
-  { img: `${MYTEK_CACHE}/a/p/apple-macbook-air-m1-8go-256go-ssd-gris-1_1.jpg`, grad: "from-cyan-500 to-cyan-700" },
+  { img: "/InformatiqueBg.png", grad: "from-cyan-500 to-cyan-700" },
   // Électroménager — Aspirateur robot Kärcher
-  { img: `${MYTEK_CACHE}/a/s/aspirateur-robot-karcher-rcv5-blanc--v.jpg`, grad: "from-amber-500 to-orange-600" },
+  { img: "/ElectroBg.png", grad: "from-amber-500 to-orange-600" },
   // Grande Distribution — local couffin
   { img: "/couffin.png", grad: "from-emerald-500 to-emerald-700" },
   // Parapharmacie — unsplash pharmacy/skincare
-  { img: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=200&h=200&fit=crop&q=80", grad: "from-pink-500 to-purple-600" },
+  { img: "/ParaSymbole.png", grad: "from-pink-500 to-purple-600" },
   // Climatiseurs — local clim
   { img: "/clim.png", grad: "from-sky-400 to-blue-600" },
 ];
@@ -196,7 +194,7 @@ export function MarketIndex() {
             {/* Icon + name */}
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-brand-gold/30 to-brand-gold/10 ring-1 ring-brand-gold/30 shadow-lg">
-                <img src="/Meta Index Global 1111.png" alt="Meta Index Global 1111" className="h-11 w-11 object-contain" />
+                <img src="/metaBg.png" alt="Meta Index Global 1111" className="h-11 w-11 object-contain" />
               </div>
               <span className="pr-5 text-[11px] font-semibold leading-tight text-amber-700 dark:text-brand-gold/70">Meta Index Global 1111</span>
             </div>

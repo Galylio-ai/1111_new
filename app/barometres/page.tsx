@@ -1,10 +1,19 @@
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingDown, TrendingUp } from "lucide-react";
 import { PageShell } from "@/components/site/PageShell";
 import { Reveal } from "@/components/site/Reveal";
 import { AcBarometer } from "@/components/AcBarometer";
 import { categoryBarometres } from "@/lib/data";
 
-export const metadata = { title: "Baromètres par catégorie — 1111.tn" };
+export const metadata = { title: "Baromètres par catégorie - 1111.tn" };
+
+const categoryImages = [
+  "/SmartphoneBg.png",
+  "/InformatiqueBg.png",
+  "/ElectroBg.png",
+  "/couffin.png",
+  "/ParaSymbole.png",
+  "/clim.png",
+];
 
 export default function BarometresPage() {
   return (
@@ -13,7 +22,7 @@ export default function BarometresPage() {
       title="Baromètres"
       accent="par catégorie"
       arabic="مقاييس الأسعار"
-      description="L'indice de prix de chaque univers du marché tunisien, avec les meilleures enseignes et leur fiabilité — mis à jour chaque heure."
+      description="L'indice de prix de chaque univers du marché tunisien, avec les meilleures enseignes et leur fiabilité - mis à jour chaque heure."
       chips={[
         { label: "Catégories", value: "6", tone: "gold" },
         { label: "Meta Index", value: "108.7", tone: "emerald" },
@@ -26,12 +35,18 @@ export default function BarometresPage() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {categoryBarometres.map((c, i) => {
             const up = c.change.startsWith("+");
+            const image = categoryImages[i] ?? "/metaBg.png";
             return (
               <Reveal key={c.name} delay={i * 0.05}>
                 <div className="card card-pad group h-full transition hover:-translate-y-1 hover:border-slate-300 dark:hover:border-white/20">
-                  <div className="flex items-center justify-between">
-                    <div className="text-base font-bold text-slate-900 dark:text-white">{c.name}</div>
-                    <div className={`h-2.5 w-2.5 rounded-full bg-gradient-to-br ${c.color}`} />
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className={`flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br ${c.color} p-1.5 shadow-lg`}>
+                        <img src={image} alt={c.name} className="h-full w-full object-contain" />
+                      </span>
+                      <div className="truncate text-base font-bold text-slate-900 dark:text-white">{c.name}</div>
+                    </div>
+                    <div className={`h-2.5 w-2.5 shrink-0 rounded-full bg-gradient-to-br ${c.color}`} />
                   </div>
                   <div className="mt-2 flex items-baseline gap-2">
                     <div className="text-3xl font-black tabular-nums text-slate-900 dark:text-white">{c.value}</div>
@@ -61,7 +76,7 @@ export default function BarometresPage() {
 
       <section className="mx-auto mt-8 max-w-[1600px] px-3 sm:px-4">
         <Reveal>
-          <h2 className="section-title mb-1">Focus — Climatiseurs Tunisie</h2>
+          <h2 className="section-title mb-1">Focus - Climatiseurs Tunisie</h2>
         </Reveal>
       </section>
       <AcBarometer />
