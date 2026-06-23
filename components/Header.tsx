@@ -1,11 +1,12 @@
 "use client";
-import { Bell, ChevronDown, Flame, LogOut, Menu, ShieldCheck, Sparkles, TrendingUp, User, X } from "lucide-react";
+import { ChevronDown, Flame, LogOut, Menu, ShieldCheck, Sparkles, TrendingUp, User, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { navLinks } from "@/lib/nav";
 import { ThemeToggle } from "./ThemeToggle";
 import { useAuth } from "@/lib/auth";
+import { NotificationBell } from "./site/NotificationBell";
 
 const tickerItems = [
   { icon: TrendingUp, label: "Indice marché", value: "108.7", trend: "+1.2%", trendUp: true },
@@ -134,16 +135,7 @@ export function Header() {
 
             <ThemeToggle />
 
-            <button
-              className="relative hidden h-9 w-9 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition sm:flex dark:text-white/80 dark:hover:bg-white/10 dark:hover:text-white"
-              aria-label="Notifications"
-            >
-              <Bell className="h-4 w-4" />
-              <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-red px-1 text-[10px] font-bold text-white ring-2 ring-white dark:ring-bg-900">
-                3
-              </span>
-              <span className="pointer-events-none absolute right-1 top-1 h-4 w-4 animate-ping rounded-full bg-brand-red/60" />
-            </button>
+            <NotificationBell />
 
             <div className="mx-1 hidden sm:block h-6 w-px bg-slate-200 dark:bg-white/10" />
 

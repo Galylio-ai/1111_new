@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { ArrowLeftRight, ChevronRight, ExternalLink, Loader2, Package, Store, Tag } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { FavoriteAlertButtons } from "@/components/site/FavoriteAlertButtons";
 
 type Detail = {
   name: string;
@@ -190,6 +191,9 @@ export default function ProductDetailPage() {
                 </Link>
               )}
             </div>
+
+            {/* Favorites + price-drop alert */}
+            <FavoriteAlertButtons slug={slug} shopSlug={data.shopSlug ?? shop} />
 
             {data.overview && (
               <p className="mt-6 text-sm leading-relaxed text-slate-600 dark:text-white/65">{data.overview}</p>

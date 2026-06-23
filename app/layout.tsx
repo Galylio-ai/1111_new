@@ -6,7 +6,7 @@ import { AuthProvider } from "@/lib/auth";
 export const metadata: Metadata = {
   title: "1111.tn — Comparateur de prix Tunisie",
   description:
-    "Comparez plus de 250 000 produits, surveillez les prix, détectez les vraies promotions et économisez sur tous vos achats en Tunisie.",
+    "Comparez plus de 350 000 produits, surveillez les prix, détectez les vraies promotions et économisez sur tous vos achats en Tunisie.",
   icons: { icon: "/favicon.svg" },
 };
 

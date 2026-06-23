@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
-  Bell, Camera, CheckCircle2, ChevronDown, Heart,
-  LogOut, Mail, MapPin, Phone, ShieldCheck, User,
+  Bell, BellRing, Camera, CheckCircle2, ChevronDown, Heart,
+  LogOut, Mail, MapPin, Phone, ShieldCheck, Trash2, TrendingDown, User,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Header } from "@/components/Header";
@@ -21,11 +22,24 @@ const TUNISIAN_STATES = [
 
 const tabs = [
   { id: "info", label: "Informations", icon: User },
-  { id: "alertes", label: "Mes alertes", icon: Bell },
+  { id: "notifications", label: "Notifications", icon: Bell },
+  { id: "alertes", label: "Mes alertes", icon: BellRing },
   { id: "favoris", label: "Favoris", icon: Heart },
   { id: "securite", label: "Sécurité", icon: ShieldCheck },
 ] as const;
 type Tab = typeof tabs[number]["id"];
+
+const fmtPrice = (n: number | null) =>
+  n == null ? "—" : n.toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 3 });
+
+type FavoriteItem = { id: string; slug: string; shopSlug: string | null; name: string; img: string | null; brand: string | null; price: number | null };
+type AlertItem = { id: string; slug: string; shopSlug: string | null; name: string; img: string | null; baselinePrice: number | null; lastPrice: number | null };
+type NotifItem = { id: string; title: string; body: string | null; slug: string | null; shopSlug: string | null; img: string | null; oldPrice: number | null; newPrice: number | null; read: boolean; createdAt: string };
+
+function productHref(slug: string | null, shopSlug: string | null): string {
+  if (!slug) return "#";
+  return shopSlug ? `/boutiques/${shopSlug}/${slug}` : `/comparaison?a=${encodeURIComponent(slug)}`;
+}
 
 function Avatar({ url, name, onUpload }: { url?: string; name: string; onUpload: (file: File) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -77,9 +91,64 @@ export default function ProfilPage() {
   const [pwdErr, setPwdErr] = useState("");
   const [pwdLoading, setPwdLoading] = useState(false);
 
+  // Engagement data
+  const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
+  const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const [notifs, setNotifs] = useState<NotifItem[]>([]);
+  const [engLoading, setEngLoading] = useState(true);
+
+  const authHeaders = () => ({
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${typeof window !== "undefined" ? localStorage.getItem("access_token") ?? "" : ""}`,
+  });
+
+  async function loadEngagement() {
+    setEngLoading(true);
+    try {
+      const [f, a, n] = await Promise.all([
+        fetch("/api/favorites", { headers: authHeaders() }).then((r) => r.json()).catch(() => ({ items: [] })),
+        fetch("/api/alerts", { headers: authHeaders() }).then((r) => r.json()).catch(() => ({ items: [] })),
+        fetch("/api/notifications", { headers: authHeaders() }).then((r) => r.json()).catch(() => ({ items: [] })),
+      ]);
+      setFavorites(f.items ?? []);
+      setAlerts(a.items ?? []);
+      setNotifs(n.items ?? []);
+    } finally {
+      setEngLoading(false);
+    }
+  }
+
+  async function removeFavorite(slug: string) {
+    await fetch(`/api/favorites?slug=${encodeURIComponent(slug)}`, { method: "DELETE", headers: authHeaders() });
+    setFavorites((xs) => xs.filter((x) => x.slug !== slug));
+  }
+  async function removeAlert(slug: string) {
+    await fetch(`/api/alerts?slug=${encodeURIComponent(slug)}`, { method: "DELETE", headers: authHeaders() });
+    setAlerts((xs) => xs.filter((x) => x.slug !== slug));
+  }
+  async function markAllRead() {
+    await fetch("/api/notifications", { method: "PATCH", headers: authHeaders(), body: JSON.stringify({}) });
+    setNotifs((xs) => xs.map((x) => ({ ...x, read: true })));
+  }
+  async function clearNotifs() {
+    await fetch("/api/notifications", { method: "DELETE", headers: authHeaders() });
+    setNotifs([]);
+  }
+
   useEffect(() => {
     if (!loading && !user) router.replace("/login");
   }, [loading, user, router]);
+
+  useEffect(() => {
+    if (user) loadEngagement();
+  }, [user]);
+
+  // When opening Notifications, mark them read so the navbar bell clears.
+  useEffect(() => {
+    if (tab === "notifications" && notifs.some((n) => !n.read)) {
+      markAllRead();
+    }
+  }, [tab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (user) {
@@ -317,16 +386,89 @@ export default function ProfilPage() {
             </form>
           )}
 
+          {/* NOTIFICATIONS TAB */}
+          {tab === "notifications" && (
+            <div>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="section-title">Notifications</h2>
+                {notifs.length > 0 && (
+                  <button onClick={clearNotifs} className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 transition hover:text-red-500">
+                    <Trash2 className="h-3.5 w-3.5" /> Tout effacer
+                  </button>
+                )}
+              </div>
+              {engLoading ? (
+                <div className="flex justify-center py-12"><div className="h-7 w-7 animate-spin rounded-full border-2 border-brand-gold/30 border-t-brand-gold" /></div>
+              ) : notifs.length === 0 ? (
+                <div className="flex flex-col items-center gap-3 py-12 text-center">
+                  <Bell className="h-12 w-12 text-slate-300 dark:text-white/20" strokeWidth={1.5} />
+                  <p className="text-sm font-semibold text-slate-500 dark:text-white/50">Aucune notification</p>
+                  <p className="text-xs text-slate-400 dark:text-white/35">Vous serez notifié ici quand le prix d'un produit suivi baisse.</p>
+                </div>
+              ) : (
+                <ul className="space-y-2">
+                  {notifs.map((n) => (
+                    <li key={n.id}>
+                      <Link href={productHref(n.slug, n.shopSlug)}
+                        className={`flex items-center gap-3 rounded-xl border p-3 transition hover:border-brand-gold/40 ${n.read ? "border-bg-border bg-transparent" : "border-brand-gold/30 bg-brand-gold/[0.04]"}`}>
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white dark:border-white/10">
+                          {n.img ? <img src={n.img} alt="" className="h-full w-full object-contain" /> : <TrendingDown className="h-5 w-5 text-emerald-500" />}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm font-bold text-slate-900 dark:text-white">{n.title}</div>
+                          {n.body && <div className="truncate text-xs text-slate-500 dark:text-white/55">{n.body}</div>}
+                          <div className="mt-0.5 text-[10px] text-slate-400 dark:text-white/35">{new Date(n.createdAt).toLocaleString("fr-FR")}</div>
+                        </div>
+                        {n.newPrice != null && (
+                          <div className="text-right">
+                            {n.oldPrice != null && <div className="text-[11px] text-slate-400 line-through">{fmtPrice(n.oldPrice)}</div>}
+                            <div className="text-sm font-black text-emerald-600 dark:text-emerald-400 tabular-nums">{fmtPrice(n.newPrice)} DT</div>
+                          </div>
+                        )}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
           {/* ALERTES TAB */}
           {tab === "alertes" && (
             <div>
               <h2 className="section-title mb-4">Mes alertes prix</h2>
-              <div className="flex flex-col items-center gap-3 py-12 text-center">
-                <Bell className="h-12 w-12 text-slate-300 dark:text-white/20" strokeWidth={1.5} />
-                <p className="text-sm font-semibold text-slate-500 dark:text-white/50">Aucune alerte configurée</p>
-                <p className="text-xs text-slate-400 dark:text-white/35">Ajoutez des produits à surveiller depuis la page Alertes.</p>
-                <a href="/alertes" className="btn-primary mt-2 text-xs">Gérer mes alertes</a>
-              </div>
+              {engLoading ? (
+                <div className="flex justify-center py-12"><div className="h-7 w-7 animate-spin rounded-full border-2 border-brand-gold/30 border-t-brand-gold" /></div>
+              ) : alerts.length === 0 ? (
+                <div className="flex flex-col items-center gap-3 py-12 text-center">
+                  <BellRing className="h-12 w-12 text-slate-300 dark:text-white/20" strokeWidth={1.5} />
+                  <p className="text-sm font-semibold text-slate-500 dark:text-white/50">Aucune alerte configurée</p>
+                  <p className="text-xs text-slate-400 dark:text-white/35">Cliquez sur « M'alerter si le prix baisse » sur une page produit.</p>
+                </div>
+              ) : (
+                <ul className="space-y-2">
+                  {alerts.map((a) => (
+                    <li key={a.id} className="flex items-center gap-3 rounded-xl border border-bg-border p-3">
+                      <Link href={productHref(a.slug, a.shopSlug)} className="flex min-w-0 flex-1 items-center gap-3">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white dark:border-white/10">
+                          {a.img ? <img src={a.img} alt="" className="h-full w-full object-contain" /> : <Bell className="h-5 w-5 text-slate-300" />}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm font-bold text-slate-900 dark:text-white">{a.name}</div>
+                          <div className="mt-0.5 flex items-center gap-2 text-xs text-slate-500 dark:text-white/55">
+                            <span>Prix suivi : <span className="font-bold tabular-nums">{fmtPrice(a.baselinePrice)} DT</span></span>
+                            <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400"><Bell className="h-3 w-3" /> Active</span>
+                          </div>
+                        </div>
+                      </Link>
+                      <button onClick={() => removeAlert(a.slug)} aria-label="Supprimer l'alerte"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-400 transition hover:border-red-300 hover:text-red-500 dark:border-white/10">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           )}
 
@@ -334,11 +476,36 @@ export default function ProfilPage() {
           {tab === "favoris" && (
             <div>
               <h2 className="section-title mb-4">Mes favoris</h2>
-              <div className="flex flex-col items-center gap-3 py-12 text-center">
-                <Heart className="h-12 w-12 text-slate-300 dark:text-white/20" strokeWidth={1.5} />
-                <p className="text-sm font-semibold text-slate-500 dark:text-white/50">Aucun favori enregistré</p>
-                <p className="text-xs text-slate-400 dark:text-white/35">Cliquez sur ♥ sur n'importe quel produit pour le sauvegarder ici.</p>
-              </div>
+              {engLoading ? (
+                <div className="flex justify-center py-12"><div className="h-7 w-7 animate-spin rounded-full border-2 border-brand-gold/30 border-t-brand-gold" /></div>
+              ) : favorites.length === 0 ? (
+                <div className="flex flex-col items-center gap-3 py-12 text-center">
+                  <Heart className="h-12 w-12 text-slate-300 dark:text-white/20" strokeWidth={1.5} />
+                  <p className="text-sm font-semibold text-slate-500 dark:text-white/50">Aucun favori enregistré</p>
+                  <p className="text-xs text-slate-400 dark:text-white/35">Cliquez sur ♥ sur n'importe quel produit pour le sauvegarder ici.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {favorites.map((f) => (
+                    <div key={f.id} className="group flex items-center gap-3 rounded-xl border border-bg-border p-3 transition hover:border-brand-gold/40">
+                      <Link href={productHref(f.slug, f.shopSlug)} className="flex min-w-0 flex-1 items-center gap-3">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white dark:border-white/10">
+                          {f.img ? <img src={f.img} alt="" className="h-full w-full object-contain" /> : <Heart className="h-5 w-5 text-slate-300" />}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          {f.brand && <div className="truncate text-[10px] font-bold uppercase tracking-wider text-brand-gold/80">{f.brand}</div>}
+                          <div className="truncate text-sm font-bold text-slate-900 dark:text-white">{f.name}</div>
+                          <div className="mt-0.5 text-sm font-black text-brand-gold tabular-nums">{fmtPrice(f.price)} DT</div>
+                        </div>
+                      </Link>
+                      <button onClick={() => removeFavorite(f.slug)} aria-label="Retirer des favoris"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-400 transition hover:border-red-300 hover:text-red-500 dark:border-white/10">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
