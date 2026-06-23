@@ -12,13 +12,17 @@ import { Pool } from "pg";
 // "cheapest mix" (each item at its cheapest shop) for comparison.
 const pool = new Pool({ connectionString: process.env.ALIMENTATION_DB_URL, max: 5 });
 
-type Body = { items?: { id: number; qty?: number }[] };
+type Body = { items?: { id: number | string; qty?: number }[] };
 
 export async function POST(req: NextRequest) {
   let body: Body;
   try { body = await req.json(); } catch { return NextResponse.json({ error: "bad json" }, { status: 400 }); }
 
-  const items = (body.items ?? []).filter((i) => Number.isInteger(i.id) && i.id > 0);
+  // Coerce ids to numbers — pg returns bigint as string, so a basket persisted
+  // from the search results may carry string ids. Normalize before matching.
+  const items = (body.items ?? [])
+    .map((i) => ({ id: Number(i.id), qty: i.qty }))
+    .filter((i) => Number.isInteger(i.id) && i.id > 0);
   if (items.length === 0) return NextResponse.json({ shops: [], cheapestMix: null, items: [] });
 
   const ids = items.map((i) => i.id);

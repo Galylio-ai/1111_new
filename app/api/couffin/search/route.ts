@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
     );
 
     const items = rows.map((r) => ({
-      id: r.id,
+      id: Number(r.id), // pg returns bigint as string — coerce so compute's id match works
       name: r.name,
       brand: r.brand,
       img: r.img ?? "",

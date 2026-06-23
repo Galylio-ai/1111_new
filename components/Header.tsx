@@ -145,13 +145,18 @@ export function Header() {
                   href="/profil"
                   className="hidden md:flex h-9 items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900 transition dark:border-white/10 dark:bg-white/[0.03] dark:text-white/90 dark:hover:border-white/20 dark:hover:bg-white/[0.06] dark:hover:text-white"
                 >
-                  {user.avatar_url ? (
-                    <img src={user.avatar_url} alt="" className="h-5 w-5 rounded-full object-cover" />
-                  ) : (
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-gold/20 text-[10px] font-black text-brand-gold">
-                      {user.full_name.charAt(0).toUpperCase()}
-                    </span>
-                  )}
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-gold/20 text-[10px] font-black text-brand-gold">
+                    {user.avatar_url ? (
+                      <img
+                        src={user.avatar_url}
+                        alt=""
+                        className="h-5 w-5 rounded-full object-cover"
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                      />
+                    ) : (
+                      user.full_name.charAt(0).toUpperCase()
+                    )}
+                  </span>
                   <span className="max-w-[100px] truncate">{user.full_name.split(" ")[0]}</span>
                 </Link>
                 <button
@@ -276,13 +281,18 @@ export function Header() {
                 onClick={() => setMenuOpen(false)}
                 className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-white/10 dark:bg-white/[0.03] dark:text-white/90 dark:hover:bg-white/[0.06]"
               >
-                {user.avatar_url ? (
-                  <img src={user.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
-                ) : (
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-gold/20 font-black text-brand-gold">
-                    {user.full_name.charAt(0).toUpperCase()}
-                  </span>
-                )}
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-gold/20 font-black text-brand-gold">
+                  {user.avatar_url ? (
+                    <img
+                      src={user.avatar_url}
+                      alt=""
+                      className="h-8 w-8 rounded-full object-cover"
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                    />
+                  ) : (
+                    user.full_name.charAt(0).toUpperCase()
+                  )}
+                </span>
                 <span className="truncate">{user.full_name}</span>
               </Link>
               <button

@@ -43,11 +43,19 @@ function productHref(slug: string | null, shopSlug: string | null): string {
 
 function Avatar({ url, name, onUpload }: { url?: string; name: string; onUpload: (file: File) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [imgOk, setImgOk] = useState(true);
   const initials = name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+  // Reset the error flag whenever the url changes (e.g. after a new upload).
+  useEffect(() => { setImgOk(true); }, [url]);
   return (
     <div className="relative inline-block">
-      {url ? (
-        <img src={url} alt={name} className="h-24 w-24 rounded-full object-cover ring-4 ring-brand-gold/30 shadow-lg" />
+      {url && imgOk ? (
+        <img
+          src={url}
+          alt={name}
+          onError={() => setImgOk(false)}
+          className="h-24 w-24 rounded-full object-cover ring-4 ring-brand-gold/30 shadow-lg"
+        />
       ) : (
         <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-brand-gold/30 to-brand-red/20 ring-4 ring-brand-gold/30 shadow-lg">
           <span className="text-2xl font-black text-brand-gold">{initials}</span>
