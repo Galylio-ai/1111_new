@@ -1,11 +1,20 @@
 "use client";
-import { ArrowDownRight, Bell, ShieldAlert, TrendingDown, TrendingUp } from "lucide-react";
+import { ArrowDownRight, Bell, PiggyBank, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { distributionEnseignes, getStoreLogo, veilleProducts } from "@/lib/data";
+import { distributionEnseignes, getStoreLogo } from "@/lib/data";
 
 type EnseigneRow = { name: string; price: string; diff: string; best?: boolean };
-type VeilleRow = { name: string; price: string; change: string; down: boolean };
+type VeilleRow = {
+  name: string;
+  slug?: string;
+  minPrice: string;
+  maxPrice: string;
+  saving: string;
+  savingPct: string;
+  cheapestShop: string;
+  img: string | null;
+};
 type AlertData = {
   name: string;
   brand: string;
@@ -64,7 +73,12 @@ export function GrandeDistribRow() {
   const [enseignes, setEnseignes] = useState<EnseigneRow[]>(
     distributionEnseignes.map((e) => ({ name: e.name, price: e.price, diff: e.diff, best: e.best }))
   );
-  const [veille, setVeille] = useState<VeilleRow[]>(veilleProducts);
+  const [veille, setVeille] = useState<VeilleRow[]>([
+    { name: "Huile d'olive Carthage 1L", minPrice: "12.900", maxPrice: "18.500", saving: "5.600", savingPct: "30%", cheapestShop: "Aziza", img: null },
+    { name: "Couches Pampers Premium Care T3", minPrice: "39.500", maxPrice: "52.900", saving: "13.400", savingPct: "25%", cheapestShop: "Carrefour", img: null },
+    { name: "Lait Délice 1L", minPrice: "2.080", maxPrice: "2.450", saving: "0.370", savingPct: "15%", cheapestShop: "Monoprix", img: null },
+    { name: "Café Bondin Royal 250g", minPrice: "6.890", maxPrice: "8.250", saving: "1.360", savingPct: "16%", cheapestShop: "Géant", img: null },
+  ]);
   const [basketSize, setBasketSize] = useState<number>(29);
   const [economy, setEconomy] = useState<string>("8.370");
   const [alert, setAlert] = useState<AlertData | null>(null);
@@ -191,52 +205,72 @@ export function GrandeDistribRow() {
           </div>
         </div>
 
-        {/* VEILLE PRIX CONSOMMATEUR */}
+        {/* TOP ÉCONOMIES — biggest cross-shop price gaps */}
         <div className="card card-pad">
           <div className="mb-1 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Bell className="h-4 w-4 text-brand-gold" />
-              <span className="section-title">Veille prix consommateur</span>
+              <PiggyBank className="h-4 w-4 text-emerald-500" />
+              <span className="section-title">Top économies du jour</span>
             </div>
+            <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-300">
+              MAJ live
+            </span>
           </div>
           <div className="font-arabic text-[11px] text-slate-400 dark:text-white/50" dir="rtl">
-            ثبت في السعر بلا ما تفتكش
+            أكبر الفوارق في الأسعار اليوم
           </div>
 
-          <div className="mt-3 flex items-center gap-2 rounded-xl border border-bg-border bg-bg-700 p-1.5 dark:bg-bg-800">
-            <input
-              className="flex-1 bg-transparent px-2 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder:text-white/40"
-              placeholder="Rechercher un produit à surveiller…"
-            />
-            <button className="rounded-lg bg-brand-red px-3 py-1.5 text-xs font-semibold text-white">
-              Surveiller
-            </button>
-          </div>
-
-          <div className="mt-3 text-[11px] uppercase tracking-wider text-slate-400 dark:text-white/40">Mes produits suivis</div>
-          <ul className="mt-1 divide-y divide-bg-border/50">
-            {veille.map((p) => (
-              <li key={p.name} className="flex items-center justify-between py-2 text-sm">
-                <span className="flex items-center gap-2 text-slate-700 dark:text-white/90">
-                  <span className="h-1.5 w-1.5 rounded-full bg-brand-gold" />
-                  {p.name}
-                </span>
-                <span className="flex items-center gap-3">
-                  <span className="tabular-nums text-slate-900 dark:text-white">{p.price}</span>
-                  <span
-                    className={`inline-flex items-center gap-0.5 text-xs ${
-                      p.down ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-300"
-                    }`}
-                  >
-                    {p.down ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />}
-                    {p.change}
-                  </span>
-                </span>
-              </li>
-            ))}
+          <ul className="mt-3 space-y-2">
+            {veille.map((p) => {
+              const shopLogo = shopLogoSrc(p.cheapestShop);
+              const inner = (
+                <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-2 transition hover:border-emerald-300/60 hover:bg-emerald-50/40 dark:border-white/5 dark:bg-bg-800 dark:hover:border-emerald-400/30 dark:hover:bg-bg-700">
+                  <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white ring-1 ring-slate-200 dark:bg-white/[0.04] dark:ring-white/10">
+                    {p.img ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={p.img} alt={p.name} className="h-full w-full object-contain p-0.5" />
+                    ) : (
+                      <span className="text-lg">🛒</span>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-xs font-semibold text-slate-900 dark:text-white">{p.name}</div>
+                    <div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-white/60">
+                      <span>Dès {p.minPrice} DT</span>
+                      <span className="text-slate-300 dark:text-white/20">·</span>
+                      <span className="flex items-center gap-1">
+                        {shopLogo ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={shopLogo} alt={p.cheapestShop} className="h-3 w-3 rounded-sm object-contain" />
+                        ) : null}
+                        <span className="font-medium text-slate-700 dark:text-white/80">{p.cheapestShop}</span>
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 flex-col items-end leading-tight">
+                    <span className="rounded-md bg-emerald-500/15 px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-emerald-700 dark:text-emerald-300">
+                      −{p.saving} DT
+                    </span>
+                    <span className="mt-0.5 text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">
+                      {p.savingPct} écart
+                    </span>
+                  </div>
+                </div>
+              );
+              return (
+                <li key={p.name}>
+                  {p.slug ? (
+                    <Link href={`/supermarche/${p.slug}`} className="block">{inner}</Link>
+                  ) : (
+                    inner
+                  )}
+                </li>
+              );
+            })}
           </ul>
-          <Link href="/veille" className="mt-3 block w-full rounded-lg border border-bg-border bg-bg-700 py-2 text-center text-xs font-medium text-slate-600 hover:bg-bg-800 dark:bg-bg-800 dark:text-white/80 dark:hover:bg-bg-700">
-            Voir tous mes produits
+
+          <Link href="/comparateur" className="mt-3 block w-full rounded-lg border border-emerald-200 bg-emerald-50 py-2 text-center text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-400/20 dark:bg-emerald-500/10 dark:text-emerald-300 dark:hover:bg-emerald-500/20">
+            Comparer tout le panier
           </Link>
         </div>
 

@@ -7,7 +7,7 @@ const pool = new Pool({
 });
 
 const BASKET_SIZE = 29;
-const VEILLE_SIZE = 5;
+const VEILLE_SIZE = 4;
 
 function formatMillimes(n: number): string {
   return n.toFixed(3);
@@ -70,27 +70,49 @@ export async function GET() {
       best: i === 0,
     }));
 
-    // 3. Veille: products sold in 3+ shops with the biggest price spread between shops.
-    //    This surfaces real market tension — items where shops genuinely disagree on price.
-    //    show min price + spread% (max-min)/max so the user sees the savings opportunity.
+    // 3. Top économies: products with the biggest absolute saving (max-min) between shops,
+    //    sold in 3+ shops. Returns image, cheapest shop name, and DT savings — so the card
+    //    tells a complete story: "switch shops for this product, save X DT".
     const veilleRes = await pool.query<{
       name: string;
       min_price: string;
       max_price: string;
-      shop_count: string;
+      cheapest_shop: string;
+      img: string | null;
+      slug: string;
     }>(
-      `SELECT p.name,
-              MIN(sp.current_price) AS min_price,
-              MAX(sp.current_price) AS max_price,
-              COUNT(DISTINCT sp.shop_id)::text AS shop_count
-       FROM products p
-       JOIN shop_prices sp ON sp.product_id = p.id
-       WHERE sp.current_price > 0
-       GROUP BY p.id, p.name
-       HAVING COUNT(DISTINCT sp.shop_id) >= 3
-         AND MAX(sp.current_price) > 0
-         AND (MAX(sp.current_price) - MIN(sp.current_price)) / MAX(sp.current_price) >= 0.05
-       ORDER BY (MAX(sp.current_price) - MIN(sp.current_price)) / MAX(sp.current_price) DESC
+      `WITH ranked AS (
+         SELECT p.id,
+                p.name,
+                p.slug,
+                MIN(sp.current_price) AS min_price,
+                MAX(sp.current_price) AS max_price,
+                COUNT(DISTINCT sp.shop_id) AS shop_count
+         FROM products p
+         JOIN shop_prices sp ON sp.product_id = p.id
+         WHERE sp.current_price > 0
+         GROUP BY p.id, p.name, p.slug
+         HAVING COUNT(DISTINCT sp.shop_id) >= 3
+            AND MAX(sp.current_price) > 0
+            AND (MAX(sp.current_price) - MIN(sp.current_price)) / MAX(sp.current_price) >= 0.10
+       )
+       SELECT r.name,
+              r.slug,
+              r.min_price::text,
+              r.max_price::text,
+              (
+                SELECT s.name FROM shop_prices sp2
+                JOIN shops s ON s.id = sp2.shop_id
+                WHERE sp2.product_id = r.id AND sp2.current_price = r.min_price
+                ORDER BY s.id ASC LIMIT 1
+              ) AS cheapest_shop,
+              (
+                SELECT image_url FROM product_images
+                WHERE product_id = r.id AND image_url LIKE 'https://%'
+                ORDER BY id ASC LIMIT 1
+              ) AS img
+       FROM ranked r
+       ORDER BY (r.max_price - r.min_price) DESC
        LIMIT $1`,
       [VEILLE_SIZE]
     );
@@ -98,13 +120,17 @@ export async function GET() {
     const veille = veilleRes.rows.map((r) => {
       const min = parseFloat(r.min_price) || 0;
       const max = parseFloat(r.max_price) || min;
-      // spread %: how much cheaper is the cheapest shop vs the most expensive
-      const pct = max > 0 ? -((max - min) / max) * 100 : 0;
+      const saving = max - min;
+      const pct = max > 0 ? ((max - min) / max) * 100 : 0;
       return {
         name: r.name,
-        price: formatMillimes(min),
-        change: `${pct.toFixed(1)}%`,
-        down: true, // always "down" — showing the saving vs worst price
+        slug: r.slug,
+        minPrice: formatMillimes(min),
+        maxPrice: formatMillimes(max),
+        saving: formatMillimes(saving),
+        savingPct: `${pct.toFixed(0)}%`,
+        cheapestShop: r.cheapest_shop || "—",
+        img: r.img,
       };
     });
 
