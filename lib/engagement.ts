@@ -82,13 +82,3 @@ export function ensureEngagementSchema(): Promise<void> {
   }
   return ensured;
 }
-
-// One-time maintenance: drop the tables and recreate them with the current
-// schema (used to migrate an old UUID user_id to TEXT). Bypasses the memo.
-export async function resetEngagementSchema(): Promise<void> {
-  await catalogPool().query(
-    `DROP TABLE IF EXISTS user_favorites, user_alerts, user_notifications CASCADE;`
-  );
-  await catalogPool().query(SCHEMA_SQL);
-  ensured = Promise.resolve(); // mark as ensured for the rest of this process
-}

@@ -12,27 +12,13 @@ type JwtPayload = { userId?: string; sub?: string; email?: string; role?: string
 
 function verify(req: NextRequest): JwtPayload | null {
   const auth = req.headers.get("authorization");
-  if (!auth?.startsWith("Bearer ")) {
-    console.warn("[engagementAuth] no Bearer header");
-    return null;
-  }
+  if (!auth?.startsWith("Bearer ")) return null;
   const token = auth.slice(7);
   const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    console.error("[engagementAuth] JWT_SECRET is NOT set in process.env");
-    return null;
-  }
-  // Try with algorithm restriction first, then without (covers RS256/other).
+  if (!secret) return null;
   try {
     return jwt.verify(token, secret) as JwtPayload;
-  } catch (e) {
-    console.error(
-      "[engagementAuth] verify failed:",
-      (e as Error).name,
-      (e as Error).message,
-      "| secret length:", secret.length,
-      "| secret head:", secret.slice(0, 6)
-    );
+  } catch {
     return null;
   }
 }
