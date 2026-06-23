@@ -3,22 +3,33 @@ import jwt from "jsonwebtoken";
 import { catalogPool } from "@/lib/db";
 
 // The frontend sends the auth-service access token (HS256, signed with the same
-// JWT_SECRET the gateway uses) as `Authorization: Bearer <token>`. We verify it
+// JWT_SECRET the backend uses) as `Authorization: Bearer <token>`. We verify it
 // locally to identify the user — no round-trip to the backend needed.
-type JwtPayload = { sub: string; role?: string; jti?: string };
+//
+// The live auth service signs `{ userId, email }` (Mongo _id). We also accept
+// `sub` for forward-compat with the Postgres-style gateway token.
+type JwtPayload = { userId?: string; sub?: string; email?: string; role?: string };
 
-export function getUserId(req: NextRequest): string | null {
+function verify(req: NextRequest): JwtPayload | null {
   const auth = req.headers.get("authorization");
   if (!auth?.startsWith("Bearer ")) return null;
   const token = auth.slice(7);
   const secret = process.env.JWT_SECRET;
   if (!secret) return null;
   try {
-    const payload = jwt.verify(token, secret, { algorithms: ["HS256"] }) as JwtPayload;
-    return payload.sub ?? null;
+    return jwt.verify(token, secret, { algorithms: ["HS256"] }) as JwtPayload;
   } catch {
     return null;
   }
+}
+
+export function getUserId(req: NextRequest): string | null {
+  const p = verify(req);
+  return p?.userId ?? p?.sub ?? null;
+}
+
+export function getUserEmail(req: NextRequest): string | null {
+  return verify(req)?.email ?? null;
 }
 
 // Best (lowest) current price for a product slug across all shops that carry it,

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { catalogPool } from "@/lib/db";
 import { ensureEngagementSchema } from "@/lib/engagement";
-import { getUserId, resolveProductPrice } from "@/lib/engagementAuth";
+import { getUserId, getUserEmail, resolveProductPrice } from "@/lib/engagementAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
              baseline_price = EXCLUDED.baseline_price, last_price = EXCLUDED.last_price,
              name = EXCLUDED.name, img = EXCLUDED.img
        RETURNING id`,
-      [userId, body.email ?? null, body.fullName ?? null, slug,
+      [userId, body.email ?? getUserEmail(req) ?? null, body.fullName ?? null, slug,
        body.shopSlug ?? prod.shopSlug, prod.name, prod.img, prod.brand, prod.price]
     );
     return NextResponse.json({ ok: true, id: rows[0].id, baselinePrice: prod.price });

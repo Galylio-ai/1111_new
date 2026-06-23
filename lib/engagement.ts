@@ -20,7 +20,7 @@ export function ensureEngagementSchema(): Promise<void> {
         -- so the profile can render & link them without re-joining at read time.
         CREATE TABLE IF NOT EXISTS user_favorites (
           id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          user_id      UUID NOT NULL,
+          user_id      TEXT NOT NULL,
           slug         TEXT NOT NULL,
           shop_slug    TEXT,
           name         TEXT NOT NULL,
@@ -37,7 +37,7 @@ export function ensureEngagementSchema(): Promise<void> {
         -- We store the user's email/name so the cron job is self-sufficient.
         CREATE TABLE IF NOT EXISTS user_alerts (
           id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          user_id        UUID NOT NULL,
+          user_id        TEXT NOT NULL,
           email          TEXT,
           full_name      TEXT,
           slug           TEXT NOT NULL,
@@ -59,7 +59,7 @@ export function ensureEngagementSchema(): Promise<void> {
         -- Notifications: shown in the profile + navbar bell.
         CREATE TABLE IF NOT EXISTS user_notifications (
           id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          user_id     UUID NOT NULL,
+          user_id     TEXT NOT NULL,
           type        TEXT NOT NULL DEFAULT 'price_drop',
           title       TEXT NOT NULL,
           body        TEXT,
