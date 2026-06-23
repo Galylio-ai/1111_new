@@ -49,7 +49,9 @@ app.get('/health', (_req, res) => {
 });
 
 // Public static uploads (avatars) — served by the user service. Registered
-// BEFORE jwtMiddleware so images load without a token.
+// BEFORE jwtMiddleware so images load without a token. We also relax the
+// Cross-Origin-Resource-Policy so the frontend (different origin) can embed
+// the image — helmet defaults to same-origin, which the browser blocks.
 app.use(
   '/api/uploads',
   createProxyMiddleware({
@@ -57,6 +59,10 @@ app.use(
     changeOrigin: true,
     pathRewrite: (path) => `/uploads${path}`,
     on: {
+      proxyRes: (proxyRes) => {
+        proxyRes.headers['cross-origin-resource-policy'] = 'cross-origin';
+        proxyRes.headers['access-control-allow-origin'] = '*';
+      },
       error: (err, _req, res) => {
         logger.error('Uploads proxy error', { error: (err as Error).message });
         (res as express.Response).status(502).end();
