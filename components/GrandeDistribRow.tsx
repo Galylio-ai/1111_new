@@ -398,26 +398,27 @@ export function GrandeDistribRow() {
             <div className="flex items-center gap-4">
               <div className="h-28 w-28 shrink-0 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center overflow-hidden">
                 <img
-                  src={illogicalPromo?.img ?? "/clim.png"}
-                  alt={illogicalPromo?.name ?? "Réfrigérateur"}
+                  src={illogicalPromo?.img ?? "https://jumbo.tn/4425-large_default/tv-hisense-l5g-series-100-uhd-4k-smart-laser-tv-android-wifi.jpg"}
+                  alt={illogicalPromo?.name ?? "TV Hisense L5G 100\""}
                   className="h-24 w-24 object-contain drop-shadow-[0_4px_16px_rgba(239,68,68,0.3)]"
                 />
               </div>
               <div className="space-y-1.5 min-w-0">
                 <div className="text-base font-semibold text-slate-900 dark:text-white line-clamp-2">
-                  {illogicalPromo?.name ?? "Réfrigérateur Hyundai Side By Side 549L"}
+                  {illogicalPromo?.name ?? "TV Hisense L5G 100\" UHD 4K Smart Laser TV"}
                 </div>
                 <div className="text-base text-slate-600 dark:text-white/70">
-                  {illogicalPromo?.shop ?? "Tunisianet"}
+                  {illogicalPromo?.shop ?? "Kamounhome"}
                 </div>
                 <div className="text-sm text-slate-500 dark:text-white/60">
-                  Prix affiché : <span className="text-slate-900 dark:text-white">{illogicalPromo?.currentPrice ?? "2 799"} DT</span>
+                  Prix affiché : <span className="text-slate-900 dark:text-white">{illogicalPromo?.currentPrice ?? "14 020"} DT</span>
                 </div>
                 <div className="text-sm text-slate-500 dark:text-white/60">
-                  Prix avant promo : <span className="text-slate-900 dark:text-white line-through">{illogicalPromo?.regularPrice ?? "4 889"} DT</span>
+                  Prix avant promo : <span className="text-slate-900 dark:text-white line-through">{illogicalPromo?.regularPrice ?? "29 830"} DT</span>
                 </div>
                 <div className="text-sm text-slate-500 dark:text-white/60">
-                  Vrai prix marché : <span className="font-semibold text-emerald-600 dark:text-emerald-400">{illogicalPromo?.marketMin ?? "2 689"} DT</span>
+                  Vrai prix marché : <span className="font-semibold text-emerald-600 dark:text-emerald-400">{illogicalPromo?.marketMin ?? "6 999"} DT</span>
+                  <span className="ml-1 text-[10px] text-slate-400">chez Jumbo</span>
                 </div>
               </div>
             </div>
@@ -429,14 +430,14 @@ export function GrandeDistribRow() {
                 ? illogicalPromo.currentPriceRaw <= illogicalPromo.marketMinRaw
                   ? `−${illogicalPromo.realDiscount} DT`
                   : `+${Math.round(illogicalPromo.currentPriceRaw - illogicalPromo.marketMinRaw).toLocaleString("fr-FR").replace(/ /g, " ")} DT plus cher que le marché`
-                : "− 300 DT"}
+                : "+7 021 DT plus cher que le marché"}
             </div>
           </div>
 
           {/* ILLOGIQUE! button */}
           <div className="relative px-5 pb-5 mt-auto pt-6">
             <Link
-              href={illogicalPromo?.href ?? "/alertes"}
+              href={illogicalPromo?.href ?? "/retail/tv-hisense-l5g-series-100-quot-uhd-4k-smart-laser-tv-android-wifi"}
               className="flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-b from-red-600 to-red-700 border border-red-500 py-3.5 shadow-[0_0_24px_-4px_rgba(239,68,68,0.4)] hover:shadow-[0_0_32px_-4px_rgba(239,68,68,0.6)] transition dark:from-red-900/80 dark:to-red-950/90 dark:border-red-700/50"
             >
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-red-600 shadow-md dark:from-orange-400 dark:to-red-600">
