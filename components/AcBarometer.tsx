@@ -14,6 +14,8 @@ type ShopStat = {
   availability: number;
   score: number;
   rank: number;
+  logo: string | null;
+  visitors: number;
 };
 
 const RANK_BG = [
@@ -52,29 +54,12 @@ export function AcBarometer() {
         : s.score >= 70
         ? "text-amber-600 dark:text-amber-300"
         : "text-red-500 dark:text-red-400";
-    // Deterministic synthetic evolution for visual variety (based on rank+score hash)
-    const hash = (s.shop.charCodeAt(0) + s.products) % 7;
-    const evoNum = hash - 3; // -3..+3
-    const evolution = evoNum === 0 ? "—" : `${evoNum > 0 ? "+" : ""}${evoNum}`;
-    const evolutionColor =
-      evoNum > 0
-        ? "text-emerald-600 dark:text-emerald-400"
-        : evoNum < 0
-        ? "text-red-500 dark:text-red-400"
-        : "text-slate-400 dark:text-white/55";
-    // Approximate "visitors" from product count (scaled) — fake but deterministic
-    const visitors = Math.round(s.products * 47 + s.score * 280);
-    const visitorsTrendNum = ((s.score - 70) / 10).toFixed(1);
-    const visitorsUp = Number(visitorsTrendNum) >= 0;
     return {
       ...s,
       rankBg: RANK_BG[Math.min(idx, RANK_BG.length - 1)],
       positionColor,
-      evolution,
-      evolutionColor,
-      visitors: fmtNumber(visitors),
-      visitorsTrend: `${visitorsUp ? "+" : ""}${visitorsTrendNum}%`,
-      visitorsUp,
+      visitorsStr: fmtNumber(s.visitors),
+      cheapestStr: fmtNumber(s.cheapestCount),
     };
   });
   return (
@@ -97,13 +82,13 @@ export function AcBarometer() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-slate-500 text-xs dark:text-white/40">
-                  <th className="pb-3 text-left font-medium">Sitees</th>
-                  <th className="pb-3 text-center font-medium">Position</th>
-                  <th className="pb-3 text-center font-medium">Évolution</th>
-                  <th className="pb-3 text-center font-medium">Prix moyens</th>
+                  <th className="pb-3 text-left font-medium">Site</th>
+                  <th className="pb-3 text-center font-medium">Score</th>
+                  <th className="pb-3 text-center font-medium">Meilleur prix sur</th>
+                  <th className="pb-3 text-center font-medium">Prix moyen</th>
                   <th className="pb-3 text-center font-medium">Promotions</th>
-                  <th className="pb-3 text-center font-medium">Disponibilité</th>
-                  <th className="pb-3 text-center font-medium">Nombre de visiteurs</th>
+                  <th className="pb-3 text-center font-medium">Couverture</th>
+                  <th className="pb-3 text-center font-medium">Visiteurs estimés</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-white/5">
@@ -139,6 +124,16 @@ export function AcBarometer() {
                         <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-black text-white ${s.rankBg}`}>
                           {s.rank}
                         </span>
+                        {s.logo ? (
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white p-1 ring-1 ring-slate-200 dark:ring-white/10">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={s.logo} alt={s.displayName} className="h-full w-full object-contain" />
+                          </span>
+                        ) : (
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-200 text-xs font-black text-slate-600 dark:bg-white/10 dark:text-white/60">
+                            {s.displayName.slice(0, 1).toUpperCase()}
+                          </span>
+                        )}
                         <div className="leading-tight">
                           <div className="font-semibold text-slate-900 dark:text-white">{s.displayName}</div>
                           <div className="text-[10px] text-slate-400 dark:text-white/40">{fmtNumber(s.products)} produits</div>
@@ -146,18 +141,11 @@ export function AcBarometer() {
                       </div>
                     </td>
                     <td className={`py-3 text-center font-bold tabular-nums ${s.positionColor}`}>{s.score}/100</td>
-                    <td className={`py-3 text-center font-semibold tabular-nums ${s.evolutionColor}`}>{s.evolution}</td>
+                    <td className="py-3 text-center font-semibold tabular-nums text-slate-900 dark:text-white">{s.cheapestStr}</td>
                     <td className="py-3 text-center font-semibold tabular-nums text-slate-900 dark:text-white">{fmtPrice(s.avgPrice)}</td>
                     <td className="py-3 text-center font-semibold text-slate-900 dark:text-white">{Math.round(s.promoPct)}%</td>
                     <td className="py-3 text-center font-bold text-emerald-600 dark:text-emerald-400">{Math.round(s.availability)}%</td>
-                    <td className="py-3 text-center">
-                      <div className="inline-flex flex-col items-center leading-tight">
-                        <span className="font-bold tabular-nums text-slate-900 dark:text-white">{s.visitors}</span>
-                        <span className={`text-[10px] font-semibold tabular-nums ${s.visitorsUp ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
-                          {s.visitorsUp ? "▲" : "▼"} {s.visitorsTrend}
-                        </span>
-                      </div>
-                    </td>
+                    <td className="py-3 text-center font-bold tabular-nums text-slate-900 dark:text-white">{s.visitorsStr}</td>
                   </tr>
                 ))}
               </tbody>
