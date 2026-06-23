@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 
 /* ── SVG micro-icons ───────────────────────────────────────────────── */
@@ -38,12 +38,6 @@ const IconEye = ({ off }: { off?: boolean }) =>
 export default function LoginPage() {
   const { login } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirectParam = searchParams?.get("redirect") || "";
-  // Only allow internal redirects (must start with "/" and not "//")
-  const safeRedirect = redirectParam.startsWith("/") && !redirectParam.startsWith("//")
-    ? redirectParam
-    : "/profil";
 
   const [mode, setMode] = useState<"email" | "phone">("email");
   const [email, setEmail] = useState("");
@@ -59,7 +53,13 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login({ ...(mode === "email" ? { email } : { phone }), password });
-      router.push(safeRedirect);
+      // Read redirect from URL at submit time — avoids useSearchParams + Suspense requirement
+      let target = "/profil";
+      if (typeof window !== "undefined") {
+        const r = new URLSearchParams(window.location.search).get("redirect");
+        if (r && r.startsWith("/") && !r.startsWith("//")) target = r;
+      }
+      router.push(target);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erreur de connexion");
     } finally {
