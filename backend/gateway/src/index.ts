@@ -48,6 +48,23 @@ app.get('/health', (_req, res) => {
   res.json({ success: true, data: { status: 'ok', service: 'gateway' } });
 });
 
+// Public static uploads (avatars) — served by the user service. Registered
+// BEFORE jwtMiddleware so images load without a token.
+app.use(
+  '/api/uploads',
+  createProxyMiddleware({
+    target: config.userServiceUrl,
+    changeOrigin: true,
+    pathRewrite: (path) => `/uploads${path}`,
+    on: {
+      error: (err, _req, res) => {
+        logger.error('Uploads proxy error', { error: (err as Error).message });
+        (res as express.Response).status(502).end();
+      },
+    },
+  }),
+);
+
 app.use([...STRICT_AUTH_RATE_LIMIT_PATHS], strictRateLimiter);
 
 app.use(jwtMiddleware);

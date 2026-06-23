@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { navLinks } from "@/lib/nav";
 import { ThemeToggle } from "./ThemeToggle";
-import { useAuth } from "@/lib/auth";
+import { useAuth, avatarSrc } from "@/lib/auth";
 import { NotificationBell } from "./site/NotificationBell";
 
 const tickerItems = [
@@ -148,7 +148,7 @@ export function Header() {
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-gold/20 text-[10px] font-black text-brand-gold">
                     {user.avatar_url ? (
                       <img
-                        src={user.avatar_url}
+                        src={avatarSrc(user.avatar_url)}
                         alt=""
                         className="h-5 w-5 rounded-full object-cover"
                         onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
@@ -284,7 +284,7 @@ export function Header() {
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-gold/20 font-black text-brand-gold">
                   {user.avatar_url ? (
                     <img
-                      src={user.avatar_url}
+                      src={avatarSrc(user.avatar_url)}
                       alt=""
                       className="h-8 w-8 rounded-full object-cover"
                       onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}

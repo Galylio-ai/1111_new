@@ -6,7 +6,7 @@ import {
   Bell, BellRing, Camera, CheckCircle2, ChevronDown, Heart,
   LogOut, Mail, MapPin, Phone, ShieldCheck, Trash2, TrendingDown, User,
 } from "lucide-react";
-import { useAuth } from "@/lib/auth";
+import { useAuth, avatarSrc } from "@/lib/auth";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 
@@ -254,7 +254,7 @@ export default function ProfilPage() {
           <div className="pointer-events-none absolute right-0 top-0 h-44 w-44 rounded-full bg-brand-gold/8 blur-3xl" />
 
           <div className="relative flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-            <Avatar url={user.avatar_url} name={user.full_name} onUpload={handleAvatarUpload} />
+            <Avatar url={avatarSrc(user.avatar_url)} name={user.full_name} onUpload={handleAvatarUpload} />
 
             <div className="flex-1 text-center sm:text-left">
               <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
