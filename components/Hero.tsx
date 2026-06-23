@@ -103,7 +103,7 @@ export function Hero() {
                 ثبت قبل ما تشري، وفر أكثر ! 😎
               </p>
               <p className="mt-1 md:mt-3 text-[11px] sm:text-xs md:text-sm text-slate-600 dark:text-white/70">
-                Comparez plus de <span className="text-slate-900 font-semibold dark:text-white">250 000 produits</span>,
+                Comparez plus de <span className="text-slate-900 font-semibold dark:text-white">350 000 produits</span>,
                 surveillez les prix, détectez les vraies promotions et économisez sur tous vos achats.
               </p>
 

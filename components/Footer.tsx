@@ -100,7 +100,7 @@ export function Footer() {
               </div>
             </Link>
             <p className="mt-4 text-sm leading-relaxed text-slate-500 dark:text-white/60">
-              Le moteur d'intelligence des prix en Tunisie. Comparez, surveillez et économisez sur plus de 250 000 produits.
+              Le moteur d'intelligence des prix en Tunisie. Comparez, surveillez et économisez sur plus de 350 000 produits.
             </p>
             <p className="mt-2 font-arabic text-sm text-slate-500 dark:text-white/60" dir="rtl">
               محرك ذكاء الأسعار في تونس

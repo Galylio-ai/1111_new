@@ -26,7 +26,7 @@ export default function ComparateurPage() {
       arabic="مقارنة الأسعار"
       description="Comparez le même produit sur plus de 62 sites e-commerce tunisiens et trouvez le meilleur prix en un clic."
       chips={[
-        { label: "Produits", value: "250 000+", tone: "gold" },
+        { label: "Produits", value: "350 000+", tone: "gold" },
         { label: "Sites suivis", value: "62", tone: "blue" },
       ]}
     >
