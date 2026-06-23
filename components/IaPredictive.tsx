@@ -32,21 +32,11 @@ function fmtCompact(n: number): string {
   return n.toLocaleString("fr-FR");
 }
 
-function fmtPrice(n: number): string {
-  return n.toFixed(3).replace(/\.?0+$/, "");
-}
-
 function fmtDT(n: number): string {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + " M DT";
   if (n >= 1_000)     return Math.round(n / 1_000) + " K DT";
   return Math.round(n).toLocaleString("fr-FR") + " DT";
 }
-
-const CATALOG_BADGES: Record<string, string> = {
-  Supermarché:    "bg-emerald-500/15 text-emerald-700 border-emerald-400/30 dark:text-emerald-300",
-  Parapharmacie:  "bg-pink-500/15 text-pink-700 border-pink-400/30 dark:text-pink-300",
-  Retail:         "bg-blue-500/15 text-blue-700 border-blue-400/30 dark:text-blue-300",
-};
 
 export function IaPredictive() {
   const [discounts, setDiscounts] = useState<Discount[]>([]);
@@ -262,14 +252,14 @@ export function IaPredictive() {
           </Link>
         </div>
 
-        {/* PLUS GRANDES RÉDUCTIONS ACTIVES */}
+        {/* TOP RÉDUCTIONS INFORMATIQUE */}
         <div className="card card-pad">
           <div className="mb-2 flex items-center gap-2">
-            <Tag className="h-4 w-4 text-brand-red" />
-            <span className="section-title">Top réductions</span>
+            <Tag className="h-4 w-4 text-blue-500" />
+            <span className="section-title">Top réductions informatique</span>
           </div>
           <div className="mb-2 text-[10px] text-slate-400 dark:text-white/40">
-            promotions actives les plus agressives
+            PC, imprimantes, écrans · économies les plus élevées
           </div>
 
           {discounts.length === 0 ? (
@@ -282,23 +272,23 @@ export function IaPredictive() {
                 <li key={`${d.catalog}-${d.slug}`}>
                   <Link
                     href={`${d.catalogPath}/${d.slug}`}
-                    className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1.5 transition hover:border-brand-gold/40 hover:bg-brand-gold/[0.04] dark:border-white/5 dark:bg-bg-800 dark:hover:border-brand-gold/40"
+                    className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1.5 transition hover:border-blue-400/40 hover:bg-blue-50/40 dark:border-white/5 dark:bg-bg-800 dark:hover:border-blue-400/40 dark:hover:bg-blue-500/[0.04]"
                   >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md bg-white ring-1 ring-slate-200 dark:ring-white/10">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md bg-white ring-1 ring-slate-200 dark:ring-white/10">
                       {d.img ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={d.img} alt={d.name} className="h-full w-full object-contain p-0.5" />
                       ) : (
-                        <span className="text-sm">🏷️</span>
+                        <span className="text-sm">💻</span>
                       )}
                     </div>
                     <div className="min-w-0 flex-1 leading-tight">
                       <div className="truncate text-[11px] font-semibold text-slate-900 dark:text-white">{d.name}</div>
                       <div className="mt-0.5 flex items-center gap-1.5 text-[9px] text-slate-500 dark:text-white/55">
-                        <span className={`rounded-sm border px-1 py-px font-bold uppercase tracking-wider ${CATALOG_BADGES[d.catalog] ?? ""}`}>
-                          {d.catalog === "Supermarché" ? "Super" : d.catalog === "Parapharmacie" ? "Para" : "Retail"}
+                        <span className="rounded-sm border border-blue-400/30 bg-blue-500/15 px-1 py-px font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">
+                          Tech
                         </span>
-                        <span>{d.shop}</span>
+                        <span className="truncate">{d.shop}</span>
                       </div>
                     </div>
                     <div className="shrink-0 text-right leading-tight">
@@ -306,7 +296,7 @@ export function IaPredictive() {
                         −{d.discountPct}%
                       </div>
                       <div className="mt-0.5 text-[9px] tabular-nums text-emerald-600 dark:text-emerald-300">
-                        {fmtPrice(d.currentPrice)} DT
+                        {fmtCompact(Math.round(d.currentPrice))} DT
                       </div>
                     </div>
                   </Link>
@@ -315,8 +305,8 @@ export function IaPredictive() {
             </ul>
           )}
 
-          <Link className="mt-3 inline-block text-xs font-medium text-brand-gold hover:underline" href="/promotions">
-            Voir toutes les promotions
+          <Link className="mt-3 inline-block text-xs font-medium text-brand-gold hover:underline" href="/retail">
+            Voir tout l&apos;informatique
           </Link>
         </div>
       </div>
