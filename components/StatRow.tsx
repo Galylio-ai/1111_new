@@ -1,7 +1,7 @@
 "use client";
 import { AlertTriangle, Database, Tag } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 
 function formatNumber(n: number): string {
@@ -91,51 +91,19 @@ function ProductThumb({ src, label }: { src: string | null; label: string }) {
 }
 
 function SkuCounter() {
-  const [total, setTotal] = useState(350000);
-  const [display, setDisplay] = useState(0);
-  const raf = useRef<number>(0);
+  const [display, setDisplay] = useState(350000);
 
   useEffect(() => {
-    fetch("/api/stats/total-skus")
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.total) setTotal(d.total); })
-      .catch(() => {});
-  }, []);
-
-  // Phase 1: count up from 0 → total in ~8s
-  // Phase 2: once reached, tick +1 every 500ms forever
-  useEffect(() => {
-    if (total === 0) return;
-    let current = 0;
-    let slowMode = false;
-    let slowTimer: ReturnType<typeof setTimeout>;
-    const step = total / (8000 / 16);
-
+    let current = 350000;
+    let timer: ReturnType<typeof setTimeout>;
     function tick() {
-      if (slowMode) return;
-      current += step;
-      if (current >= total) {
-        current = total;
-        setDisplay(total);
-        slowMode = true;
-        // tick +1 every 500ms
-        function slowTick() {
-          current += 1;
-          setDisplay(Math.round(current));
-          slowTimer = setTimeout(slowTick, 500);
-        }
-        slowTimer = setTimeout(slowTick, 500);
-        return;
-      }
-      setDisplay(Math.round(current));
-      raf.current = requestAnimationFrame(tick);
+      current += 1;
+      setDisplay(current);
+      timer = setTimeout(tick, 500);
     }
-    raf.current = requestAnimationFrame(tick);
-    return () => {
-      cancelAnimationFrame(raf.current);
-      clearTimeout(slowTimer);
-    };
-  }, [total]);
+    timer = setTimeout(tick, 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className="card card-pad flex flex-col items-center justify-center text-center">

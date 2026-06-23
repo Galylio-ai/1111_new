@@ -145,15 +145,13 @@ export function Hero() {
             </Link>
           </div>
 
-          <div className="mt-3 flex items-end gap-3">
+          <div className="mt-3 flex items-center gap-3">
             <div className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-slate-900 tabular-nums transition-all duration-500 dark:text-white">
-              {current.toFixed(1)}
+              {fmt(data.stats.totalPromos)}
             </div>
-            <div className="mb-2 flex flex-col text-sm">
-              <span className={`font-bold tabular-nums transition-colors duration-500 ${up ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
-                {up ? "▲" : "▼"} {up ? "+" : ""}{change}%
-              </span>
-              <span className="text-xs text-slate-500 dark:text-white/50">vs hier</span>
+            <div className="flex flex-col justify-center">
+              <span className="text-sm font-bold text-slate-700 dark:text-white/80">promotions actives</span>
+              <span className="text-xs text-slate-500 dark:text-white/50">réduction moy. <span className={`font-semibold ${up ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>{data.stats.avgDiscountPct}%</span></span>
             </div>
           </div>
 
