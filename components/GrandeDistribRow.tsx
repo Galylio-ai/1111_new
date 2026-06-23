@@ -1,19 +1,18 @@
 "use client";
-import { ArrowDownRight, Bell, PiggyBank, ShieldAlert } from "lucide-react";
+import { Activity, ArrowDownRight, ArrowUpRight, Bell, Clock, Plus, ShieldAlert, Store } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { distributionEnseignes, getStoreLogo } from "@/lib/data";
 
 type EnseigneRow = { name: string; price: string; diff: string; best?: boolean };
-type VeilleRow = {
-  name: string;
-  slug?: string;
-  minPrice: string;
-  maxPrice: string;
-  saving: string;
-  savingPct: string;
-  cheapestShop: string;
-  img: string | null;
+type Pulse = {
+  pricesUpdated24h: number;
+  priceDropsCount: number;
+  priceRisesCount: number;
+  newProducts24h: number;
+  topCategory: { name: string; count: number } | null;
+  shopsActive: number;
+  lastUpdate: string | null;
 };
 type AlertData = {
   name: string;
@@ -49,6 +48,24 @@ type IllogicalPromo = {
   href: string;
 };
 
+function fmtCompact(n: number): string {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
+  if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, "") + "k";
+  return n.toLocaleString("fr-FR");
+}
+
+function timeSince(iso: string): string {
+  const t = new Date(iso).getTime();
+  if (!isFinite(t)) return "—";
+  const diff = Math.max(0, Date.now() - t);
+  const mins = Math.round(diff / 60_000);
+  if (mins < 1) return "à l'instant";
+  if (mins < 60) return `il y a ${mins} min`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `il y a ${hrs} h`;
+  return `il y a ${Math.round(hrs / 24)} j`;
+}
+
 function shopLogoSrc(shop: string): string | null {
   const key = shop.trim().toLowerCase();
   if (key.includes("aziza")) return "/aziza-logo.jpg";
@@ -73,12 +90,7 @@ export function GrandeDistribRow() {
   const [enseignes, setEnseignes] = useState<EnseigneRow[]>(
     distributionEnseignes.map((e) => ({ name: e.name, price: e.price, diff: e.diff, best: e.best }))
   );
-  const [veille, setVeille] = useState<VeilleRow[]>([
-    { name: "Huile d'olive Carthage 1L", minPrice: "12.900", maxPrice: "18.500", saving: "5.600", savingPct: "30%", cheapestShop: "Aziza", img: null },
-    { name: "Couches Pampers Premium Care T3", minPrice: "39.500", maxPrice: "52.900", saving: "13.400", savingPct: "25%", cheapestShop: "Carrefour", img: null },
-    { name: "Lait Délice 1L", minPrice: "2.080", maxPrice: "2.450", saving: "0.370", savingPct: "15%", cheapestShop: "Monoprix", img: null },
-    { name: "Café Bondin Royal 250g", minPrice: "6.890", maxPrice: "8.250", saving: "1.360", savingPct: "16%", cheapestShop: "Géant", img: null },
-  ]);
+  const [pulse, setPulse] = useState<Pulse | null>(null);
   const [basketSize, setBasketSize] = useState<number>(29);
   const [economy, setEconomy] = useState<string>("8.370");
   const [alert, setAlert] = useState<AlertData | null>(null);
@@ -91,11 +103,15 @@ export function GrandeDistribRow() {
       .then((d) => {
         if (cancelled) return;
         if (Array.isArray(d?.enseignes) && d.enseignes.length > 0) setEnseignes(d.enseignes);
-        if (Array.isArray(d?.veille) && d.veille.length > 0) setVeille(d.veille);
         if (typeof d?.basketSize === "number") setBasketSize(d.basketSize);
         if (typeof d?.economy === "string") setEconomy(d.economy);
         if (d?.alert && typeof d.alert === "object") setAlert(d.alert as AlertData);
       })
+      .catch(() => {});
+
+    fetch("/api/stats/market-pulse")
+      .then((r) => r.json())
+      .then((d) => { if (!cancelled && d) setPulse(d as Pulse); })
       .catch(() => {});
 
     fetch("/api/stats/illogical-promo")
@@ -209,68 +225,87 @@ export function GrandeDistribRow() {
         <div className="card card-pad">
           <div className="mb-1 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <PiggyBank className="h-4 w-4 text-emerald-500" />
-              <span className="section-title">Top économies du jour</span>
+              <Activity className="h-4 w-4 text-emerald-500" />
+              <span className="section-title">Pouls du marché</span>
             </div>
-            <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-300">
-              MAJ live
+            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-300">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              </span>
+              24 h
             </span>
           </div>
           <div className="font-arabic text-[11px] text-slate-400 dark:text-white/50" dir="rtl">
-            أكبر الفوارق في الأسعار اليوم
+            نبض السوق · آخر 24 ساعة
           </div>
 
-          <ul className="mt-3 space-y-2">
-            {veille.map((p) => {
-              const shopLogo = shopLogoSrc(p.cheapestShop);
-              const inner = (
-                <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-2 transition hover:border-emerald-300/60 hover:bg-emerald-50/40 dark:border-white/5 dark:bg-bg-800 dark:hover:border-emerald-400/30 dark:hover:bg-bg-700">
-                  <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white ring-1 ring-slate-200 dark:bg-white/[0.04] dark:ring-white/10">
-                    {p.img ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={p.img} alt={p.name} className="h-full w-full object-contain p-0.5" />
-                    ) : (
-                      <span className="text-lg">🛒</span>
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-xs font-semibold text-slate-900 dark:text-white">{p.name}</div>
-                    <div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-white/60">
-                      <span>Dès {p.minPrice} DT</span>
-                      <span className="text-slate-300 dark:text-white/20">·</span>
-                      <span className="flex items-center gap-1">
-                        {shopLogo ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={shopLogo} alt={p.cheapestShop} className="h-3 w-3 rounded-sm object-contain" />
-                        ) : null}
-                        <span className="font-medium text-slate-700 dark:text-white/80">{p.cheapestShop}</span>
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex shrink-0 flex-col items-end leading-tight">
-                    <span className="rounded-md bg-emerald-500/15 px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-emerald-700 dark:text-emerald-300">
-                      −{p.saving} DT
-                    </span>
-                    <span className="mt-0.5 text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">
-                      {p.savingPct} écart
-                    </span>
-                  </div>
-                </div>
-              );
-              return (
-                <li key={p.name}>
-                  {p.slug ? (
-                    <Link href={`/supermarche/${p.slug}`} className="block">{inner}</Link>
-                  ) : (
-                    inner
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+          {/* KPI grid */}
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {/* Prices updated */}
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5 dark:border-white/5 dark:bg-bg-800">
+              <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-white/55">
+                <Activity className="h-3 w-3" />
+                Prix mis à jour
+              </div>
+              <div className="mt-1 text-xl font-black tabular-nums text-slate-900 dark:text-white">
+                {pulse ? fmtCompact(pulse.pricesUpdated24h) : "—"}
+              </div>
+              <div className="text-[10px] text-slate-400 dark:text-white/40">tous catalogues</div>
+            </div>
 
-          <Link href="/comparateur" className="mt-3 block w-full rounded-lg border border-emerald-200 bg-emerald-50 py-2 text-center text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-400/20 dark:bg-emerald-500/10 dark:text-emerald-300 dark:hover:bg-emerald-500/20">
-            Comparer tout le panier
+            {/* New products */}
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5 dark:border-white/5 dark:bg-bg-800">
+              <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-300">
+                <Plus className="h-3 w-3" />
+                Nouveaux produits
+              </div>
+              <div className="mt-1 text-xl font-black tabular-nums text-slate-900 dark:text-white">
+                {pulse ? fmtCompact(pulse.newProducts24h) : "—"}
+              </div>
+              <div className="text-[10px] text-slate-400 dark:text-white/40">indexés aujourd'hui</div>
+            </div>
+
+            {/* Price drops */}
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-2.5 dark:border-emerald-400/20 dark:bg-emerald-500/[0.06]">
+              <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+                <ArrowDownRight className="h-3 w-3" />
+                Baisses
+              </div>
+              <div className="mt-1 text-xl font-black tabular-nums text-emerald-700 dark:text-emerald-300">
+                {pulse ? fmtCompact(pulse.priceDropsCount) : "—"}
+              </div>
+              <div className="text-[10px] text-emerald-600/70 dark:text-emerald-300/60">prix réduits</div>
+            </div>
+
+            {/* Price rises */}
+            <div className="rounded-xl border border-red-200 bg-red-50/60 p-2.5 dark:border-red-400/20 dark:bg-red-500/[0.06]">
+              <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-red-600 dark:text-red-300">
+                <ArrowUpRight className="h-3 w-3" />
+                Hausses
+              </div>
+              <div className="mt-1 text-xl font-black tabular-nums text-red-600 dark:text-red-300">
+                {pulse ? fmtCompact(pulse.priceRisesCount) : "—"}
+              </div>
+              <div className="text-[10px] text-red-500/70 dark:text-red-300/60">prix augmentés</div>
+            </div>
+          </div>
+
+          {/* Bottom strip — active shops + last update */}
+          <div className="mt-3 flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-white/5 dark:bg-bg-800">
+            <div className="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-white/70">
+              <Store className="h-3.5 w-3.5 text-brand-gold" />
+              <span className="font-semibold">{pulse?.shopsActive ?? "—"}</span>
+              <span>boutiques actives</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-white/50">
+              <Clock className="h-3 w-3" />
+              {pulse?.lastUpdate ? timeSince(pulse.lastUpdate) : "—"}
+            </div>
+          </div>
+
+          <Link href="/observatoire" className="mt-3 block w-full rounded-lg border border-emerald-200 bg-emerald-50 py-2 text-center text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-400/20 dark:bg-emerald-500/10 dark:text-emerald-300 dark:hover:bg-emerald-500/20">
+            Voir l'observatoire
           </Link>
         </div>
 
