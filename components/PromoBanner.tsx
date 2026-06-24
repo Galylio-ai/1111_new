@@ -8,7 +8,7 @@ const PLAY_STORE_URL =
 const SLIDES = [
   { src: "/banner.png",         href: "/promotions", alt: "1111.tn · Téléchargez l'application" },
   { src: "/Banner-electro.png", href: "/retail",     alt: "Electroménager · Comparez les prix" },
-  { src: "/banner-clim.png",    href: "/retail",     alt: "Climatiseurs · Meilleures offres" },
+  { src: "/banner-clim.png?v=20260624", href: "/retail", alt: "Climatiseurs · Meilleures offres" },
 ];
 
 const INTERVAL = 5000;
