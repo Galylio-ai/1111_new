@@ -25,9 +25,9 @@ const BASKET_STAPLES: { label: string; pattern: string }[] = [
 ];
 const BASKET_SIZE = BASKET_STAPLES.length;
 // Shops only need to cover this fraction of the basket to be ranked.
-// 70% lets shops missing a couple of staples still show up so the table
-// always has the expected 5+ enseignes.
-const BASKET_COVERAGE = 0.7;
+// 50% lets smaller shops (Carrefour Market/Express, Monoprix Glovo) still
+// appear so the table consistently shows 5+ enseignes.
+const BASKET_COVERAGE = 0.5;
 const VEILLE_SIZE = 4;
 
 function formatMillimes(n: number): string {

@@ -295,23 +295,36 @@ async function main() {
       const name = String(raw.name ?? "").trim();
       if (!name) { skipped += 1; continue; }
 
-      const prices = Array.isArray(raw.prices) ? raw.prices.filter((p) => p && p.url) : [];
-      if (prices.length === 0) { skipped += 1; continue; }
+      const primary = Array.isArray(raw.prices) ? raw.prices.filter((p) => p && p.url) : [];
+      if (primary.length === 0) { skipped += 1; continue; }
 
-      // Resolve shops / brand / categories upfront (uses cache)
+      // Fallback URL for delivery_prices entries that have an empty url.
+      const fallbackUrl = primary[0].url;
+
+      // Merge primary prices + delivery_prices so every shop that carries
+      // the product (incl. Carrefour Market, Carrefour Express, Monoprix Glovo)
+      // ends up in shop_prices. shop_product_url is NOT NULL, so we fall back
+      // to the parent shop's URL when delivery_prices has none.
+      const allPriceEntries = [
+        ...primary,
+        ...(Array.isArray(raw.delivery_prices) ? raw.delivery_prices : []),
+      ];
+
       const shopPrices = [];
       const seenShopIds = new Set();
-      for (const p of prices) {
+      for (const p of allPriceEntries) {
+        if (!p || !p.shop_key) continue;
         const sid = await getOrInsertShop(client, p.shop_key, p.shop);
         if (!sid || seenShopIds.has(sid)) continue;
         seenShopIds.add(sid);
         const cur = Number.isFinite(p.price) ? p.price : null;
         const reg = Number.isFinite(p.regular_price) ? p.regular_price : null;
+        if (!(cur && cur > 0)) continue; // skip rows with no usable price
         shopPrices.push({
           shopId: sid,
-          current: cur && cur > 0 ? cur : null,
+          current: cur,
           regular: reg && reg > 0 ? reg : null,
-          url: String(p.url),
+          url: String(p.url || fallbackUrl),
         });
       }
       if (shopPrices.length === 0) { skipped += 1; continue; }
