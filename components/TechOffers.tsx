@@ -21,14 +21,13 @@ type TechProduct = {
 function ProductCard({ p }: { p: TechProduct }) {
   const offers = p.offers;
   const hasSavings = p.savings && p.savings !== "0";
-  const bestOfferUrl = offers.find(o => o.url)?.url;
-  const href = bestOfferUrl ?? `/retail/${p.slug}`;
-  const isExternal = !!bestOfferUrl;
+  // Always link to the internal retail product page so users see the full
+  // comparator instead of being bounced to a shop's site.
+  const href = `/retail/${p.slug}`;
 
   return (
-    <a
+    <Link
       href={href}
-      {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
       className="card group relative w-[clamp(12.5rem,68vw,14.375rem)] sm:w-[250px] md:w-[270px] shrink-0 snap-start flex flex-col overflow-hidden p-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-brand-gold/40 dark:hover:border-brand-gold/40"
     >
       {hasSavings && (
@@ -99,7 +98,7 @@ function ProductCard({ p }: { p: TechProduct }) {
           )}
         </div>
       </div>
-    </a>
+    </Link>
   );
 }
 
