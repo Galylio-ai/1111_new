@@ -1,45 +1,36 @@
 "use client";
 import { useEffect, useState } from "react";
-import { BarChart3, Flame, Package, Search, Store, TrendingUp } from "lucide-react";
+import { ArrowUpRight, Search, TrendingUp } from "lucide-react";
 import Link from "next/link";
-import { PromosBars, PromoPoint } from "./charts/PromosBars";
 import { SearchModal } from "./SearchModal";
 
-const tags = ["climatiseur", "iphone 15", "samsung", "machine à laver", "parfum", "laptop"];
+const tags = ["climatiseur", "iphone 15", "samsung", "machine a laver", "parfum", "laptop"];
 
-type MarketData = {
-  index: number;
-  yesterdayIndex: number;
-  topShops: PromoPoint[];
-  stats: {
-    totalProducts: number;
-    totalPrices: number;
-    totalPromos: number;
-    totalSavingsDT: number;
-    totalShops: number;
-    avgDiscountPct: number;
-  };
-};
-
-const FALLBACK: MarketData = {
-  index: 100,
-  yesterdayIndex: 99,
-  topShops: [],
-  stats: { totalProducts: 93105, totalPrices: 159011, totalPromos: 26080, totalSavingsDT: 1414956, totalShops: 0, avgDiscountPct: 17.9 },
-};
+const inflationSectors = [
+  {
+    name: "Climatisation",
+    value: 18,
+    detail: "Hausse la plus forte detectee sur les offres froid et confort",
+    tone: "from-red-500 to-orange-400",
+  },
+  {
+    name: "Smartphones",
+    value: 11,
+    detail: "Prix en progression sur les modeles les plus recherches",
+    tone: "from-brand-gold to-yellow-300",
+  },
+  {
+    name: "Electromenager",
+    value: 8,
+    detail: "Tendance haussiere sur cuisine, lavage et petit equipement",
+    tone: "from-emerald-500 to-teal-300",
+  },
+];
 
 export function Hero() {
-  const [data, setData]         = useState<MarketData>(FALLBACK);
   const [searchOpen, setSearchOpen] = useState(false);
 
-  useEffect(() => {
-    fetch("/api/market-index")
-      .then(r => r.ok ? r.json() : null)
-      .then(j => { if (j && j.index) setData(j); })
-      .catch(() => {});
-  }, []);
-
-  // ⌘K / Ctrl+K opens search
+  // Cmd+K / Ctrl+K opens search.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
@@ -50,31 +41,6 @@ export function Hero() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
-
-  const current = data.index;
-  const change  = +(((current - data.yesterdayIndex) / data.yesterdayIndex) * 100).toFixed(2);
-  const up      = change >= 0;
-
-  const stats = [
-    {
-      value: data.stats.totalProducts.toLocaleString("fr-TN"),
-      label: "Produits suivis",
-      desc: "Références uniques indexées en supermarché, parapharmacie et retail",
-      icon: Package, color: "text-brand-gold",
-    },
-    {
-      value: data.stats.totalPromos.toLocaleString("fr-TN"),
-      label: "Promotions actives",
-      desc: "Offres où le prix affiché est inférieur au prix de référence en ce moment",
-      icon: Flame, color: "text-red-400",
-    },
-    {
-      value: data.stats.avgDiscountPct + "%",
-      label: "Réduction moyenne",
-      desc: "Rabais moyen constaté sur toutes les promotions actives dans nos bases",
-      icon: BarChart3, color: "text-yellow-400",
-    },
-  ];
 
   return (
     <section className="mx-auto max-w-[1600px] px-3 pt-4 sm:px-4 sm:pt-6">
@@ -89,16 +55,16 @@ export function Hero() {
             </div>
             <div className="flex-1 min-w-0 text-left">
               <h1 className="text-base sm:text-xl md:text-3xl lg:text-4xl font-black leading-[1.05] tracking-tight text-slate-900 dark:text-white">
-                VÉRIFIEZ AVANT D'ACHETER,
+                VERIFIEZ AVANT D'ACHETER,
                 <br />
-                <span className="gradient-text-gold">ÉCONOMISEZ PLUS !</span>
+                <span className="gradient-text-gold">ECONOMISEZ PLUS !</span>
               </h1>
               <p className="mt-1 md:mt-2 font-arabic text-right text-sm sm:text-base md:text-xl text-slate-700 dark:text-white/90" dir="rtl">
-                ثبت قبل ما تشري، وفر أكثر ! 
+                ثبت قبل ما تشري، وفر أكثر !
               </p>
               <p className="mt-1 md:mt-3 text-[11px] sm:text-xs md:text-sm text-slate-600 dark:text-white/70">
                 Comparez plus de <span className="text-slate-900 font-semibold dark:text-white">350 000 produits</span>,
-                surveillez les prix, détectez les vraies promotions et économisez sur tous vos achats.
+                surveillez les prix, detectez les vraies promotions et economisez sur tous vos achats.
               </p>
 
               <button
@@ -108,10 +74,10 @@ export function Hero() {
               >
                 <Search className="ml-1 h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 shrink-0 text-slate-400 transition group-hover:text-brand-gold dark:text-white/50" />
                 <span className="min-w-0 flex-1 truncate px-1 py-1 sm:py-2 text-[11px] sm:text-xs md:text-sm text-slate-400 dark:text-white/40">
-                  Rechercher un produit, marque…
+                  Rechercher un produit, marque...
                 </span>
                 <kbd className="mr-1 hidden shrink-0 rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 sm:inline-block dark:border-white/10 dark:bg-white/5 dark:text-white/50">
-                  ⌘K
+                  Ctrl K
                 </kbd>
                 <span className="btn-gold whitespace-nowrap px-2 py-1 text-[10px] sm:px-3 sm:py-1.5 sm:text-xs md:px-4 md:py-2 md:text-sm">Rechercher</span>
               </button>
@@ -127,58 +93,73 @@ export function Hero() {
           </div>
         </div>
 
-        {/* Right: market index card */}
+        {/* Right: inflation sectors card */}
         <div className="card card-pad relative overflow-hidden">
-          <div className="flex items-start justify-between">
+          <div className="pointer-events-none absolute -right-10 -top-12 h-36 w-36 rounded-full bg-red-500/10 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-10 left-8 h-32 w-32 rounded-full bg-brand-gold/10 blur-3xl" />
+
+          <div className="relative flex items-start justify-between gap-3">
             <div className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-brand-gold" />
-              <span className="section-title">Indice du marché ✦</span>
+              <span className="section-title">Secteur le plus inflationniste</span>
             </div>
-            <Link href="/indice" className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700 transition hover:border-emerald-400/60 dark:text-emerald-300">
-              <span className="live-dot" /> En temps réel
-            </Link>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-red-600 dark:text-red-300">
+              <span className="live-dot bg-red-500" /> Signal chaud
+            </span>
           </div>
 
-          <div className="mt-3 flex items-center gap-3">
-            <div className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-slate-900 tabular-nums transition-all duration-500 dark:text-white">
-              {data.stats.totalPromos.toLocaleString("fr-TN")}
-            </div>
-            <div className="flex flex-col justify-center">
-              <span className="text-sm font-bold text-slate-700 dark:text-white/80">promotions actives</span>
-              <span className="text-xs text-slate-500 dark:text-white/50">réduction moy. <span className={`font-semibold ${up ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>{data.stats.avgDiscountPct}%</span></span>
-            </div>
-          </div>
-
-          <div className="mt-1">
-            <div className="mb-1 flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/50">
-                Top parapharmacies en promo
+          <div className="relative mt-3">
+            <p className="max-w-xl text-sm leading-relaxed text-slate-600 dark:text-white/65">
+              Vous classez les secteurs selon l'augmentation des prix.
+            </p>
+            <div className="mt-3 flex items-end gap-2">
+              <span className="text-5xl font-black tracking-tight text-red-500 tabular-nums sm:text-6xl">
+                +18%
               </span>
-              <span className="text-[10px] text-slate-400 dark:text-white/40">survol pour détails</span>
+              <span className="pb-2 text-sm font-bold text-slate-700 dark:text-white/80">
+                secteur en plus forte hausse
+              </span>
             </div>
-            <PromosBars data={data.topShops} height={130} />
           </div>
 
-          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-            {stats.map((s) => (
+          <div className="relative mt-4 space-y-2.5">
+            {inflationSectors.map((sector, index) => (
               <div
-                key={s.label}
-                title={s.desc}
-                className="group rounded-xl border border-slate-200 bg-slate-50 p-3 hover:border-slate-300 transition dark:border-bg-border dark:bg-bg-800 dark:hover:border-white/15 cursor-default"
+                key={sector.name}
+                className="rounded-xl border border-slate-200 bg-slate-50 p-3 transition hover:border-brand-gold/40 dark:border-bg-border dark:bg-bg-800 dark:hover:border-white/15"
               >
-                <div className={`flex items-center justify-between ${s.color}`}>
-                  <span className="text-xl font-extrabold tabular-nums">{s.value}</span>
-                  <s.icon className="h-4 w-4 opacity-80" />
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[10px] font-black text-white dark:bg-white dark:text-bg-900">
+                        {index + 1}
+                      </span>
+                      <span className="truncate text-sm font-black text-slate-900 dark:text-white">
+                        {sector.name}
+                      </span>
+                    </div>
+                    <div className="mt-1 truncate text-[11px] text-slate-500 dark:text-white/45">
+                      {sector.detail}
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1 rounded-full border border-red-500/20 bg-red-500/10 px-2.5 py-1 text-sm font-black tabular-nums text-red-600 dark:text-red-300">
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                    +{sector.value}%
+                  </div>
                 </div>
-                <div className="mt-1 text-[11px] font-semibold leading-tight text-slate-700 dark:text-white/80">{s.label}</div>
-                <div className="mt-0.5 text-[10px] leading-tight text-slate-400 dark:text-white/35">{s.desc}</div>
+                <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-white/10">
+                  <div
+                    className={`h-full rounded-full bg-gradient-to-r ${sector.tone}`}
+                    style={{ width: `${Math.max(18, sector.value * 4)}%` }}
+                  />
+                </div>
               </div>
             ))}
           </div>
 
-          <Link href="/indice" className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-brand-gold transition hover:gap-2 hover:underline">
-            Voir l'indice détaillé →
-          </Link>
+          <div className="relative mt-3 rounded-xl border border-brand-gold/20 bg-brand-gold/10 px-3 py-2 text-xs font-semibold text-brand-gold">
+            Tres fort pour articles et reseaux sociaux.
+          </div>
         </div>
       </div>
 
