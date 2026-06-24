@@ -4,7 +4,10 @@ import { Apple, Play } from "lucide-react";
 export function AppBanner() {
   return (
     <section className="mx-auto mt-5 max-w-[1600px] px-3 sm:px-4">
-      <div className="relative overflow-hidden rounded-2xl border border-pink-500/40 bg-gradient-to-r from-rose-600/30 via-purple-600/20 to-pink-500/30 p-4 sm:p-5">
+      <div
+        data-home-card=""
+        className="relative overflow-hidden rounded-2xl border border-pink-500/40 bg-gradient-to-r from-rose-600/30 via-purple-600/20 to-pink-500/30 p-4 sm:p-5"
+      >
         <div className="absolute -left-10 -top-10 h-40 w-40 rounded-full bg-pink-500/30 blur-3xl" />
         <div className="relative flex flex-col items-center justify-between gap-4 text-center md:flex-row md:text-left">
           <div className="flex items-center gap-3">

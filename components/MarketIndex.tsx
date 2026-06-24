@@ -1,236 +1,291 @@
 "use client";
+import { useEffect, useState } from "react";
 import {
-  Diamond,
+  Flame,
   Info,
+  ShoppingCart,
+  Sparkles,
+  Store,
 } from "lucide-react";
 import Link from "next/link";
-import { categoryBarometres } from "@/lib/data";
 
-const indices = [
-  {
-    name: "Inflation e-commerce",
-    value: "104.2",
-    change: "+ 1.9%",
-    up: true,
-    img: "/Inflation e-commerceBg.png",
-    imgSize: "h-12 w-12",
-    iconBg: "from-blue-500/40 to-blue-700/30 ring-blue-400/30",
-    impact: "Moyen",
-    impactIcon: "🟡",
-    impactColor: "text-amber-600 dark:text-amber-400",
-    desc:
-      "Mesure la hausse moyenne des prix en ligne par rapport à l'année dernière. " +
-      "Base 100 = janvier de l'année précédente. Un indice de 104.2 signifie que les " +
-      "prix ont augmenté de 4.2% sur les sites e-commerce tunisiens.",
-  },
-  {
-    name: "Volatilité des prix",
-    value: "102.7",
-    change: "− 0.6%",
-    up: false,
-    img: "/VolatilitéBg.png",
-    imgSize: "h-11 w-11",
-    iconBg: "from-cyan-500/40 to-cyan-700/30 ring-cyan-400/30",
-    impact: "Élevé",
-    impactIcon: "🔴",
-    impactColor: "text-red-500 dark:text-red-400",
-    desc:
-      "Indique à quel point les prix bougent souvent sur une période donnée. " +
-      "Plus l'indice est haut, plus les prix changent fréquemment — il est donc " +
-      "stratégique d'attendre ou de surveiller avant d'acheter.",
-  },
-  {
-    name: "Guerre des prix",
-    value: "103.5",
-    change: "+ 1.2%",
-    up: true,
-    img: "/Guerre des prix.png",
-    imgSize: "h-11 w-11",
-    iconBg: "from-emerald-500/40 to-emerald-700/30 ring-emerald-400/30",
-    impact: "Positif",
-    impactIcon: "🟢",
-    impactColor: "text-emerald-600 dark:text-emerald-400",
-    desc:
-      "Détecte quand plusieurs enseignes baissent leurs prix sur les mêmes produits " +
-      "pour se concurrencer. Un indice élevé veut dire que c'est un bon moment pour " +
-      "acheter — les marchands tirent les prix vers le bas.",
-  },
-  {
-    name: "Pression promotionnelle",
-    value: "99.6",
-    change: "+ 0.6%",
-    up: false,
-    img: "/Pression promotionnelle.png",
-    imgSize: "h-11 w-11",
-    iconBg: "from-purple-500/40 to-purple-700/30 ring-purple-400/30",
-    impact: "Moyen",
-    impactIcon: "🟡",
-    impactColor: "text-amber-600 dark:text-amber-400",
-    desc:
-      "Pourcentage de produits actuellement en promotion sur l'ensemble des sites. " +
-      "Un indice supérieur à 100 indique une période de soldes plus intense que la " +
-      "moyenne annuelle.",
-  },
-];
+// Real per-category barometers from /api/category-barometers.
+type CatBarometer = {
+  name: string;
+  products: number;
+  avgDiscount: number;
+  promoShare: number;
+  topShops: { name: string; products: number }[];
+};
 
-const META_DESC =
-  "Indice composite qui combine les quatre indicateurs ci-dessus en une seule note. " +
-  "Il représente la santé globale du marché e-commerce tunisien — au-dessus de 100, " +
-  "le marché est dynamique et favorable aux consommateurs.";
+// Real numbers pulled from /api/market-index. Instead of repeating the hero's
+// global totals (produits / promos / enseignes), we break the market down by
+// the three sectors we actually scrape — where the deals and savings are right
+// now — plus one golden "total savings" highlight.
+type Sector = { products: number; promos: number; savingsDT: number };
+type MarketBreakdown = {
+  totalSavingsDT: number;
+  alimentation: Sector;
+  para: Sector;
+  retail: Sector;
+};
 
-const catIcons = [
-  // Smartphones — Samsung Galaxy S25 Ultra
-  { img: "/SmartphoneBg.png", grad: "from-blue-500 to-blue-700" },
-  // Informatique — MacBook Air M1
-  { img: "/InformatiqueBg.png", grad: "from-cyan-500 to-cyan-700" },
-  // Électroménager — Aspirateur robot Kärcher
-  { img: "/ElectroBg.png", grad: "from-amber-500 to-orange-600" },
-  // Grande Distribution — local couffin
-  { img: "/couffin.png", grad: "from-emerald-500 to-emerald-700" },
-  // Parapharmacie — unsplash pharmacy/skincare
-  { img: "/ParaSymbole.png", grad: "from-pink-500 to-purple-600" },
-  // Climatiseurs — local clim
-  { img: "/clim.png", grad: "from-sky-400 to-blue-600" },
-];
+const FR = (n: number) => n.toLocaleString("fr-FR");
+
+// Compact dinar formatting for big sums: 1 414 956 → "1,41 M"
+function fmtDT(n: number): string {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(2).replace(".", ",") + " M";
+  if (n >= 10_000) return Math.round(n / 1_000).toLocaleString("fr-FR") + " K";
+  return FR(n);
+}
+
+// Icon + gradient per real category name (returned by the API).
+const catIcons: Record<string, { img: string; grad: string }> = {
+  "Informatique": { img: "/InformatiqueBg.png", grad: "from-cyan-500 to-cyan-700" },
+  "Électroménager": { img: "/ElectroBg.png", grad: "from-amber-500 to-orange-600" },
+  "Supermarché": { img: "/couffin.png", grad: "from-emerald-500 to-emerald-700" },
+  "Beauté & Visage": { img: "/ParaSymbole.png", grad: "from-pink-500 to-purple-600" },
+  "Cheveux & Soins": { img: "/clim.png", grad: "from-sky-400 to-blue-600" },
+  "Bébé & Maman": { img: "/SmartphoneBg.png", grad: "from-blue-500 to-blue-700" },
+};
+const FALLBACK_ICON = { img: "/metaBg.png", grad: "from-slate-500 to-slate-700" };
 
 const rankBadges = ["bg-amber-500 text-black", "bg-blue-500 text-white", "bg-blue-400 text-white"];
 
 export function MarketIndex() {
+  const [bd, setBd] = useState<MarketBreakdown | null>(null);
+  const [barometers, setBarometers] = useState<CatBarometer[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/market-index")
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled || !d?.stats?.breakdown) return;
+        const b = d.stats.breakdown;
+        setBd({
+          totalSavingsDT: d.stats.totalSavingsDT ?? 0,
+          alimentation: b.alimentation ?? { products: 0, promos: 0, savingsDT: 0 },
+          para: b.para ?? { products: 0, promos: 0, savingsDT: 0 },
+          retail: b.retail ?? { products: 0, promos: 0, savingsDT: 0 },
+        });
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/category-barometers")
+      .then((r) => r.json())
+      .then((d) => { if (!cancelled && Array.isArray(d?.categories)) setBarometers(d.categories); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  // One card per sector we scrape — shows where the deals & savings actually are
+  // right now (promo rate = promos / products). These are distinct from the
+  // hero's global totals.
+  const sectors = bd
+    ? [
+        {
+          label: "Supermarché",
+          sub: "alimentaire & courses",
+          icon: ShoppingCart,
+          color: "text-emerald-600 dark:text-emerald-400",
+          ring: "from-emerald-500/15 to-emerald-500/5 ring-emerald-400/20",
+          data: bd.alimentation,
+          desc:
+            "Produits alimentaires et de grande distribution suivis chez les supermarchés tunisiens. " +
+            "« Promotions en cours » = articles dont le prix affiché est aujourd'hui inférieur à leur prix de référence. " +
+            "« % en promo » = part de ce rayon actuellement en réduction.",
+        },
+        {
+          label: "Parapharmacie",
+          sub: "soin, beauté & santé",
+          icon: Sparkles,
+          color: "text-pink-600 dark:text-pink-400",
+          ring: "from-pink-500/15 to-pink-500/5 ring-pink-400/20",
+          data: bd.para,
+          desc:
+            "Soin, beauté, hygiène et santé suivis chez les parapharmacies en ligne. " +
+            "Le montant « À économiser » est la somme des rabais réels (prix de référence − prix promo) " +
+            "sur toutes les promotions actives de ce rayon.",
+        },
+        {
+          label: "Magasins & Retail",
+          sub: "high-tech & maison",
+          icon: Store,
+          color: "text-blue-600 dark:text-blue-400",
+          ring: "from-blue-500/15 to-blue-500/5 ring-blue-400/20",
+          data: bd.retail,
+          desc:
+            "High-tech, électroménager et maison suivis chez les enseignes retail. " +
+            "Un « % en promo » élevé indique une période de soldes intense — un bon moment pour acheter dans cette catégorie.",
+        },
+      ]
+    : [];
+
+  // Golden card: the sector with the highest promo rate right now — i.e. where
+  // it's most worth shopping today. Derived from the same real breakdown.
+  const hottest =
+    sectors.length > 0
+      ? sectors
+          .map((s) => ({
+            label: s.label,
+            rate: s.data.products > 0 ? (s.data.promos / s.data.products) * 100 : 0,
+            promos: s.data.promos,
+          }))
+          .sort((a, b) => b.rate - a.rate)[0]
+      : null;
+
   return (
     <section className="mx-auto mt-5 max-w-[1600px] px-3 sm:px-4">
-      {/* TUNISIA E-COMMERCE MARKET INDEX */}
+      {/* TUNISIA E-COMMERCE MARKET INDEX — sector breakdown */}
       <div className="card card-pad relative overflow-visible">
         {/* Header row */}
         <div className="relative mb-4 flex items-center justify-between gap-3">
           <div className="flex flex-wrap items-baseline gap-3">
             <span className="text-lg font-black uppercase tracking-wide text-brand-gold">
-              Tunisia E-Commerce Market Index
+              Où sont les bonnes affaires
             </span>
             <span className="font-arabic text-base font-semibold text-brand-gold/80" dir="rtl">
-              مؤشر التجارة الإلكترونية في تونس
+              وين توجد العروض
             </span>
           </div>
           <Link
             href="/indice"
             className="shrink-0 rounded-full border border-brand-gold/40 bg-brand-gold/5 px-4 py-1.5 text-xs font-semibold text-brand-gold hover:bg-brand-gold/15 transition"
           >
-            Voir tous les indices
+            Voir le détail
           </Link>
         </div>
 
-        {/* Indices + Meta Index in one row */}
-        <div className="relative grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          {indices.map((idx) => (
-            <div
-              key={idx.name}
-              tabIndex={0}
-              className="group relative flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm ring-1 ring-slate-100 transition-all duration-200 hover:border-brand-gold/40 hover:shadow-[0_4px_24px_rgba(246,196,83,0.12)] hover:ring-brand-gold/20 focus:outline-none focus-visible:border-brand-gold/30 dark:border-white/[0.06] dark:bg-gradient-to-b dark:from-bg-800 dark:to-bg-900 dark:ring-white/[0.04] dark:shadow-[0_2px_12px_rgba(0,0,0,0.25)]"
-            >
-              {/* Info button */}
-              <Info className="absolute right-3 top-3 h-3.5 w-3.5 text-slate-300 transition group-hover:text-brand-gold/60 group-focus-visible:text-brand-gold/60 dark:text-white/20" />
-
-              {/* Icon + name */}
-              <div className="flex items-center gap-3">
-                <div className={`flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br ${idx.iconBg} ring-1 shadow-lg`}>
-                  <img
-                    src={(idx as { img: string; imgSize: string }).img}
-                    alt={idx.name}
-                    className={`${(idx as { imgSize: string }).imgSize} object-contain`}
-                  />
-                </div>
-                <span className="pr-5 text-[11px] font-semibold leading-tight text-slate-500 dark:text-white/60">{idx.name}</span>
-              </div>
-
-              {/* Divider */}
-              <div className="h-px bg-slate-100 dark:bg-white/[0.06]" />
-
-              {/* Value + change */}
-              <div className="flex items-end justify-between">
-                <span className="text-[28px] font-black tabular-nums leading-none tracking-tight text-slate-900 dark:text-white">
-                  {idx.value}
-                </span>
-                <span className={`mb-0.5 flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold tabular-nums ${
-                  idx.up
-                    ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                    : "bg-red-500/15 text-red-500 dark:text-red-400"
-                }`}>
-                  {idx.up ? "▲" : "▼"} {idx.change.replace(/[+−\-\s]/g, "")}
-                </span>
-              </div>
-
-              {/* Impact badge */}
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-white/30">Impact consommateur</span>
-                <span className={`text-[11px] font-bold ${idx.impactColor}`}>
-                  {idx.impactIcon} {idx.impact}
-                </span>
-              </div>
-
-              {/* Hover tooltip */}
+        {/* 3 sector cards + total savings highlight */}
+        <div className="relative grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {(bd ? sectors : Array.from({ length: 3 })).map((s, i) => {
+            const sec = s as (typeof sectors)[number] | undefined;
+            const promoRate =
+              sec && sec.data.products > 0
+                ? Math.round((sec.data.promos / sec.data.products) * 100)
+                : 0;
+            return (
               <div
-                role="tooltip"
-                className="pointer-events-none invisible absolute left-1/2 top-full z-30 mt-2 w-72 -translate-x-1/2 translate-y-1 rounded-xl border border-brand-gold/30 bg-white/95 p-3 text-left shadow-[0_8px_30px_rgba(0,0,0,0.15)] ring-1 ring-brand-gold/15 backdrop-blur-md opacity-0 transition duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:visible group-focus-visible:translate-y-0 group-focus-visible:opacity-100 dark:bg-bg-900/95 dark:shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
+                key={sec?.label ?? i}
+                tabIndex={sec ? 0 : undefined}
+                className="group relative flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm ring-1 ring-slate-100 transition-all duration-200 hover:border-brand-gold/40 hover:shadow-[0_4px_24px_rgba(246,196,83,0.12)] focus:outline-none focus-visible:border-brand-gold/30 dark:border-white/[0.06] dark:bg-gradient-to-b dark:from-bg-800 dark:to-bg-900 dark:ring-white/[0.04]"
               >
-                <span className="absolute -top-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 border-l border-t border-brand-gold/30 bg-white/95 dark:bg-bg-900/95" />
-                <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-brand-gold">
-                  <Info className="h-3 w-3" /> Définition
+                {/* info hint */}
+                {sec && (
+                  <Info className="absolute right-3 top-3 h-3.5 w-3.5 text-slate-300 transition group-hover:text-brand-gold/60 group-focus-visible:text-brand-gold/60 dark:text-white/20" />
+                )}
+
+                {/* sector head */}
+                <div className="flex items-center gap-3">
+                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${sec?.ring ?? "from-slate-200 to-slate-100 ring-slate-200"} ring-1`}>
+                    {sec ? <sec.icon className={`h-5 w-5 ${sec.color}`} strokeWidth={2.2} /> : <Store className="h-5 w-5 text-slate-300" />}
+                  </div>
+                  <div className="min-w-0 pr-5">
+                    <div className="text-[13px] font-bold leading-tight text-slate-800 dark:text-white/90">{sec?.label ?? "—"}</div>
+                    <div className="text-[10px] leading-tight text-slate-400 dark:text-white/40">{sec?.sub ?? ""}</div>
+                  </div>
                 </div>
-                <div className="mt-1 text-[12px] font-semibold text-slate-900 dark:text-white">{idx.name}</div>
-                <p className="mt-1 text-[11px] leading-relaxed text-slate-500 dark:text-white/60">{idx.desc}</p>
-              </div>
-            </div>
-          ))}
 
-          {/* Meta Index Global 1111 — golden card */}
+                {/* headline: promos active */}
+                <div className="flex items-end justify-between">
+                  <div>
+                    <span className={`block text-[28px] font-black tabular-nums leading-none tracking-tight ${sec ? "text-slate-900 dark:text-white" : "text-slate-300 dark:text-white/20"}`}>
+                      {sec ? FR(sec.data.promos) : "—"}
+                    </span>
+                    <span className="mt-1.5 block text-[11px] leading-tight text-slate-400 dark:text-white/40">promotions en cours</span>
+                  </div>
+                  {sec && promoRate > 0 && (
+                    <span className="mb-0.5 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
+                      {promoRate}% en promo
+                    </span>
+                  )}
+                </div>
+
+                {/* footer: savings in this sector */}
+                <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-2.5 dark:border-white/[0.06]">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-white/30">À économiser</span>
+                  <span className="text-[13px] font-black tabular-nums text-brand-gold">
+                    {sec ? fmtDT(sec.data.savingsDT) : "—"} DT
+                  </span>
+                </div>
+
+                {/* hover/focus tooltip — definition */}
+                {sec && (
+                  <div
+                    role="tooltip"
+                    className="pointer-events-none invisible absolute left-1/2 top-full z-30 mt-2 w-[min(18rem,calc(100vw-2rem))] -translate-x-1/2 translate-y-1 rounded-xl border border-brand-gold/30 bg-white p-3 text-left opacity-0 shadow-[0_8px_30px_rgba(0,0,0,0.15)] ring-1 ring-brand-gold/15 transition duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:visible group-focus-visible:translate-y-0 group-focus-visible:opacity-100 dark:border-brand-gold/25 dark:bg-bg-800 dark:shadow-[0_8px_30px_rgba(0,0,0,0.6)]"
+                  >
+                    <span className="absolute -top-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 border-l border-t border-brand-gold/30 bg-white dark:border-brand-gold/25 dark:bg-bg-800" />
+                    <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-brand-gold">
+                      <Info className="h-3 w-3" /> Définition
+                    </div>
+                    <div className="mt-1 text-[12px] font-semibold text-slate-900 dark:text-white">{sec.label}</div>
+                    <p className="mt-1 text-[11px] leading-relaxed text-slate-600 dark:text-white/75">{sec.desc}</p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {/* Hottest sector — golden highlight card */}
           <div
-            tabIndex={0}
-            className="group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-brand-gold/40 bg-gradient-to-b from-amber-50 to-yellow-50 p-4 shadow-sm ring-1 ring-brand-gold/20 transition-all duration-200 hover:border-brand-gold/60 hover:shadow-[0_4px_32px_rgba(246,196,83,0.2)] focus:outline-none dark:from-[#1a1506] dark:to-[#0f0e09] dark:shadow-[0_2px_24px_rgba(246,196,83,0.12)]"
+            tabIndex={bd ? 0 : undefined}
+            className="group relative flex flex-col gap-3 rounded-2xl border border-brand-gold/40 bg-gradient-to-b from-amber-50 to-yellow-50 p-4 shadow-sm ring-1 ring-brand-gold/20 transition-all duration-200 hover:border-brand-gold/60 hover:shadow-[0_4px_32px_rgba(246,196,83,0.2)] focus:outline-none dark:from-[#1a1506] dark:to-[#0f0e09]"
           >
-            {/* Ambient glow */}
-            <div className="pointer-events-none absolute -right-6 -top-6 h-28 w-28 rounded-full bg-brand-gold/20 blur-2xl" />
+            {/* ambient glow (clipped to its own layer so the tooltip can overflow) */}
+            <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
+              <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-brand-gold/20 blur-2xl" />
+            </div>
 
-            <Info className="absolute right-3 top-3 h-3.5 w-3.5 text-brand-gold/40 transition group-hover:text-brand-gold/70" />
+            <Info className="absolute right-3 top-3 h-3.5 w-3.5 text-brand-gold/40 transition group-hover:text-brand-gold/70 group-focus-visible:text-brand-gold/70" />
 
-            {/* Icon + name */}
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-brand-gold/30 to-brand-gold/10 ring-1 ring-brand-gold/30 shadow-lg">
-                <img src="/metaBg.png" alt="Meta Index Global 1111" className="h-11 w-11 object-contain" />
+            <div className="relative flex items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-gold/30 to-brand-gold/10 ring-1 ring-brand-gold/30">
+                <Flame className="h-5 w-5 text-brand-gold" strokeWidth={2.2} />
               </div>
-              <span className="pr-5 text-[11px] font-semibold leading-tight text-amber-700 dark:text-brand-gold/70">Meta Index Global 1111</span>
+              <div className="min-w-0 pr-5">
+                <div className="text-[13px] font-bold leading-tight text-amber-800 dark:text-brand-gold/90">Rayon le plus chaud</div>
+                <div className="text-[10px] leading-tight text-amber-600/70 dark:text-brand-gold/40">où acheter maintenant</div>
+              </div>
             </div>
 
-            {/* Divider */}
-            <div className="h-px bg-brand-gold/20" />
+            <div className="relative flex items-end">
+              <div>
+                <span className={`block text-[22px] font-black leading-none tracking-tight ${bd ? "text-slate-900 dark:text-white" : "text-amber-300/50 dark:text-brand-gold/20"}`}>
+                  {hottest ? hottest.label : "—"}
+                </span>
+                <span className="mt-1.5 block text-[11px] leading-tight text-amber-600/70 dark:text-brand-gold/40">
+                  c'est là que les promos sont les plus fréquentes
+                </span>
+              </div>
+            </div>
 
-            {/* Value + change */}
-            <div className="flex items-end justify-between">
-              <span className="text-[28px] font-black tabular-nums leading-none tracking-tight text-slate-900 dark:text-white">
-                108.7
-              </span>
-              <span className="mb-0.5 flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
-                ▲ 1.2%
+            <div className="relative mt-auto flex items-center justify-between border-t border-brand-gold/20 pt-2.5">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-600/60 dark:text-brand-gold/40">Taux de promo</span>
+              <span className="text-[13px] font-black tabular-nums text-brand-gold">
+                {hottest ? `${Math.round(hottest.rate)}%` : "—"}
               </span>
             </div>
 
-            {/* Sub label */}
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-amber-600/60 dark:text-brand-gold/40">vs mois dernier</span>
-              <span className="flex items-center gap-1 text-[11px] font-bold text-brand-gold">
-                <Diamond className="h-3 w-3" /> Composite
-              </span>
-            </div>
-
-            {/* Tooltip */}
+            {/* hover/focus tooltip — definition (right-anchored, last card) */}
             <div
               role="tooltip"
-              className="pointer-events-none invisible absolute right-0 top-full z-30 mt-2 w-72 translate-y-1 rounded-xl border border-brand-gold/30 bg-white/95 p-3 text-left shadow-[0_8px_30px_rgba(0,0,0,0.15)] ring-1 ring-brand-gold/15 backdrop-blur-md opacity-0 transition duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:visible group-focus-visible:translate-y-0 group-focus-visible:opacity-100 dark:bg-bg-900/95 dark:shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
+              className="pointer-events-none invisible absolute right-0 top-full z-30 mt-2 w-[min(18rem,calc(100vw-2rem))] translate-y-1 rounded-xl border border-brand-gold/30 bg-white p-3 text-left opacity-0 shadow-[0_8px_30px_rgba(0,0,0,0.15)] ring-1 ring-brand-gold/15 transition duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:visible group-focus-visible:translate-y-0 group-focus-visible:opacity-100 dark:border-brand-gold/25 dark:bg-bg-800 dark:shadow-[0_8px_30px_rgba(0,0,0,0.6)]"
             >
-              <span className="absolute -top-1.5 right-6 h-3 w-3 rotate-45 border-l border-t border-brand-gold/30 bg-white/95 dark:bg-bg-900/95" />
+              <span className="absolute -top-1.5 right-6 h-3 w-3 rotate-45 border-l border-t border-brand-gold/30 bg-white dark:border-brand-gold/25 dark:bg-bg-800" />
               <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-brand-gold">
                 <Info className="h-3 w-3" /> Définition
               </div>
-              <div className="mt-1 text-[12px] font-semibold text-slate-900 dark:text-white">Meta Index Global 1111</div>
-              <p className="mt-1 text-[11px] leading-relaxed text-slate-500 dark:text-white/60">{META_DESC}</p>
+              <div className="mt-1 text-[12px] font-semibold text-slate-900 dark:text-white">Rayon le plus chaud</div>
+              <p className="mt-1 text-[11px] leading-relaxed text-slate-600 dark:text-white/75">
+                Le secteur dont la part de produits en promotion (« taux de promo ») est la plus élevée en ce moment. C'est
+                statistiquement le meilleur rayon où chercher une bonne affaire aujourd'hui.
+              </p>
             </div>
           </div>
         </div>
@@ -256,55 +311,55 @@ export function MarketIndex() {
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          {categoryBarometres.map((c, ci) => {
-            const ic = catIcons[ci];
+          {(barometers ?? Array.from({ length: 6 })).map((cc, ci) => {
+            const c = cc as CatBarometer | undefined;
+            const ic = (c && catIcons[c.name]) || FALLBACK_ICON;
             return (
               <div
-                key={c.name}
+                key={c?.name ?? ci}
                 className="flex flex-col rounded-2xl border border-brand-gold/15 bg-slate-50 p-3.5 ring-1 ring-brand-gold/10 dark:bg-bg-800"
               >
-                {/* Top: icon + name + value */}
+                {/* Top: icon + name + headline (real avg discount) */}
                 <div className="flex items-start gap-3">
                   <span
                     className={`flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br ${ic.grad} p-1 shadow-lg`}
                   >
-                    <img
-                      src={ic.img}
-                      alt={c.name}
-                      className="h-full w-full object-contain"
-                    />
+                    <img src={ic.img} alt={c?.name ?? ""} className="h-full w-full object-contain" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-xs text-slate-600 dark:text-white/80">{c.name}</div>
+                    <div className="truncate text-xs text-slate-600 dark:text-white/80">{c?.name ?? "—"}</div>
                     <div className="mt-1 flex items-baseline gap-2">
-                      <span className="text-xl font-black tabular-nums text-slate-900 dark:text-white">{c.value}</span>
-                      <span
-                        className={`text-xs font-bold tabular-nums ${
-                          c.change.startsWith("+") ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"
-                        }`}
-                      >
-                        {c.change.startsWith("+") ? "+ " : "− "}
-                        {c.change.replace(/[+−-]/, "")}
+                      <span className={`text-xl font-black tabular-nums ${c ? "text-slate-900 dark:text-white" : "text-slate-300 dark:text-white/20"}`}>
+                        {c ? `−${c.avgDiscount}%` : "—"}
                       </span>
+                      {c && c.promoShare > 0 && (
+                        <span className="text-[10px] font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
+                          {c.promoShare}% en promo
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[10px] text-slate-400 dark:text-white/40">
+                      {c ? `${FR(c.products)} produits suivis` : " "}
                     </div>
                   </div>
                 </div>
 
-                {/* Ranked stores */}
+                {/* Ranked stores — top shops by real product count */}
                 <ul className="mt-3 flex-1 space-y-1.5 text-xs">
-                  {c.stores.map((s, idx) => (
-                    <li key={s} className="flex items-center justify-between">
-                      <span className="flex items-center gap-2">
-                        <span
-                          className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-black ${rankBadges[idx]}`}
-                        >
+                  {(c?.topShops ?? []).map((s, idx) => (
+                    <li key={s.name} className="flex items-center justify-between">
+                      <span className="flex min-w-0 items-center gap-2">
+                        <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] font-black ${rankBadges[idx]}`}>
                           {idx + 1}
                         </span>
-                        <span className="text-slate-700 dark:text-white/85">{s}</span>
+                        <span className="truncate text-slate-700 dark:text-white/85">{s.name}</span>
                       </span>
-                      <span className="tabular-nums text-slate-500 dark:text-white/60">{c.ratings[idx]}</span>
+                      <span className="shrink-0 tabular-nums text-slate-500 dark:text-white/60">{FR(s.products)}</span>
                     </li>
                   ))}
+                  {c && c.topShops.length === 0 && (
+                    <li className="text-[11px] italic text-slate-400 dark:text-white/35">Aucune enseigne</li>
+                  )}
                 </ul>
 
                 {/* Voir le baromètre */}

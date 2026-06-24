@@ -22,7 +22,7 @@ type ShopStat = {
   promoCount: number;    // products with a discount that this shop carries
   promoPct: number;      // percent of its catalog that's on promo
   availability: number;  // % of total catalog this shop covers
-  score: number;         // 0..100 composite score
+  score: number;         // 0..100 score based on visible ranking signals
   rank: number;
   logo: string | null;   // /shop-logos/<key>.<ext> if we scraped one
   visitors: number;      // estimated monthly visitors (derived from catalog size)
@@ -111,16 +111,36 @@ function compute(): ShopStat[] {
     ...Object.values(agg).map((a) => a.products),
     1
   );
+  const maxCheapestCount = Math.max(
+    ...Object.values(agg).map((a) => a.cheapestCount),
+    1
+  );
+  const avgPrices = Object.values(agg).map((a) => (a.products > 0 ? a.priceSum / a.products : 0));
+  const minAvgPrice = Math.min(...avgPrices);
+  const maxAvgPrice = Math.max(...avgPrices);
+  const visitorEstimate = (a: { products: number; cheapestCount: number }) =>
+    Math.round(a.products * 48 + a.cheapestCount * 120);
+  const maxVisitors = Math.max(...Object.values(agg).map(visitorEstimate), 1);
 
   const stats: ShopStat[] = Object.entries(agg).map(([shop, a]) => {
     const avgPrice = a.products > 0 ? a.priceSum / a.products : 0;
     const promoPct = a.products > 0 ? (a.promoCount / a.products) * 100 : 0;
     const availability = (a.products / totalProducts) * 100;
-    // Composite score 0..100
-    // 60% coverage (catalog size vs largest), 25% cheapest-rate, 15% promo-rate
-    const coverageScore = (a.products / maxShopProducts) * 100;
-    const cheapestRate = a.products > 0 ? (a.cheapestCount / a.products) * 100 : 0;
-    const score = coverageScore * 0.6 + cheapestRate * 0.25 + promoPct * 0.15;
+    const visitors = visitorEstimate(a);
+    // Composite score based on columns shown in the ranking:
+    // best-price wins, price level, catalog depth, and estimated audience.
+    const bestPriceScore = (a.cheapestCount / maxCheapestCount) * 100;
+    const priceLevelScore =
+      maxAvgPrice === minAvgPrice
+        ? 100
+        : ((maxAvgPrice - avgPrice) / (maxAvgPrice - minAvgPrice)) * 100;
+    const catalogScore = (a.products / maxShopProducts) * 100;
+    const audienceScore = (visitors / maxVisitors) * 100;
+    const score =
+      bestPriceScore * 0.45 +
+      priceLevelScore * 0.25 +
+      catalogScore * 0.15 +
+      audienceScore * 0.15;
 
     return {
       shop,
@@ -135,7 +155,7 @@ function compute(): ShopStat[] {
       rank: 0,
       logo: LOGO_FILES[logoKey(shop)] ?? null,
       // estimated monthly visitors, scaled from catalog size (stable, deterministic)
-      visitors: Math.round(a.products * 48 + (a.cheapestCount * 120)),
+      visitors,
     };
   });
 

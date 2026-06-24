@@ -12,7 +12,7 @@ const tickerItems = [
   { icon: TrendingUp, label: "Indice marché", value: "108.7", trend: "+1.2%", trendUp: true },
   { icon: Flame, label: "Promos actives", value: "152" },
   { icon: ShieldCheck, label: "Fausses promos", value: "37" },
-  { icon: Sparkles, label: "Économisés aujourd'hui", value: "48 000 DT" },
+  
 ];
 
 export function Header() {

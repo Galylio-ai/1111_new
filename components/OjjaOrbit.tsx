@@ -20,9 +20,9 @@ const ingredients: Ingredient[] = [
   { name: "Concentré", qty: "100g",   price: "0.463", icon: "/food/tomato-paste.svg", accent: "#dc2626" },
 ];
 
-const CARD = 78; // card size in px
+const CARD = 78; // desktop card size in px
 const PADDING = 6; // breathing room from stage edge
-const STAGE_HEIGHT = 360; // fixed height — only width grows
+const STAGE_HEIGHT = 360; // desktop height; smaller containers scale it down
 
 export function OjjaOrbit() {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -43,14 +43,15 @@ export function OjjaOrbit() {
     return () => ro.disconnect();
   }, []);
 
-  const height = STAGE_HEIGHT;
+  const card = width < 320 ? 60 : width < 420 ? 68 : CARD;
+  const height = width < 320 ? 300 : width < 420 ? 330 : STAGE_HEIGHT;
   // Circular orbit. Radius is bound by the SMALLER of the two half-dimensions
   // so the ring never overflows vertically (fixed height) nor horizontally.
   const halfW = width / 2;
   const halfH = height / 2;
-  const radius = Math.max(0, Math.min(halfW, halfH) - CARD / 2 - PADDING);
+  const radius = Math.max(0, Math.min(halfW, halfH) - card / 2 - PADDING);
   // Square ring area centred inside the (wider) stage.
-  const ring = 2 * radius + CARD;
+  const ring = 2 * radius + card;
   const center = ring / 2;
 
   return (
@@ -85,8 +86,8 @@ export function OjjaOrbit() {
       >
         {ingredients.map((ing, i) => {
           const angle = (2 * Math.PI * i) / ingredients.length - Math.PI / 2; // start at top
-          const x = center + radius * Math.cos(angle) - CARD / 2;
-          const y = center + radius * Math.sin(angle) - CARD / 2;
+          const x = center + radius * Math.cos(angle) - card / 2;
+          const y = center + radius * Math.sin(angle) - card / 2;
           return (
             <div
               key={ing.name}
@@ -94,8 +95,8 @@ export function OjjaOrbit() {
               style={{
                 left: x,
                 top: y,
-                width: CARD,
-                height: CARD,
+                width: card,
+                height: card,
               }}
             >
               <div

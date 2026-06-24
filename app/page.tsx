@@ -15,7 +15,7 @@ import { TechOffers } from "@/components/TechOffers";
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen">
+    <main className="home-page min-h-screen">
       <Header />
       <Hero />
       <PromoBanner />

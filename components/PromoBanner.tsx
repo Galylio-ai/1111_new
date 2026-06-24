@@ -23,7 +23,10 @@ export function PromoBanner() {
 
   return (
     <section className="mx-auto mt-5 max-w-[1600px] px-3 sm:px-4">
-      <div className="group relative overflow-hidden rounded-2xl border border-orange-500/30 shadow-card transition hover:border-orange-400/60 hover:shadow-[0_0_32px_-8px_rgba(249,115,22,0.5)]">
+      <div
+        data-home-card=""
+        className="group relative overflow-hidden rounded-2xl border border-orange-500/30 shadow-card transition hover:border-orange-400/60 hover:shadow-[0_0_32px_-8px_rgba(249,115,22,0.5)]"
+      >
 
         {/* Slides */}
         {SLIDES.map((slide, i) => (

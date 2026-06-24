@@ -26,20 +26,20 @@ const columns = [
   {
     title: "À propos",
     links: [
-      { label: "Qui sommes-nous", href: "#" },
-      { label: "Notre mission", href: "#" },
-      { label: "Carrières", href: "#" },
-      { label: "Contact", href: "#" },
-      { label: "FAQ", href: "#" },
+      { label: "Qui sommes-nous", href: "/a-propos#qui-sommes-nous" },
+      { label: "Notre mission", href: "/a-propos#mission" },
+      { label: "Carrières", href: "/a-propos#carrieres" },
+      { label: "Contact", href: "/a-propos#contact" },
+      { label: "FAQ", href: "/a-propos#faq" },
     ],
   },
 ];
 
 const socials = [
-  { Icon: Facebook, label: "Facebook", hover: "hover:bg-[#1877f2] hover:border-[#1877f2]" },
-  { Icon: Instagram, label: "Instagram", hover: "hover:bg-gradient-to-br hover:from-[#feda75] hover:via-[#d62976] hover:to-[#4f5bd5] hover:border-transparent" },
-  { Icon: Youtube, label: "YouTube", hover: "hover:bg-[#ff0000] hover:border-[#ff0000]" },
-  { Icon: Music2, label: "TikTok", hover: "hover:bg-black hover:border-black" },
+  { Icon: Facebook, label: "Facebook", href: "https://www.facebook.com/", hover: "hover:bg-[#1877f2] hover:border-[#1877f2]" },
+  { Icon: Instagram, label: "Instagram", href: "https://www.instagram.com/", hover: "hover:bg-gradient-to-br hover:from-[#feda75] hover:via-[#d62976] hover:to-[#4f5bd5] hover:border-transparent" },
+  { Icon: Youtube, label: "YouTube", href: "https://www.youtube.com/", hover: "hover:bg-[#ff0000] hover:border-[#ff0000]" },
+  { Icon: Music2, label: "TikTok", href: "https://www.tiktok.com/", hover: "hover:bg-black hover:border-black" },
 ];
 
 export function Footer() {
@@ -110,9 +110,9 @@ export function Footer() {
               <span className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-brand-gold" /> Tunis, Tunisie
               </span>
-              <span className="flex items-center gap-2">
+              <a href="mailto:contact@1111.tn" className="flex items-center gap-2 transition hover:text-brand-gold">
                 <Mail className="h-4 w-4 text-brand-gold" /> contact@1111.tn
-              </span>
+              </a>
             </div>
           </div>
 
@@ -144,10 +144,12 @@ export function Footer() {
           <div>
             <div className="mb-3 text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">Suivez-nous</div>
             <div className="flex items-center gap-2.5">
-              {socials.map(({ Icon, label, hover }) => (
+              {socials.map(({ Icon, label, href, hover }) => (
                 <a
                   key={label}
-                  href="#"
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={label}
                   className={`flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-all hover:-translate-y-0.5 hover:text-white dark:border-white/10 dark:bg-white/[0.04] dark:text-white/80 ${hover}`}
                 >
@@ -182,9 +184,9 @@ export function Footer() {
         <div className="relative flex flex-col items-center justify-between gap-3 border-t border-slate-200 px-6 py-5 text-xs text-slate-400 md:flex-row md:px-10 dark:border-white/10 dark:text-white/50">
           <div>© {new Date().getFullYear()} 1111.tn — Tous droits réservés.</div>
           <div className="flex items-center gap-4">
-            <Link href="#" className="transition hover:text-brand-gold">CGU</Link>
-            <Link href="#" className="transition hover:text-brand-gold">Confidentialité</Link>
-            <Link href="#" className="transition hover:text-brand-gold">Cookies</Link>
+            <Link href="/conditions-utilisation" className="transition hover:text-brand-gold">CGU</Link>
+            <Link href="/confidentialite" className="transition hover:text-brand-gold">Confidentialité</Link>
+            <Link href="/confidentialite#cookies" className="transition hover:text-brand-gold">Cookies</Link>
           </div>
           <div className="flex items-center gap-1.5">
             Fait avec passion en Tunisie <span className="text-base leading-none">🇹🇳</span>
