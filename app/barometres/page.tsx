@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Info, Loader2, TrendingDown, TrendingUp } from "lucide-react";
 import { PageShell } from "@/components/site/PageShell";
 import { Reveal } from "@/components/site/Reveal";
@@ -32,6 +33,17 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 // Definition shown in the hover/focus tooltip for each barometer card.
+// Where each barometer card sends the user when clicked.
+// Targets the right catalog page with the right filter pre-set.
+const CATEGORY_LINKS: Record<string, string> = {
+  "Informatique":      "/retail?cat=informatique",
+  "Électroménager":    "/retail?cat=electromenager",
+  "Supermarché":       "/supermarche",
+  "Beauté & Visage":   "/parapharmacie?cat=visage",
+  "Cheveux & Soins":   "/parapharmacie?cat=cheveux",
+  "Bébé & Maman":      "/parapharmacie?cat=bébé",
+};
+
 const CATEGORY_DEFINITIONS: Record<string, string> = {
   "Informatique":
     "Univers PC, ordinateurs portables, écrans, imprimantes, périphériques et composants. Suivi en continu chez les enseignes spécialisées tech tunisiennes.",
@@ -101,11 +113,12 @@ export default function BarometresPage() {
               const color = CATEGORY_COLORS[c.name] ?? "from-slate-500 to-slate-600";
               const promoCount = Math.round(c.products * c.promoShare / 100);
               const goodDeal = c.avgDiscount >= 20;
+              const linkHref = CATEGORY_LINKS[c.name] ?? "/";
               return (
                 <Reveal key={c.name} delay={i * 0.05}>
-                  <div
-                    tabIndex={0}
-                    className="card card-pad group relative h-full overflow-visible transition hover:-translate-y-1 hover:border-slate-300 focus:outline-none focus-visible:border-brand-gold/30 dark:hover:border-white/20"
+                  <Link
+                    href={linkHref}
+                    className="card card-pad group relative block h-full overflow-visible transition hover:-translate-y-1 hover:border-slate-300 focus:outline-none focus-visible:border-brand-gold/30 dark:hover:border-white/20"
                   >
                     {/* Info indicator (top-right corner) */}
                     <Info className="absolute right-3 top-3 h-3.5 w-3.5 text-slate-300 transition group-hover:text-brand-gold/70 group-focus-visible:text-brand-gold/70 dark:text-white/25" />
@@ -192,7 +205,7 @@ export default function BarometresPage() {
                         {CATEGORY_DEFINITIONS[c.name] ?? "Catégorie suivie en continu — données issues du marché tunisien."}
                       </p>
                     </div>
-                  </div>
+                  </Link>
                 </Reveal>
               );
             })}
