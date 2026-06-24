@@ -141,15 +141,15 @@ export default function SupermarchePage() {
                     السوبرماركت — قارن أسعار المواد الغذائية
                   </p>
                   <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-600 dark:text-white/65">
-                    Comparez les prix de <span className="font-bold text-slate-900 dark:text-white">69 003</span> produits alimentaires sur{" "}
-                    <span className="font-bold text-slate-900 dark:text-white">6 enseignes</span> tunisiennes.
+                    Comparez les prix de <span className="font-bold text-slate-900 dark:text-white">{(total > 0 ? total : 0).toLocaleString("fr-FR")}</span> produits alimentaires sur{" "}
+                    <span className="font-bold text-slate-900 dark:text-white">{shops.length} enseignes</span> tunisiennes.
                   </p>
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 shrink-0">
                 {[
-                  { label: "Produits",  value: "69 003", cls: "border-brand-gold/25 bg-brand-gold/10 text-brand-gold" },
-                  { label: "Enseignes", value: "6",      cls: "border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300" },
+                  { label: "Produits",  value: (total > 0 ? total : 0).toLocaleString("fr-FR"), cls: "border-brand-gold/25 bg-brand-gold/10 text-brand-gold" },
+                  { label: "Enseignes", value: String(shops.length),      cls: "border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300" },
                 ].map(c => (
                   <div key={c.label} className={`rounded-xl border px-4 py-2.5 ${c.cls}`}>
                     <div className="text-xl font-black tabular-nums leading-none">{c.value}</div>
