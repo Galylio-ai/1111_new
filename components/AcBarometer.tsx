@@ -146,7 +146,7 @@ export function AcBarometer() {
           {/* Bottom button */}
           <div className="mt-4 flex justify-center">
             <Link
-              href="/barometres"
+              href="/barometres/parapharmacie"
               className="rounded-full border border-brand-gold/60 px-8 py-2.5 text-sm font-semibold text-brand-gold hover:bg-brand-gold/10 transition"
             >
               Voir le classement complet
