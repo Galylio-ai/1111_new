@@ -1,5 +1,6 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowRight, BadgeCheck, ChevronDown, ChevronRight, Loader2, Monitor, Search, Store, Tag, X,
@@ -145,14 +146,23 @@ function displayName(key: string) {
 }
 
 export default function RetailPage() {
+  return (
+    <Suspense fallback={null}>
+      <RetailPageInner />
+    </Suspense>
+  );
+}
+
+function RetailPageInner() {
+  const sp = useSearchParams();
   const [products, setProducts]   = useState<Product[]>([]);
   const [total, setTotal]         = useState(0);
   const [page, setPage]           = useState(0);
   const [loading, setLoading]     = useState(false);
-  const [activeCat, setActiveCat]   = useState("");
-  const [activeShop, setActiveShop] = useState("");
-  const [search, setSearch]         = useState("");
-  const [query, setQuery]           = useState("");
+  const [activeCat, setActiveCat]   = useState(sp?.get("cat") ?? "");
+  const [activeShop, setActiveShop] = useState(sp?.get("shop") ?? "");
+  const [search, setSearch]         = useState(sp?.get("q") ?? "");
+  const [query, setQuery]           = useState(sp?.get("q") ?? "");
 
   const fetchProducts = useCallback(async (p: number, cat: string, q: string, shop: string) => {
     setLoading(true);

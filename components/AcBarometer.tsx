@@ -83,7 +83,6 @@ export function AcBarometer() {
               <thead>
                 <tr className="text-slate-500 text-xs dark:text-white/40">
                   <th className="pb-3 text-left font-medium">Site</th>
-                  <th className="pb-3 text-center font-medium">Score global</th>
                   <th className="pb-3 text-center font-medium">Meilleurs prix</th>
                   <th className="pb-3 text-center font-medium">Prix moyen</th>
                   <th className="pb-3 text-center font-medium">Visiteurs estimés</th>
@@ -99,7 +98,6 @@ export function AcBarometer() {
                           <span className="h-3 w-24 rounded bg-slate-200 dark:bg-white/10" />
                         </div>
                       </td>
-                      <td className="py-3"><span className="mx-auto block h-3 w-10 rounded bg-slate-200 dark:bg-white/10" /></td>
                       <td className="py-3"><span className="mx-auto block h-3 w-6 rounded bg-slate-200 dark:bg-white/10" /></td>
                       <td className="py-3"><span className="mx-auto block h-3 w-14 rounded bg-slate-200 dark:bg-white/10" /></td>
                       <td className="py-3"><span className="mx-auto block h-3 w-16 rounded bg-slate-200 dark:bg-white/10" /></td>
@@ -108,7 +106,7 @@ export function AcBarometer() {
                 )}
                 {!loading && topRows.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center text-sm text-slate-400 dark:text-white/40">
+                    <td colSpan={4} className="py-8 text-center text-sm text-slate-400 dark:text-white/40">
                       Aucune donnée disponible.
                     </td>
                   </tr>
@@ -136,7 +134,6 @@ export function AcBarometer() {
                         </div>
                       </div>
                     </td>
-                    <td className={`py-3 text-center font-bold tabular-nums ${s.positionColor}`}>{s.score}/100</td>
                     <td className="py-3 text-center font-semibold tabular-nums text-slate-900 dark:text-white">{s.cheapestStr} produits</td>
                     <td className="py-3 text-center font-semibold tabular-nums text-slate-900 dark:text-white">{fmtPrice(s.avgPrice)}</td>
                     <td className="py-3 text-center font-bold tabular-nums text-slate-900 dark:text-white">{s.visitorsStr}</td>

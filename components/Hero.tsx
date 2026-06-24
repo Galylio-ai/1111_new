@@ -147,7 +147,7 @@ export function Hero() {
 
           <div className="mt-3 flex items-center gap-3">
             <div className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-slate-900 tabular-nums transition-all duration-500 dark:text-white">
-              {fmt(data.stats.totalPromos)}
+              {data.stats.totalPromos.toLocaleString("fr-TN")}
             </div>
             <div className="flex flex-col justify-center">
               <span className="text-sm font-bold text-slate-700 dark:text-white/80">promotions actives</span>
