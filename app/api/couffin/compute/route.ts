@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Pool } from "pg";
+import { productCoverImageSql } from "@/lib/productImages";
 
 // Compute the cheapest shop for a couffin (basket) of supermarché products.
 //
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
       shop_id: number; shop_key: string; shop_name: string; price: string;
     }>(
       `SELECT p.id AS product_id, p.name AS product_name,
-              (SELECT image_url FROM product_images WHERE product_id = p.id LIMIT 1) AS img,
+              ${productCoverImageSql("p.id")} AS img,
               s.id AS shop_id, s.shop_key, s.name AS shop_name, sp.current_price AS price
        FROM products p
        JOIN shop_prices sp ON sp.product_id = p.id

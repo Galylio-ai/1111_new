@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Pool } from "pg";
+import { productCoverImageSql } from "@/lib/productImages";
 
 // Search supermarché products to add to the couffin. Returns the stable product
 // id (needed for basket cost computation), name, image, brand and price range.
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest) {
       min_price: string; max_price: string; shop_count: string;
     }>(
       `SELECT p.id, p.name, COALESCE(b.name,'') AS brand,
-              (SELECT image_url FROM product_images WHERE product_id = p.id LIMIT 1) AS img,
+              ${productCoverImageSql("p.id")} AS img,
               MIN(sp.current_price) AS min_price,
               MAX(sp.current_price) AS max_price,
               COUNT(DISTINCT sp.shop_id) AS shop_count

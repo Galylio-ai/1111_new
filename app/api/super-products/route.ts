@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Pool } from "pg";
+import { productCoverImageSql } from "@/lib/productImages";
 
 const pool = new Pool({
   connectionString: process.env.ALIMENTATION_DB_URL,
@@ -46,7 +47,7 @@ export async function GET(req: NextRequest) {
       COALESCE(b.name, '') AS brand,
       MIN(sp.current_price) AS min_price,
       MAX(sp.current_price) AS max_price,
-      (SELECT image_url FROM product_images WHERE product_id = p.id LIMIT 1) AS img,
+      ${productCoverImageSql("p.id")} AS img,
       array_agg(DISTINCT s.name ORDER BY s.name) AS shop_names
     FROM products p
     LEFT JOIN brands b ON b.id = p.brand_id

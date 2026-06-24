@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Pool } from "pg";
+import { productCoverImageFilterSql, productCoverImageOrderSql } from "@/lib/productImages";
 
 export const revalidate = 300;
 
@@ -52,17 +53,8 @@ async function queryLatest(
       cover AS (
         SELECT DISTINCT ON (product_id) product_id, image_url
         FROM product_images
-        WHERE image_url NOT ILIKE '%loading%'
-          AND image_url NOT ILIKE '%placeholder%'
-          AND image_url NOT ILIKE '%home_default%'
-        ORDER BY product_id,
-          CASE
-            WHEN image_url ILIKE '%.webp' THEN 1
-            WHEN image_url ILIKE '%.jpg'  THEN 2
-            WHEN image_url ILIKE '%.jpeg' THEN 2
-            WHEN image_url ILIKE '%.png'  THEN 3
-            ELSE 9
-          END
+        WHERE ${productCoverImageFilterSql()}
+        ORDER BY product_id, ${productCoverImageOrderSql()}
       ),
       product_top_cat AS (
         SELECT DISTINCT ON (ps.product_id) ps.product_id, tc.name AS category

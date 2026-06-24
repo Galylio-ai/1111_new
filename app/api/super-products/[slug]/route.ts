@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Pool } from "pg";
+import { productCoverImageFilterSql, productCoverImageOrderSql, productCoverImageSql } from "@/lib/productImages";
 
 const pool = new Pool({
   connectionString: process.env.ALIMENTATION_DB_URL,
@@ -35,7 +36,7 @@ export async function GET(
         COALESCE(b.name, '') AS brand,
         MIN(sp.current_price) AS min_price,
         MAX(sp.current_price) AS max_price,
-        (SELECT image_url FROM product_images WHERE product_id = p.id LIMIT 1) AS img,
+        ${productCoverImageSql("p.id")} AS img,
         array_agg(DISTINCT s.name ORDER BY s.name) AS shop_names
       FROM products p
       LEFT JOIN brands b ON b.id = p.brand_id
@@ -78,7 +79,8 @@ export async function GET(
            FROM products p
            JOIN product_images pi ON pi.product_id = p.id
            WHERE p.slug = $1
-           ORDER BY pi.id ASC`,
+             AND ${productCoverImageFilterSql("pi")}
+           ORDER BY ${productCoverImageOrderSql("pi")}`,
           [params.slug]
         ),
         client.query(

@@ -41,6 +41,30 @@ function fmtPrice(n: number | null): string {
   return `${n.toFixed(2).replace(/\.?0+$/, "").replace(".", ",")} DT`;
 }
 
+function LatestProductThumb({ src, name }: { src: string | null; name: string }) {
+  const [broken, setBroken] = useState(false);
+  const image = src?.trim();
+
+  if (image && !broken) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={image}
+        alt={name}
+        className="h-full w-full object-contain p-0.5 transition duration-500 group-hover/row:scale-110"
+        loading="lazy"
+        onError={() => setBroken(true)}
+      />
+    );
+  }
+
+  return (
+    <span className="flex h-full w-full items-center justify-center text-base text-slate-300 dark:text-white/20">
+      📦
+    </span>
+  );
+}
+
 export function QoffaSection() {
   const [items, setItems] = useState<LatestProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -234,12 +258,7 @@ export function QoffaSection() {
                         className="group/row flex items-center gap-2.5 rounded-lg border border-slate-100 p-2 transition hover:-translate-y-0.5 hover:border-brand-gold/30 hover:bg-brand-gold/[0.03] dark:border-white/[0.05] dark:hover:bg-white/[0.03]"
                       >
                         <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md bg-gradient-to-br from-slate-50 to-slate-100 ring-1 ring-slate-200 dark:from-white/[0.05] dark:to-white/[0.02] dark:ring-white/10">
-                          {p.img ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={p.img} alt={p.name} className="h-full w-full object-contain p-0.5 transition duration-500 group-hover/row:scale-110" loading="lazy" />
-                          ) : (
-                            <span className="flex h-full w-full items-center justify-center text-base text-slate-300 dark:text-white/20">📦</span>
-                          )}
+                          <LatestProductThumb src={p.img} name={p.name} />
                           {fresh && (
                             <span className="absolute -right-0.5 -top-0.5 rounded-full bg-brand-red px-1 text-[7px] font-black text-white shadow">
                               NEW
