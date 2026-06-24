@@ -296,10 +296,10 @@ export function GrandeDistribRow() {
           <div className="relative mt-3 flex items-center gap-3 rounded-xl border border-slate-200 bg-bg-700 p-2.5 dark:border-white/5 dark:bg-bg-800">
             <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white ring-1 ring-slate-200 dark:ring-white/10">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-400/15 via-transparent to-brand-red/10" />
-              {(alert?.img ?? "https://clusteraz.flesk.fr/images/100016181.jpg") ? (
+              {alert?.img ? (
                 <img
-                  src={alert?.img ?? "https://clusteraz.flesk.fr/images/100016181.jpg"}
-                  alt={alert?.name ?? "Fromage fondu triangles"}
+                  src={alert.img}
+                  alt={alert.name ?? "Pot crème emmental fondu"}
                   className="relative h-full w-full object-contain p-1 animate-float drop-shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
                 />
               ) : (
@@ -308,10 +308,10 @@ export function GrandeDistribRow() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-semibold text-slate-900 dark:text-white">
-                {alert?.name ?? "Fromage fondu triangles"}
+                {alert?.name ?? "Pot crème 100% emmental fondu"}
               </div>
               <div className="truncate text-[11px] text-slate-500 dark:text-white/50">
-                {alert?.brand || "PRESIDENT"}
+                {alert?.brand || "—"}
               </div>
             </div>
           </div>
@@ -396,7 +396,7 @@ export function GrandeDistribRow() {
 
           {/* Actions */}
           <div className="relative mt-auto pt-3">
-            <Link href={alert?.href ?? "/supermarche/fromage-fondu-triangles"} className="btn-primary w-full">Voir l'offre</Link>
+            <Link href={alert?.href ?? "/supermarche/pot-creme-100-emmental-fondu"} className="btn-primary w-full">Voir l'offre</Link>
             <Link href="/alertes" className="mt-1.5 block w-full rounded-lg py-1.5 text-center text-xs font-medium text-slate-500 hover:text-slate-900 dark:text-white/60 dark:hover:text-white">
               Me rappeler plus tard
             </Link>

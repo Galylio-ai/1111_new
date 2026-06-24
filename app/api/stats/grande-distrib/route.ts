@@ -134,12 +134,22 @@ export async function GET() {
       };
     });
 
-    // 4. Fromage fondu triangles for the price-alert card — sold in 6 shops with real spread.
-    const TARGET_SLUG = "fromage-fondu-triangles";
+    // 4. Pot crème 100% emmental fondu — featured product for the price-alert card.
+    //    Look up by slug first (post-import), with a name LIKE fallback for safety.
+    const TARGET_SLUG = "pot-creme-100-emmental-fondu";
 
-    const candidates = await pool.query<{ id: number; name: string }>(
-      `SELECT id, name FROM products WHERE lower(name) LIKE '%fromage%fondu%'`
+    let candidates = await pool.query<{ id: number; name: string }>(
+      `SELECT id, name FROM products WHERE slug = $1 LIMIT 1`,
+      [TARGET_SLUG]
     );
+    if (candidates.rows.length === 0) {
+      candidates = await pool.query<{ id: number; name: string }>(
+        `SELECT id, name FROM products
+         WHERE lower(name) LIKE '%emmental%fondu%'
+            OR lower(name) LIKE '%pot%cr_me%emmental%'
+         LIMIT 1`
+      );
+    }
     const target = candidates.rows[0] ?? null;
 
     let milkRes: { rows: Array<{ name: string; brand: string; shop: string; min_price: string; max_price: string; avg_price: string; img: string | null }> } = { rows: [] };
@@ -198,7 +208,7 @@ export async function GET() {
         min: formatMillimes(min),
         max: formatMillimes(max),
         slug: TARGET_SLUG,
-        href: `/supermarche/fromage-fondu-triangles`,
+        href: `/supermarche/${TARGET_SLUG}`,
         img: r.img ?? null,
       };
     }
