@@ -18,7 +18,7 @@ const CATEGORY_IMAGES: Record<string, string> = {
   "Électroménager": "/ElectroBg.png",
   "Supermarché": "/couffin.png",
   "Beauté & Visage": "/beaute.png",
-  "Cheveux & Soins": "/cheveux.png",
+  "Cheveux & Soins": "/cheveux-category.png",
   "Bébé & Maman": "/bebe&maman.png",
 };
 

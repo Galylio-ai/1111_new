@@ -46,3 +46,57 @@ export function absoluteUrl(path: string): string {
   if (/^https?:\/\//.test(path)) return path;
   return `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 }
+
+import type { Metadata } from "next";
+
+// DRY helper for generating per-page Metadata blocks. Pass the page title,
+// description and canonical path; everything else (OG, Twitter, canonical
+// URL) is filled in consistently.
+export function pageMetadata(opts: {
+  title: string;
+  description: string;
+  path: string;
+  image?: string | null;
+  imageWidth?: number;
+  imageHeight?: number;
+  noindex?: boolean;
+  keywords?: string[];
+}): Metadata {
+  const {
+    title,
+    description,
+    path,
+    image,
+    imageWidth = SITE_OG_IMAGE_WIDTH,
+    imageHeight = SITE_OG_IMAGE_HEIGHT,
+    noindex,
+    keywords,
+  } = opts;
+
+  const ogImage = image && /^https?:\/\//.test(image) ? image : absoluteUrl(image ?? SITE_OG_IMAGE);
+
+  return {
+    title,
+    description,
+    keywords,
+    alternates: { canonical: path, languages: { "fr-TN": path } },
+    openGraph: {
+      type: "website",
+      siteName: SITE_NAME,
+      title,
+      description,
+      url: absoluteUrl(path),
+      locale: SITE_LOCALE,
+      images: [{ url: ogImage, width: imageWidth, height: imageHeight, alt: title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImage],
+    },
+    robots: noindex
+      ? { index: false, follow: false, googleBot: { index: false, follow: false } }
+      : undefined,
+  };
+}
