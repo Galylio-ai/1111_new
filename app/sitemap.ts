@@ -1,0 +1,57 @@
+import type { MetadataRoute } from "next";
+import { SITE_URL } from "@/lib/seo";
+
+// Static sitemap index — lists every fixed route on the site.
+// Product-level URLs (tens of thousands) ship in dedicated child sitemaps
+// in the next step (app/sitemap-products/[id]/route.ts).
+//
+// Priorities are relative weights for crawlers, not absolute. Homepage and
+// catalog hubs get the highest priority since they're updated most often
+// and serve as primary entry points.
+
+type Entry = {
+  path: string;
+  changeFrequency?:
+    | "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
+  priority?: number;
+};
+
+const STATIC_ROUTES: Entry[] = [
+  // Home / hubs
+  { path: "/",                       changeFrequency: "daily",  priority: 1.0 },
+  { path: "/supermarche",            changeFrequency: "daily",  priority: 0.95 },
+  { path: "/parapharmacie",          changeFrequency: "daily",  priority: 0.95 },
+  { path: "/retail",                 changeFrequency: "daily",  priority: 0.95 },
+  { path: "/boutiques",              changeFrequency: "daily",  priority: 0.9 },
+  { path: "/categories",             changeFrequency: "weekly", priority: 0.85 },
+  { path: "/promotions",             changeFrequency: "daily",  priority: 0.9 },
+
+  // Discovery / observability
+  { path: "/comparateur",            changeFrequency: "weekly", priority: 0.8 },
+  { path: "/comparaison",            changeFrequency: "weekly", priority: 0.7 },
+  { path: "/barometres",             changeFrequency: "daily",  priority: 0.85 },
+  { path: "/indice",                 changeFrequency: "daily",  priority: 0.85 },
+  { path: "/observatoire",           changeFrequency: "daily",  priority: 0.85 },
+  { path: "/sites-les-plus-visites", changeFrequency: "weekly", priority: 0.75 },
+  { path: "/grande-distribution",    changeFrequency: "weekly", priority: 0.7 },
+  { path: "/magasins",               changeFrequency: "weekly", priority: 0.7 },
+  { path: "/ia-predictive",          changeFrequency: "weekly", priority: 0.7 },
+  { path: "/couffin",                changeFrequency: "weekly", priority: 0.75 },
+  { path: "/qoffa",                  changeFrequency: "weekly", priority: 0.6 },
+  { path: "/veille",                 changeFrequency: "weekly", priority: 0.6 },
+
+  // Legal / corporate
+  { path: "/a-propos",                changeFrequency: "monthly", priority: 0.4 },
+  { path: "/conditions-utilisation",  changeFrequency: "monthly", priority: 0.3 },
+  { path: "/confidentialite",         changeFrequency: "monthly", priority: 0.3 },
+];
+
+export default function sitemap(): MetadataRoute.Sitemap {
+  const now = new Date();
+  return STATIC_ROUTES.map(({ path, changeFrequency, priority }) => ({
+    url: `${SITE_URL}${path}`,
+    lastModified: now,
+    changeFrequency,
+    priority,
+  }));
+}
