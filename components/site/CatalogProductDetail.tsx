@@ -2,11 +2,12 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowLeft, Bell, ChevronRight, ExternalLink, FileText, Heart,
+  ArrowLeft, ChevronRight, ExternalLink, FileText,
   ListChecks, Scale, ShieldCheck, Sparkles, Star, Store, Tag, Truck,
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { FavoriteAlertButtons } from "@/components/site/FavoriteAlertButtons";
 
 type RelatedProduct = {
   name: string;
@@ -130,8 +131,6 @@ export function CatalogProductDetail({
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [wished, setWished] = useState(false);
-  const [alerted, setAlerted] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
 
   useEffect(() => {
@@ -208,17 +207,6 @@ export function CatalogProductDetail({
                   <Tag className="h-3 w-3" />−{discountPct}%
                 </span>
               )}
-              <button
-                onClick={() => setWished(v => !v)}
-                className={`absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border backdrop-blur-sm shadow-sm transition-all duration-300 ease-out hover:scale-110 active:scale-95 ${
-                  wished
-                    ? "border-brand-gold/60 bg-brand-gold/15 text-brand-gold shadow-[0_0_18px_rgba(246,196,83,0.35)]"
-                    : "border-slate-200 bg-white/90 text-slate-400 hover:border-brand-gold/40 hover:text-brand-gold hover:shadow-[0_0_14px_rgba(246,196,83,0.25)] dark:border-white/10 dark:bg-black/40 dark:text-white/50"
-                }`}
-                aria-label={wished ? "Retirer des favoris" : "Ajouter aux favoris"}
-              >
-                <Heart className={`h-4 w-4 transition-transform duration-300 ${wished ? "fill-current scale-110" : ""}`} />
-              </button>
             </div>
 
             {/* Thumbnail strip — only when multiple images */}
@@ -315,33 +303,19 @@ export function CatalogProductDetail({
                 <PriceBar min={product.minPrice} max={product.maxPrice} current={product.minPrice} />
               </div>
 
-              <div className="mt-4 flex gap-2 flex-wrap">
+              <div className="mt-4 flex">
                 <Link
                   href={`/comparateur/${slug}?from=${comparatorBase.replace(/^\//, "")}`}
-                  className="group relative flex flex-1 min-w-[140px] items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-br from-brand-gold via-brand-goldDark to-[#a77f24] px-5 py-3 text-sm font-bold text-bg-900 ring-1 ring-brand-gold/40 shadow-[0_4px_18px_-4px_rgba(246,196,83,0.45)] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-[0_6px_24px_-2px_rgba(246,196,83,0.65)] active:translate-y-0 active:shadow-[0_2px_10px_-2px_rgba(246,196,83,0.45)]"
+                  className="group relative flex flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-br from-brand-gold via-brand-goldDark to-[#a77f24] px-5 py-3 text-sm font-bold text-bg-900 ring-1 ring-brand-gold/40 shadow-[0_4px_18px_-4px_rgba(246,196,83,0.45)] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-[0_6px_24px_-2px_rgba(246,196,83,0.65)] active:translate-y-0 active:shadow-[0_2px_10px_-2px_rgba(246,196,83,0.45)]"
                 >
                   <Scale className="h-4 w-4 transition-transform duration-300 group-hover:rotate-[-8deg]" />
                   <span className="relative z-10">Comparer les prix</span>
                   <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/35 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-full" />
                 </Link>
-                <button
-                  onClick={() => setAlerted(v => !v)}
-                  className={`group/alert relative flex items-center gap-2 overflow-hidden rounded-xl border px-4 py-3 text-sm font-semibold transition-all duration-300 ease-out hover:-translate-y-0.5 active:translate-y-0 ${
-                    alerted
-                      ? "border-brand-gold/50 bg-brand-gold/15 text-brand-gold shadow-[0_0_18px_rgba(246,196,83,0.25)]"
-                      : "border-slate-300 bg-white text-slate-700 hover:border-brand-gold/40 hover:bg-brand-gold/5 hover:shadow-[0_0_14px_rgba(246,196,83,0.18)] dark:border-white/10 dark:bg-white/[0.04] dark:text-white/80"
-                  }`}
-                >
-                  <Bell
-                    className={`h-4 w-4 transition-transform duration-300 ${
-                      alerted
-                        ? "fill-brand-gold text-brand-gold animate-[wiggle_0.6s_ease-in-out]"
-                        : "group-hover/alert:rotate-12"
-                    }`}
-                  />
-                  {alerted ? "Alerte activée" : "Alerte prix"}
-                </button>
               </div>
+
+              {/* Real favorite + price-drop alert (persisted server-side) */}
+              <FavoriteAlertButtons slug={slug} />
             </div>
 
             {/* Shops list */}
