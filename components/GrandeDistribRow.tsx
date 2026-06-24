@@ -74,7 +74,7 @@ export function GrandeDistribRow() {
   const [enseignes, setEnseignes] = useState<EnseigneRow[]>(
     distributionEnseignes.map((e) => ({ name: e.name, price: e.price, diff: e.diff, best: e.best }))
   );
-  const [basketSize, setBasketSize] = useState<number>(29);
+  const [basketSize, setBasketSize] = useState<number>(5);
   const [economy, setEconomy] = useState<string>("8.370");
   const [alert, setAlert] = useState<AlertData | null>(null);
   const [illogicalPromo, setIllogicalPromo] = useState<IllogicalPromo | null>(null);
@@ -126,8 +126,8 @@ export function GrandeDistribRow() {
             <div className="min-w-0 flex-1">
               {/* Sub-header */}
               <div className="mb-2 text-sm font-semibold text-slate-900 dark:text-white">
-                Comparaison panier familial{" "}
-                <span className="font-normal text-slate-400 dark:text-white/50">({basketSize} produits)</span>
+                Panier essentiel{" "}
+                <span className="font-normal text-slate-400 dark:text-white/50">({basketSize} produits : tomate, huile, lait, thon, sucre)</span>
               </div>
 
               {/* Table header */}
@@ -139,8 +139,14 @@ export function GrandeDistribRow() {
 
               {/* Rows */}
               <ul className="mt-1 divide-y divide-slate-100 dark:divide-white/5">
-                {enseignes.map((e) => {
+                {enseignes.map((e, idx) => {
                   const logo = enseigneLogo(e.name);
+                  const rank = idx + 1;
+                  const rankCls =
+                    rank === 1 ? "bg-gradient-to-br from-yellow-300 to-amber-500 text-yellow-950 ring-1 ring-yellow-300" :
+                    rank === 2 ? "bg-gradient-to-br from-slate-200 to-slate-400 text-slate-900 ring-1 ring-slate-300" :
+                    rank === 3 ? "bg-gradient-to-br from-orange-400 to-amber-700 text-amber-50 ring-1 ring-orange-400" :
+                                 "bg-slate-100 text-slate-500 ring-1 ring-slate-200 dark:bg-white/[0.06] dark:text-white/55 dark:ring-white/10";
                   return (
                   <li
                     key={e.name}
@@ -148,8 +154,11 @@ export function GrandeDistribRow() {
                       e.best ? "rounded-lg bg-emerald-500/10" : "hover:bg-slate-50 dark:hover:bg-white/[0.03]"
                     }`}
                   >
-                    {/* Logo + name */}
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    {/* Rank + Logo + name */}
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-black tabular-nums ${rankCls}`}>
+                        {rank}
+                      </span>
                       {getStoreLogo(e.name) ? (
                         <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white p-1 ring-1 ring-slate-200 shadow-sm dark:ring-white/10">
                           <img src={getStoreLogo(e.name)} alt={e.name} className="h-full w-full object-contain" />
@@ -178,7 +187,7 @@ export function GrandeDistribRow() {
               </ul>
 
               {/* Button */}
-              <Link href="/grande-distribution" className="mt-4 block w-full rounded-xl bg-brand-gold py-2.5 text-center text-sm font-black text-black hover:bg-brand-gold/90 transition">
+              <Link href="/couffin" className="mt-4 block w-full rounded-xl bg-brand-gold py-2.5 text-center text-sm font-black text-black hover:bg-brand-gold/90 transition">
                 Comparer Mon Panier
               </Link>
             </div>

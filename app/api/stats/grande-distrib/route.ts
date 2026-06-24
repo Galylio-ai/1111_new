@@ -6,7 +6,18 @@ const pool = new Pool({
   max: 5,
 });
 
-const BASKET_SIZE = 29;
+// 5 staple categories — each is matched via name keyword on the product.
+// We then take the cheapest matching product per shop per category.
+// Categories were chosen to be staples every supermarket carries, so the
+// basket total is comparable across shops.
+const BASKET_STAPLES: { label: string; pattern: string }[] = [
+  { label: "Tomate",       pattern: "%tomate%" },
+  { label: "Huile",        pattern: "%huile%" },
+  { label: "Lait",         pattern: "%lait%" },
+  { label: "Thon",         pattern: "%thon%" },
+  { label: "Sucre",        pattern: "%sucre%" },
+];
+const BASKET_SIZE = BASKET_STAPLES.length;
 const VEILLE_SIZE = 4;
 
 function formatMillimes(n: number): string {
@@ -20,44 +31,45 @@ function formatPrice(n: number): string {
 
 export async function GET() {
   try {
-    // 1. Pick the BASKET_SIZE products that appear in the most shops (most universal items)
-    const basketProductsRes = await pool.query<{ id: number; name: string }>(
-      `SELECT p.id, p.name
-       FROM products p
-       JOIN shop_prices sp ON sp.product_id = p.id
-       GROUP BY p.id, p.name
-       ORDER BY COUNT(DISTINCT sp.shop_id) DESC, p.id
-       LIMIT $1`,
-      [BASKET_SIZE]
+    // 1+2. Build a 5-staple basket (tomate, huile, lait, thon, sucre).
+    //      For each (shop, staple), take the cheapest matching product in that
+    //      shop. Sum the 5 cheapest per shop. Keep only shops covering all 5.
+    const labels = BASKET_STAPLES.map((s) => s.label);
+    const patterns = BASKET_STAPLES.map((s) => s.pattern);
+
+    const basketRes = await pool.query<{ shop: string; total: string }>(
+      `WITH staples (label, pattern) AS (
+         SELECT * FROM UNNEST($1::text[], $2::text[]) AS t(label, pattern)
+       ),
+       per_shop_staple AS (
+         SELECT sp.shop_id,
+                st.label,
+                MIN(sp.current_price) AS price
+         FROM shop_prices sp
+         JOIN products p ON p.id = sp.product_id
+         JOIN staples st ON lower(p.name) LIKE st.pattern
+         WHERE sp.current_price > 0
+         GROUP BY sp.shop_id, st.label
+       ),
+       per_shop AS (
+         SELECT shop_id, SUM(price) AS total, COUNT(*) AS covered
+         FROM per_shop_staple
+         GROUP BY shop_id
+         HAVING COUNT(*) = $3
+       )
+       SELECT s.name AS shop,
+              ps.total::text AS total
+       FROM per_shop ps
+       JOIN shops s ON s.id = ps.shop_id
+       ORDER BY ps.total ASC
+       LIMIT 6`,
+      [labels, patterns, BASKET_STAPLES.length]
     );
-    const basketIds = basketProductsRes.rows.map((r) => r.id);
 
-    // 2. For each shop, sum the price of these basket products (use min when shop has duplicates)
-    let enseignes: Array<{ name: string; total: number }> = [];
-    if (basketIds.length > 0) {
-      const basketRes = await pool.query<{ shop: string; total: string; covered: string }>(
-        `SELECT s.name AS shop,
-                SUM(min_price) AS total,
-                COUNT(*)::text AS covered
-         FROM (
-           SELECT sp.shop_id, sp.product_id, MIN(sp.current_price) AS min_price
-           FROM shop_prices sp
-           WHERE sp.product_id = ANY($1::int[])
-           GROUP BY sp.shop_id, sp.product_id
-         ) t
-         JOIN shops s ON s.id = t.shop_id
-         GROUP BY s.name
-         HAVING COUNT(*) >= $2
-         ORDER BY total ASC
-         LIMIT 6`,
-        [basketIds, Math.ceil(basketIds.length * 0.5)]
-      );
-
-      enseignes = basketRes.rows.map((r) => ({
-        name: r.shop,
-        total: parseFloat(r.total) || 0,
-      }));
-    }
+    const enseignes: Array<{ name: string; total: number }> = basketRes.rows.map((r) => ({
+      name: r.shop,
+      total: parseFloat(r.total) || 0,
+    }));
 
     const cheapest = enseignes[0]?.total ?? 0;
     const mostExpensive = enseignes.length ? enseignes[enseignes.length - 1].total : 0;
@@ -215,7 +227,7 @@ export async function GET() {
 
     return NextResponse.json({
       enseignes: enseigneList,
-      basketSize: basketIds.length,
+      basketSize: BASKET_SIZE,
       economy: formatPrice(economy),
       veille,
       alert,
