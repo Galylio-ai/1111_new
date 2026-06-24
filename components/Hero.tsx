@@ -7,12 +7,6 @@ import { SearchModal } from "./SearchModal";
 
 const tags = ["climatiseur", "iphone 15", "samsung", "machine à laver", "parfum", "laptop"];
 
-function fmt(n: number) {
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(".", ",") + " M";
-  if (n >= 1_000)     return Math.round(n / 1_000).toLocaleString("fr-TN") + " K";
-  return n.toLocaleString("fr-TN");
-}
-
 type MarketData = {
   index: number;
   yesterdayIndex: number;
@@ -63,13 +57,13 @@ export function Hero() {
 
   const stats = [
     {
-      value: fmt(data.stats.totalProducts),
+      value: data.stats.totalProducts.toLocaleString("fr-TN"),
       label: "Produits suivis",
       desc: "Références uniques indexées en supermarché, parapharmacie et retail",
       icon: Package, color: "text-brand-gold",
     },
     {
-      value: fmt(data.stats.totalPromos),
+      value: data.stats.totalPromos.toLocaleString("fr-TN"),
       label: "Promotions actives",
       desc: "Offres où le prix affiché est inférieur au prix de référence en ce moment",
       icon: Flame, color: "text-red-400",
