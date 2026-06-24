@@ -56,6 +56,10 @@ function ProductThumb({ src, label }: { src: string | null; label: string }) {
   const [broken, setBroken] = useState(false);
   const isHttp = typeof src === "string" && /^https?:\/\//.test(src);
   const showImage = isHttp && !broken;
+  const markBrokenIfTiny = (img: HTMLImageElement) => {
+    if (img.naturalWidth < 80 || img.naturalHeight < 80) setBroken(true);
+  };
+
   return (
     <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-slate-100 p-1 ring-1 ring-inset ring-slate-200 dark:bg-white/[0.06] dark:ring-white/5">
       {showImage ? (
@@ -65,6 +69,7 @@ function ProductThumb({ src, label }: { src: string | null; label: string }) {
           alt={label}
           className="h-full w-full object-contain"
           loading="lazy"
+          onLoad={(e) => markBrokenIfTiny(e.currentTarget)}
           onError={() => setBroken(true)}
         />
       ) : (

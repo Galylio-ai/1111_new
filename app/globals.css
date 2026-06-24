@@ -425,16 +425,16 @@ body {
   50%      { transform: translateY(-3px); }
 }
 
-/* "Coût ojja" badge under the plate */
+/* "Coût ojja" badge */
 .ojja-center-cost {
   position: absolute;
-  left: 50%;
-  bottom: -42px;
-  transform: translateX(-50%);
+  left: 0;
+  top: 0;
+  z-index: 5;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 4px 10px;
+  align-items: flex-start;
+  padding: 5px 10px;
   border-radius: 9px;
   background: linear-gradient(135deg, rgba(16,185,129,0.22), rgba(16,185,129,0.05));
   border: 1px solid rgba(16,185,129,0.4);

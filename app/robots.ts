@@ -11,13 +11,13 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: "*",
         allow: "/",
         disallow: [
-          "/api/",         // server endpoints, never useful to a crawler
-          "/profil",       // authenticated account page
-          "/alertes",      // authenticated alerts list
+          "/api/",        
+          "/profil",       
+          "/alertes",      
           "/login",
           "/register",
           "/mot-de-passe-oublie",
-          "/verify-email",
+          "/verify-email",  
         ],
       },
     ],

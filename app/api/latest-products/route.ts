@@ -77,7 +77,7 @@ async function queryLatest(
       FROM products p
       LEFT JOIN brands b ON b.id = p.brand_id
       LEFT JOIN product_top_cat tc ON tc.product_id = p.id
-      LEFT JOIN cover img ON img.product_id = p.id
+      JOIN cover img ON img.product_id = p.id
       LEFT JOIN cheapest ch ON ch.product_id = p.id
       WHERE p.status = 'active'
       ORDER BY p.created_at DESC
@@ -117,11 +117,12 @@ export async function GET() {
       ...(retail.status === "fulfilled" ? retail.value : []),
     ];
 
-    // Sort globally by createdAt DESC and keep the top 30 most recent
+    // Temporary: keep newest image-ready products per catalog. Some fresh Para
+    // imports currently have no images, so requiring cover images prevents
+    // empty thumbnails until the next data refresh normalizes image coverage.
     all.sort((a, b) => (b.createdAt < a.createdAt ? -1 : b.createdAt > a.createdAt ? 1 : 0));
-    const items = all.slice(0, 30);
 
-    return NextResponse.json({ items });
+    return NextResponse.json({ items: all });
   } catch (err) {
     return NextResponse.json({ items: [], error: String(err) }, { status: 200 });
   }

@@ -6,6 +6,15 @@ import type { RetailSite } from "@/lib/topRetailSites";
 function faviconFor(domain: string): string {
   return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
 }
+
+const localLogos: Record<string, string> = {
+  "tdiscount.tn": "/shop-logos/tdiscount.png",
+};
+
+function logoFor(domain: string): string {
+  return localLogos[domain.toLowerCase()] ?? faviconFor(domain);
+}
+
 function siteName(domain: string): string {
   const base = domain.replace(/\.(com\.tn|co\.uk|com|tn|fr|de|ae|ca|qa|net|to|co)$/i, "").split(".")[0];
   return base.charAt(0).toUpperCase() + base.slice(1);
@@ -120,7 +129,7 @@ export function RetailSitesTable({ sites, month }: { sites: RetailSite[]; month:
                     <div className="flex items-center gap-2.5">
                       <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white p-1 ring-1 ring-slate-200 dark:ring-white/10">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={faviconFor(s.domain)} alt="" referrerPolicy="no-referrer" loading="lazy" className="h-full w-full object-contain" />
+                        <img src={logoFor(s.domain)} alt="" referrerPolicy="no-referrer" loading="lazy" className="h-full w-full object-contain" />
                       </span>
                       <div className="min-w-0">
                         <div className="font-semibold text-slate-900 dark:text-white">{siteName(s.domain)}</div>
@@ -158,7 +167,7 @@ export function RetailSitesTable({ sites, month }: { sites: RetailSite[]; month:
               }`}>{s.rank}</span>
               <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white p-1 ring-1 ring-slate-200 dark:ring-white/10">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={faviconFor(s.domain)} alt="" referrerPolicy="no-referrer" loading="lazy" className="h-full w-full object-contain" />
+                <img src={logoFor(s.domain)} alt="" referrerPolicy="no-referrer" loading="lazy" className="h-full w-full object-contain" />
               </span>
               <div className="min-w-0 flex-1">
                 <div className="truncate font-semibold text-slate-900 dark:text-white">{siteName(s.domain)}</div>

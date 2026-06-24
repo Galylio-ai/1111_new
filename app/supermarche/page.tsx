@@ -464,15 +464,6 @@ export default function SupermarchePage() {
                     <div className="text-[11px] font-medium text-white/50">enseignes</div>
                   </div>
                 </div>
-                <Link
-                  href="/comparateur"
-                  className="group relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-brand-red to-brand-redDark px-7 py-3.5 text-sm font-bold text-white shadow-[0_8px_24px_-6px_rgba(225,29,45,0.6)] ring-1 ring-white/10 transition-all hover:scale-[1.02] hover:shadow-[0_10px_30px_-4px_rgba(225,29,45,0.7)] active:scale-[0.98] sm:w-auto"
-                >
-                  <ShoppingCart className="h-4 w-4" />
-                  Lancer le comparateur
-                  <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
-                  <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-                </Link>
               </div>
             </div>
           </div>

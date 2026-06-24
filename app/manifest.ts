@@ -1,11 +1,10 @@
 import type { MetadataRoute } from "next";
 import { SITE_DEFAULT_DESCRIPTION, SITE_NAME } from "@/lib/seo";
 
-// /manifest.webmanifest — basic PWA manifest so the site can be added to
-// the home screen on mobile and shows up with our brand colour + name.
+
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: `${SITE_NAME} — Comparateur de prix Tunisie`,
+    name: `${SITE_NAME} — Comparateur de prix intelligent Tunisie`,
     short_name: SITE_NAME,
     description: SITE_DEFAULT_DESCRIPTION,
     start_url: "/",

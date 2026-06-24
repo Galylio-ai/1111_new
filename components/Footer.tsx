@@ -16,7 +16,6 @@ const columns = [
   {
     title: "Outils",
     links: [
-      { label: "Comparateur", href: "/comparateur" },
       { label: "Indice du marché", href: "/indice" },
       { label: "Baromètres", href: "/barometres" },
       { label: "Observatoire", href: "/observatoire" },

@@ -23,6 +23,17 @@ const CATALOG_META: Record<LatestProduct["catalog"], { label: string; href: stri
   retail:       { label: "Retail",        href: "/retail",         chip: "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-300" },
 };
 
+const qoffaBestItems = [
+  { name: "Semoule fine", qty: "5 kg", price: 3.7, shop: "Carrefour" },
+  { name: "Huile végétale", qty: "1 bidon", price: 8.97, shop: "Geant / Monoprix" },
+  { name: "Boeuf", qty: "2 kg", price: 105, shop: "Carrefour" },
+  { name: "Légumes frais", qty: "mix", price: 2.49, shop: "Aziza / Monoprix" },
+  { name: "Lait", qty: "6 L", price: 8.1, shop: "Carrefour" },
+  { name: "Oeufs", qty: "1 plateau", price: 9.79, shop: "Aziza" },
+  { name: "Café moulu", qty: "2 paquets", price: 9.78, shop: "Aziza" },
+  { name: "Sucre", qty: "2 kg", price: 2.8, shop: "Carrefour" },
+];
+
 function fmtRelative(iso: string): string {
   const t = new Date(iso).getTime();
   if (Number.isNaN(t)) return "récemment";
@@ -111,12 +122,43 @@ export function QoffaSection() {
           {/* Stat cards */}
           <div className="mt-3 grid grid-cols-2 gap-2">
             <div className="flex flex-col justify-center rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-center">
-              <div className="text-base font-extrabold tabular-nums text-emerald-600 dark:text-emerald-300">21,460 DT</div>
+              <div className="text-base font-extrabold tabular-nums text-emerald-600 dark:text-emerald-300">150,630 DT</div>
               <div className="mt-0.5 text-[10px] text-slate-500 dark:text-white/60">Coût total · meilleur prix</div>
             </div>
             <div className="flex flex-col justify-center rounded-lg border border-brand-gold/30 bg-brand-gold/10 p-3.5 text-center">
               <div className="text-base font-extrabold tabular-nums text-brand-gold">8</div>
               <div className="mt-0.5 text-[10px] text-slate-500 dark:text-white/60">Ingrédients comparés</div>
+            </div>
+          </div>
+          <div className="mt-3 rounded-xl border border-white/10 bg-slate-950/5 p-2.5 dark:bg-white/[0.03]">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <span className="text-[10px] font-black uppercase tracking-wider text-brand-gold">
+                Panier le moins cher
+              </span>
+              <span className="text-[10px] font-semibold text-slate-500 dark:text-white/50">
+                par enseigne
+              </span>
+            </div>
+            <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+              {qoffaBestItems.map((item) => (
+                <div
+                  key={`${item.name}-${item.shop}`}
+                  className="min-w-0 rounded-lg border border-slate-200/70 bg-white/60 px-2 py-1.5 dark:border-white/5 dark:bg-bg-900/55"
+                >
+                  <div className="flex min-w-0 items-center justify-between gap-2">
+                    <span className="truncate text-[11px] font-extrabold text-slate-900 dark:text-white">
+                      {item.name}
+                    </span>
+                    <span className="shrink-0 text-[11px] font-black tabular-nums text-emerald-600 dark:text-emerald-300">
+                      {fmtPrice(item.price)}
+                    </span>
+                  </div>
+                  <div className="mt-0.5 flex items-center justify-between gap-2 text-[10px] text-slate-500 dark:text-white/50">
+                    <span>{item.qty}</span>
+                    <span className="truncate font-semibold">{item.shop}</span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>

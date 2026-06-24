@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { CATALOGS } from "@/lib/db";
+import { productCoverImageFilterSql, productCoverImageOrderSql } from "@/lib/productImages";
 
 export const revalidate = 300; // 5 minutes
 
@@ -11,30 +12,18 @@ const SQL = `
            (
              SELECT image_url FROM product_images
              WHERE product_id = p.id
-               AND image_url ~ '^https?://'
-               AND (
-                 image_url ILIKE 'https://clusteraz.flesk.fr/%'
-                 OR image_url ILIKE 'https://beautystore.tn/%'
-                 OR image_url ILIKE 'https://parashop.tn/%'
-                 OR image_url ILIKE 'https://www.parashop.tn/%'
-                 OR image_url ILIKE 'https://pharma-shop.tn/%'
-                 OR image_url ILIKE 'https://pharmashop.tn/%'
-                 OR image_url ILIKE 'https://www.mapara.tn/%'
-                 OR image_url ILIKE 'https://www.paraexpert.tn/%'
-                 OR image_url ILIKE 'https://parafendri.tn/%'
-                 OR image_url ILIKE 'https://www.cosmetique.tn/%'
-                 OR image_url ILIKE 'https://www.pharmacie-elfarabi.tn/%'
-                 OR image_url ILIKE 'https://parahouse.tn/%'
-                 OR image_url ILIKE 'https://paraland.tn/%'
-               )
-             ORDER BY id ASC
+               AND ${productCoverImageFilterSql()}
+               AND image_url NOT ILIKE 'https://pharmashop.tn/%'
+               AND image_url NOT ILIKE 'https://www.pharmashop.tn/%'
+             ORDER BY ${productCoverImageOrderSql()}
              LIMIT 1
            ) AS image
     FROM products p
     WHERE p.created_at IS NOT NULL
       AND p.name NOT ILIKE 'anthelios%'
+      AND p.name NOT ILIKE 'uriage eau thermale gelee d''eau 40ml%'
     ORDER BY p.created_at DESC
-    LIMIT 100
+    LIMIT 500
   )
   SELECT
     e.name,

@@ -28,7 +28,6 @@ const STATIC_ROUTES: Entry[] = [
   { path: "/promotions",             changeFrequency: "daily",  priority: 0.9 },
 
   // Discovery / observability
-  { path: "/comparateur",            changeFrequency: "weekly", priority: 0.8 },
   { path: "/comparaison",            changeFrequency: "weekly", priority: 0.7 },
   { path: "/barometres",             changeFrequency: "daily",  priority: 0.85 },
   { path: "/indice",                 changeFrequency: "daily",  priority: 0.85 },

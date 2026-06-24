@@ -150,7 +150,7 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
               {heading}
             </span>
             <Link
-              href="/comparateur"
+              href="/categories"
               onClick={onClose}
               className="flex items-center gap-1 text-sm font-semibold text-brand-gold transition hover:gap-2"
             >

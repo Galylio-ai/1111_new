@@ -62,6 +62,11 @@ export function OjjaOrbit() {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
+      <div className="ojja-center-cost">
+        <span className="ojja-center-cost-kicker">Coût ojja</span>
+        <strong>4.135 DT</strong>
+      </div>
+
       {/* faint dashed orbit guide */}
       <div className="ojja-orbit-guide" style={{ width: 2 * radius, height: 2 * radius }} />
 
@@ -69,10 +74,6 @@ export function OjjaOrbit() {
       <div className="ojja-center-plate">
         <div className="ojja-plate-halo" />
         <img src="/ojja.png" alt="Ojja" className="ojja-plate-img" />
-        <div className="ojja-center-cost">
-          <span className="ojja-center-cost-kicker">Coût ojja</span>
-          <strong>4.135 DT</strong>
-        </div>
       </div>
 
       {/* rotating ring with cards positioned at fixed angles */}

@@ -1,6 +1,4 @@
-// Lightweight DB lookups used only by `generateMetadata` on product pages.
-// Returns just the fields we need for SEO (name, brand, image, best price)
-// from one of the three catalog DBs, or null if the slug doesn't exist.
+
 
 import { alimentPool, paraPool, retailPool } from "@/lib/db";
 
