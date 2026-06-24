@@ -16,7 +16,7 @@ const stats = [
   { value: "152", label: "Promotions aujourd'hui", icon: Flame, color: "text-red-500 dark:text-red-400" },
   { value: "4 238", label: "Prix modifiés aujourd'hui", icon: BarChart3, color: "text-yellow-600 dark:text-yellow-400" },
   { value: "37", label: "Fausses promos détectées", icon: AlertTriangle, color: "text-orange-600 dark:text-orange-400" },
-  { value: "48 000 DT", label: "Économisés aujourd'hui", icon: Coins, color: "text-emerald-600 dark:text-emerald-400" },
+
 ];
 
 export function LiveIndexCard() {

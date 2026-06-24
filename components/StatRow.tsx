@@ -1,5 +1,5 @@
 "use client";
-import { AlertTriangle, Database, Tag } from "lucide-react";
+import { Database, Tag } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -52,22 +52,6 @@ type LatestPriceChange = {
   changedAt: string;
 };
 
-type IllogicalPromo = {
-  catalog: string;
-  catalogPath: string;
-  name: string;
-  brand: string | null;
-  slug: string;
-  image: string | null;
-  shopName: string;
-  oldPrice: number;
-  currentPrice: number;
-  honestMin: number;
-  effectiveDiscountPct: number;
-  claimedDiscountPct: number;
-  changedAt: string;
-};
-
 function ProductThumb({ src, label }: { src: string | null; label: string }) {
   const [broken, setBroken] = useState(false);
   const isHttp = typeof src === "string" && /^https?:\/\//.test(src);
@@ -90,19 +74,25 @@ function ProductThumb({ src, label }: { src: string | null; label: string }) {
   );
 }
 
+// Base count at the anchor time, growing by +8 every elapsed hour. Time-based so
+// the number stays consistent across reloads instead of animating arbitrarily.
+const SKU_BASE = 350_871;
+const SKU_ANCHOR = Date.UTC(2026, 5, 24, 0, 0, 0); // 24 Jun 2026 (month is 0-based)
+const SKU_PER_HOUR = 8;
+
+function skuCount(now = Date.now()): number {
+  const hours = Math.max(0, Math.floor((now - SKU_ANCHOR) / 3_600_000));
+  return SKU_BASE + hours * SKU_PER_HOUR;
+}
+
 function SkuCounter() {
-  const [display, setDisplay] = useState(350000);
+  const [display, setDisplay] = useState(SKU_BASE);
 
   useEffect(() => {
-    let current = 350000;
-    let timer: ReturnType<typeof setTimeout>;
-    function tick() {
-      current += 1;
-      setDisplay(current);
-      timer = setTimeout(tick, 500);
-    }
-    timer = setTimeout(tick, 500);
-    return () => clearTimeout(timer);
+    setDisplay(skuCount());
+    // Re-check every minute so it bumps shortly after each hour rolls over.
+    const id = setInterval(() => setDisplay(skuCount()), 60_000);
+    return () => clearInterval(id);
   }, []);
 
   return (
@@ -136,7 +126,7 @@ function EmptyState({ label }: { label: string }) {
 export function StatRow() {
   const [latestAdded, setLatestAdded] = useState<LatestAdded | null>(null);
   const [latestChange, setLatestChange] = useState<LatestPriceChange | null>(null);
-  const [illogical, setIllogical] = useState<IllogicalPromo | null>(null);
+  const [latestPara, setLatestPara] = useState<LatestAdded | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -148,7 +138,7 @@ export function StatRow() {
 
     safeFetch<LatestAdded>("/api/stats/latest-added", setLatestAdded, d => d?.item ?? null);
     safeFetch<LatestPriceChange>("/api/stats/latest-price-change", setLatestChange, d => d?.item ?? null);
-    safeFetch<IllogicalPromo>("/api/stats/illogical-promo", setIllogical, d => d?.item ?? null);
+    safeFetch<LatestAdded>("/api/stats/latest-added-para", setLatestPara, d => d?.item ?? null);
 
     return () => { cancelled = true; };
   }, []);
@@ -229,41 +219,36 @@ export function StatRow() {
         {/* Nombre total SKU */}
         <SkuCounter />
 
-        {/* Promotions illogiques */}
+        {/* Nouveau article parapharmacie */}
         <div className="card card-pad">
           <div className="mb-2 flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-orange-400" />
-            <span className="text-[11px] font-bold uppercase tracking-wider text-orange-400">
-              Promotion illogique détectée
+            <Tag className="h-4 w-4 text-brand-gold" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-brand-gold">
+              Nouveau article parapharmacie ajouté
             </span>
           </div>
-          <div className="text-[11px] text-slate-600 dark:text-white/60">aujourd'hui</div>
-          {illogical ? (
-            <Link href={`${illogical.catalogPath}/${illogical.slug}`} className="block">
+          <div className="text-[11px] text-slate-600 dark:text-white/60">(parapharmacie)</div>
+          {latestPara ? (
+            <Link href={`${latestPara.catalogPath}/${latestPara.slug}`} className="block">
               <div className="mt-3 flex items-center gap-3">
-                <ProductThumb src={illogical.image} label={illogical.name} />
+                <ProductThumb src={latestPara.image} label={latestPara.name} />
                 <div className="flex-1 text-xs min-w-0">
-                  <div className="line-clamp-2 text-sm font-semibold text-slate-900 dark:text-white">{illogical.name}</div>
-                  <div className="text-slate-500 dark:text-white/50">{illogical.shopName}</div>
-                  <div className="text-slate-600 dark:text-white/60">
-                    « Ancien prix » : <span className="line-through">{formatPrice(illogical.oldPrice)}</span>
-                  </div>
-                  <div className="text-slate-600 dark:text-white/60">
-                    Prix réel marché : <span className="font-semibold text-slate-900 dark:text-white">{formatPrice(illogical.honestMin)}</span>
-                  </div>
+                  <div className="line-clamp-2 text-sm font-semibold text-slate-900 dark:text-white">{latestPara.name}</div>
+                  <div className="text-slate-500 dark:text-white/50">{latestPara.shopName ?? latestPara.catalog}</div>
+                  {latestPara.price != null && (
+                    <div className="text-slate-600 dark:text-white/60">
+                      Prix : <span className="font-semibold text-slate-900 dark:text-white">{formatPrice(latestPara.price)}</span>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="mt-2 flex items-center justify-between text-[11px]">
-                <span className="text-slate-600 dark:text-white/60">
-                  Réduction annoncée : <span className="font-semibold text-orange-600 dark:text-orange-300">−{illogical.claimedDiscountPct}%</span>
-                </span>
-                <span className="rounded-md bg-orange-500/20 px-2 py-0.5 font-bold text-orange-600 dark:text-orange-300">
-                  ILLOGIQUE
-                </span>
+                <span className="text-slate-500 dark:text-white/50">{timeAgo(latestPara.createdAt)}</span>
+                <span className="rounded-md bg-brand-gold/20 px-2 py-0.5 font-bold text-brand-gold">NOUVEAU</span>
               </div>
             </Link>
           ) : (
-            <EmptyState label="Aucune promotion suspecte détectée pour le moment." />
+            <EmptyState label="Aucun article parapharmacie importé récemment." />
           )}
         </div>
       </div>

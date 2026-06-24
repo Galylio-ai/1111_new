@@ -3,6 +3,16 @@ import { createContext, useContext, useEffect, useState } from "react";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
+// Avatars are stored on the backend as a relative path ("/uploads/avatars/..").
+// Resolve them against the API host (the gateway proxies /api/uploads → user
+// service) so the image loads. Absolute URLs (e.g. Google avatars) pass through.
+export function avatarSrc(url?: string | null): string | undefined {
+  if (!url) return undefined;
+  if (/^https?:\/\//i.test(url)) return url;
+  const path = url.startsWith("/uploads/") ? `/api${url}` : url;
+  return `${API}${path.startsWith("/") ? "" : "/"}${path}`;
+}
+
 export type AuthUser = {
   id: string;
   full_name: string;

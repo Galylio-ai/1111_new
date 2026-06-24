@@ -163,11 +163,12 @@ export function Categories() {
           <Link
             key={c.id}
             href={c.href}
+            data-home-card=""
             className="group relative flex flex-col overflow-hidden rounded-2xl transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl"
             style={{ animationDelay: `${i * 50}ms` }}
           >
             {/* Image */}
-            <div className="relative h-36 w-full overflow-hidden sm:h-44 lg:h-52">
+            <div className="relative h-[clamp(5rem,24vw,9rem)] w-full overflow-hidden sm:h-44 lg:h-52">
               <Image
                 src={c.image}
                 alt={c.fr}
@@ -177,25 +178,20 @@ export function Categories() {
                 unoptimized
               />
 
-              {/* Strong gradient overlay — colour-coded per category */}
-              <div
-                className="absolute inset-0"
-                style={{
-                  background: `linear-gradient(to top, ${c.from}ee 0%, ${c.from}99 35%, transparent 65%)`,
-                }}
-              />
+              {/* Neutral bottom gradient — keeps labels readable without tinting the image */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
               {/* Top-right product count badge */}
-              <span className={`absolute right-2 top-2 rounded-full border px-2 py-0.5 text-[9px] font-bold backdrop-blur-sm ${c.badge}`}>
+              <span className={`absolute right-1.5 top-1.5 rounded-full border px-1.5 py-0.5 text-[clamp(7px,1.8vw,9px)] font-bold backdrop-blur-sm sm:right-2 sm:top-2 sm:px-2 ${c.badge}`}>
                 {c.count}
               </span>
 
               {/* Labels at bottom */}
-              <div className="absolute bottom-0 left-0 right-0 p-2.5 text-center">
-                <span className="block text-[11px] font-extrabold leading-tight text-white drop-shadow-lg sm:text-xs">
+              <div className="absolute bottom-0 left-0 right-0 p-[clamp(0.35rem,1.7vw,0.625rem)] text-center">
+                <span className="block text-[clamp(8px,2.4vw,11px)] font-extrabold leading-tight text-white drop-shadow-lg sm:text-xs">
                   {c.fr}
                 </span>
-                <span className={`font-arabic mt-0.5 block text-[10px] leading-none ${c.text}`}>
+                <span className={`font-arabic mt-0.5 block text-[clamp(7px,2vw,10px)] leading-none ${c.text}`}>
                   {c.ar}
                 </span>
               </div>

@@ -54,6 +54,7 @@ export function Observatoire() {
 
         <Link
           href="/promotions"
+          data-home-card=""
           className="group relative block overflow-hidden rounded-2xl border border-red-500/40 shadow-card transition hover:border-red-400/70 hover:shadow-[0_0_32px_-8px_rgba(239,68,68,0.55)]"
         >
           <img

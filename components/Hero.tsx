@@ -100,7 +100,7 @@ export function Hero() {
                 <span className="gradient-text-gold">ÉCONOMISEZ PLUS !</span>
               </h1>
               <p className="mt-1 md:mt-2 font-arabic text-right text-sm sm:text-base md:text-xl text-slate-700 dark:text-white/90" dir="rtl">
-                ثبت قبل ما تشري، وفر أكثر ! 😎
+                ثبت قبل ما تشري، وفر أكثر ! 
               </p>
               <p className="mt-1 md:mt-3 text-[11px] sm:text-xs md:text-sm text-slate-600 dark:text-white/70">
                 Comparez plus de <span className="text-slate-900 font-semibold dark:text-white">350 000 produits</span>,

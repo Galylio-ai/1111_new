@@ -29,7 +29,7 @@ function ProductCard({ p }: { p: TechProduct }) {
     <a
       href={href}
       {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-      className="card group relative w-[230px] sm:w-[250px] md:w-[270px] shrink-0 snap-start flex flex-col overflow-hidden p-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-brand-gold/40 dark:hover:border-brand-gold/40"
+      className="card group relative w-[clamp(12.5rem,68vw,14.375rem)] sm:w-[250px] md:w-[270px] shrink-0 snap-start flex flex-col overflow-hidden p-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-brand-gold/40 dark:hover:border-brand-gold/40"
     >
       {hasSavings && (
         <span className="absolute right-2.5 top-2.5 z-10 rounded-full bg-brand-red px-2.5 py-1 text-[10px] font-black text-white shadow-md">
@@ -37,7 +37,7 @@ function ProductCard({ p }: { p: TechProduct }) {
         </span>
       )}
 
-      <div className="relative h-48 sm:h-52 w-full overflow-hidden bg-gradient-to-b from-slate-50 to-slate-100 dark:from-white/[0.06] dark:to-white/[0.02]">
+      <div className="relative h-[clamp(8.5rem,44vw,12rem)] sm:h-52 w-full overflow-hidden bg-gradient-to-b from-slate-50 to-slate-100 dark:from-white/[0.06] dark:to-white/[0.02]">
         {p.img ? (
           <img
             src={p.img}
@@ -139,8 +139,8 @@ function ScrollRow({ products, label, icon, color }: {
 }
 
 const SKELETON_CARD = (
-  <div className="card w-[230px] sm:w-[250px] md:w-[270px] shrink-0 p-0">
-    <div className="h-48 w-full animate-pulse bg-slate-100 dark:bg-white/[0.04]" />
+  <div className="card w-[clamp(12.5rem,68vw,14.375rem)] sm:w-[250px] md:w-[270px] shrink-0 p-0">
+    <div className="h-[clamp(8.5rem,44vw,12rem)] w-full animate-pulse bg-slate-100 dark:bg-white/[0.04] sm:h-52" />
     <div className="space-y-2 p-3.5">
       <div className="h-3 w-1/3 animate-pulse rounded bg-slate-100 dark:bg-white/[0.04]" />
       <div className="h-4 w-full animate-pulse rounded bg-slate-100 dark:bg-white/[0.04]" />
