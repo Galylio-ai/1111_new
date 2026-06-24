@@ -394,7 +394,7 @@ function ParapharmacyPageInner() {
 
                   {/* info */}
                   <div className="flex flex-1 flex-col p-3.5">
-                    <div className="mb-1 text-[10px] font-bold uppercase tracking-wider text-brand-gold/80">
+                    <div className="mb-1 text-[12.5px] font-extrabold uppercase tracking-wider text-brand-gold transition-transform duration-300 group-hover:translate-x-0.5">
                       {p.brand}
                     </div>
                     <h3 className="text-[12.5px] font-bold leading-snug text-slate-900 line-clamp-2 dark:text-white">

@@ -501,7 +501,7 @@ export default function ProfilPage() {
                           {f.img ? <img src={f.img} alt="" className="h-full w-full object-contain" /> : <Heart className="h-5 w-5 text-slate-300" />}
                         </div>
                         <div className="min-w-0 flex-1">
-                          {f.brand && <div className="truncate text-[10px] font-bold uppercase tracking-wider text-brand-gold/80">{f.brand}</div>}
+                          {f.brand && <div className="truncate text-[12.5px] font-extrabold uppercase tracking-wider text-brand-gold transition-transform duration-300 group-hover:translate-x-0.5">{f.brand}</div>}
                           <div className="truncate text-sm font-bold text-slate-900 dark:text-white">{f.name}</div>
                           <div className="mt-0.5 text-sm font-black text-brand-gold tabular-nums">{fmtPrice(f.price)} DT</div>
                         </div>
