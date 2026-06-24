@@ -8,3 +8,6 @@ data/
 data_matching/
 supermarché/
 *.tsbuildinfo
+
+# Large data files — kept out of git, transferred to VPS via scp
+products-clean-alimentation.jsonl
