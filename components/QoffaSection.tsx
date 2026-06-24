@@ -1,63 +1,69 @@
 "use client";
-import { ChefHat, Store } from "lucide-react";
+import { ChefHat, Sparkles, Store } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { MultiLine } from "./charts/MultiLine";
+import { useEffect, useMemo, useState } from "react";
 import { OjjaOrbit } from "./OjjaOrbit";
 
-type BasketShop = { shop: string; current: number; change: number; week: number[] };
-type BasketPayload = { shops: BasketShop[]; data: Array<Record<string, string | number>> };
-
-// Sensible fallback while the DB fetch resolves (or if it fails).
-const FALLBACK: BasketPayload = {
-  shops: [
-    { shop: "Carrefour", current: 134.5, change: 4.3,  week: [128.9, 130.6, 132.4, 129.7, 133.8, 131.2, 134.5] },
-    { shop: "Geant",     current: 133.6, change: -3.5, week: [138.4, 135.7, 137.9, 134.3, 136.1, 139.2, 133.6] },
-    { shop: "Monoprix",  current: 133.1, change: 0.8,  week: [132.1, 134.8, 131.5, 135.9, 132.8, 135.4, 133.1] },
-  ],
-  data: [
-    { m: "Lun", Carrefour: 128.9, Geant: 138.4, Monoprix: 132.1 },
-    { m: "Mar", Carrefour: 130.6, Geant: 135.7, Monoprix: 134.8 },
-    { m: "Mer", Carrefour: 132.4, Geant: 137.9, Monoprix: 131.5 },
-    { m: "Jeu", Carrefour: 129.7, Geant: 134.3, Monoprix: 135.9 },
-    { m: "Ven", Carrefour: 133.8, Geant: 136.1, Monoprix: 132.8 },
-    { m: "Sam", Carrefour: 131.2, Geant: 139.2, Monoprix: 135.4 },
-    { m: "Dim", Carrefour: 134.5, Geant: 133.6, Monoprix: 133.1 },
-  ],
+type LatestProduct = {
+  id: number;
+  name: string;
+  slug: string;
+  brand: string | null;
+  category: string | null;
+  catalog: "alimentation" | "para" | "retail";
+  img: string | null;
+  shop: string | null;
+  price: number | null;
+  createdAt: string;
 };
 
-function shopChip(shop: BasketShop) {
-  const styles: Record<string, { border: string; bg: string; label: string }> = {
-    Carrefour: { border: "border-blue-500/30",  bg: "bg-blue-500/10",  label: "text-blue-600 dark:text-blue-300" },
-    Geant:     { border: "border-yellow-500/30", bg: "bg-yellow-500/10", label: "text-yellow-700 dark:text-yellow-300" },
-    Monoprix:  { border: "border-rose-500/30",  bg: "bg-rose-500/10",  label: "text-rose-600 dark:text-rose-300" },
-  };
-  const s = styles[shop.shop] ?? styles.Carrefour;
-  const up = shop.change >= 0;
-  return (
-    <div key={shop.shop} className={`rounded-lg border ${s.border} ${s.bg} p-2 text-center`}>
-      <div className={`text-[10px] font-bold uppercase tracking-wider ${s.label}`}>
-        {shop.shop === "Geant" ? "Géant" : shop.shop}
-      </div>
-      <div className="mt-0.5 text-base font-extrabold tabular-nums text-slate-900 dark:text-white">
-        {(shop.current ?? 0).toFixed(1).replace(".", ",")}
-      </div>
-      <div className={`text-[10px] ${up ? "text-red-500 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}`}>
-        {up ? "▲" : "▼"} {up ? "+" : ""}{(shop.change ?? 0).toFixed(1).replace(".", ",")}%
-      </div>
-    </div>
-  );
+const CATALOG_META: Record<LatestProduct["catalog"], { label: string; href: string; chip: string }> = {
+  alimentation: { label: "Supermarché",   href: "/supermarche",    chip: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300" },
+  para:         { label: "Parapharmacie", href: "/parapharmacie",  chip: "border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-300" },
+  retail:       { label: "Retail",        href: "/retail",         chip: "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-300" },
+};
+
+function fmtRelative(iso: string): string {
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return "récemment";
+  const diff = (Date.now() - t) / 1000;
+  if (diff < 60)    return "à l'instant";
+  if (diff < 3600)  return `il y a ${Math.floor(diff / 60)} min`;
+  if (diff < 86400) return `il y a ${Math.floor(diff / 3600)} h`;
+  const d = Math.floor(diff / 86400);
+  if (d < 7)        return `il y a ${d} j`;
+  if (d < 30)       return `il y a ${Math.floor(d / 7)} sem.`;
+  return `il y a ${Math.floor(d / 30)} mois`;
+}
+
+function fmtPrice(n: number | null): string {
+  if (n == null) return "—";
+  return `${n.toFixed(2).replace(/\.?0+$/, "").replace(".", ",")} DT`;
 }
 
 export function QoffaSection() {
-  const [basket, setBasket] = useState<BasketPayload>(FALLBACK);
+  const [items, setItems] = useState<LatestProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<"all" | LatestProduct["catalog"]>("all");
 
   useEffect(() => {
-    fetch("/api/basket-variation")
-      .then(r => r.ok ? r.json() : null)
-      .then(j => { if (j && j.shops) setBasket(j); })
-      .catch(() => { /* keep fallback */ });
+    let cancelled = false;
+    fetch("/api/latest-products")
+      .then(r => (r.ok ? r.json() : { items: [] }))
+      .then(d => { if (!cancelled) setItems(Array.isArray(d?.items) ? d.items : []); })
+      .catch(() => { if (!cancelled) setItems([]); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, []);
+
+  const counts = useMemo(() => ({
+    all: items.length,
+    alimentation: items.filter(i => i.catalog === "alimentation").length,
+    para:         items.filter(i => i.catalog === "para").length,
+    retail:       items.filter(i => i.catalog === "retail").length,
+  }), [items]);
+
+  const filtered = tab === "all" ? items : items.filter(i => i.catalog === tab);
   return (
     <section className="mx-auto mt-5 max-w-[1600px] px-3 sm:px-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1.5fr_1.2fr]">
@@ -135,10 +141,9 @@ export function QoffaSection() {
           </Link>
         </div>
 
-        {/* VARIATION DES PRIX — GRANDE DISTRIBUTION */}
-        <div className="card card-pad relative overflow-hidden">
-          {/* Watermark icon */}
-          <Store
+        {/* DERNIERS PRODUITS AJOUTÉS */}
+        <div className="card card-pad relative overflow-hidden flex flex-col">
+          <Sparkles
             className="pointer-events-none absolute -right-2 -top-2 h-28 w-28 text-white/[0.04]"
             strokeWidth={1.2}
             aria-hidden
@@ -148,43 +153,147 @@ export function QoffaSection() {
           <div className="relative flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-brand-gold/25 to-brand-gold/5 ring-1 ring-brand-gold/30">
-                <Store className="h-4 w-4 text-brand-gold" strokeWidth={2.2} />
+                <Sparkles className="h-4 w-4 text-brand-gold" strokeWidth={2.2} />
               </span>
               <div className="leading-tight">
-                <div className="section-title">Variation des prix</div>
-                <div className="text-[11px] text-slate-500 dark:text-white/55">Grandes distributions · panier familial</div>
+                <div className="section-title">Derniers ajouts</div>
+                <div className="text-[11px] text-slate-500 dark:text-white/55">Par catégorie · par enseigne · temps réel</div>
               </div>
             </div>
-            <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-300">
-              7 jours
+            <span className="relative flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-300">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              </span>
+              Live
             </span>
           </div>
 
-          {/* Enseigne summary chips */}
-          <div className="relative mt-3 grid grid-cols-3 gap-2">
-            {basket.shops.map(shopChip)}
+          {/* Tab pills */}
+          <div className="relative mt-3 flex flex-wrap gap-1.5">
+            {([
+              { id: "all" as const,           label: "Tout",         count: counts.all,          tone: "brand-gold" },
+              { id: "alimentation" as const,  label: "Supermarché",  count: counts.alimentation, tone: "emerald" },
+              { id: "para" as const,          label: "Para",         count: counts.para,         tone: "rose" },
+              { id: "retail" as const,        label: "Retail",       count: counts.retail,       tone: "blue" },
+            ]).map(t => {
+              const active = tab === t.id;
+              const activeCls =
+                t.tone === "emerald" ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" :
+                t.tone === "rose"    ? "border-rose-500/40 bg-rose-500/15 text-rose-700 dark:text-rose-300" :
+                t.tone === "blue"    ? "border-blue-500/40 bg-blue-500/15 text-blue-700 dark:text-blue-300" :
+                                       "border-brand-gold/40 bg-brand-gold/15 text-brand-gold";
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition ${
+                    active
+                      ? activeCls
+                      : "border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/60"
+                  }`}
+                >
+                  {t.label}
+                  <span className={`tabular-nums ${active ? "" : "opacity-60"}`}>{t.count}</span>
+                </button>
+              );
+            })}
           </div>
 
-          {/* Multi-line chart */}
-          <div className="relative mt-3">
-            <MultiLine
-              data={basket.data}
-              height={200}
-              series={[
-                { key: "Carrefour", name: "Carrefour", color: "#3b82f6" },
-                { key: "Geant",     name: "Géant",     color: "#eab308" },
-                { key: "Monoprix",  name: "Monoprix",  color: "#f43f5e" },
-              ]}
-            />
+          {/* List */}
+          <div className="relative mt-3 flex-1 overflow-y-auto pr-1 [scrollbar-width:thin]" style={{ maxHeight: 380 }}>
+            {loading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex animate-pulse items-center gap-2.5 rounded-lg border border-slate-100 p-2 dark:border-white/[0.05]">
+                    <div className="h-12 w-12 shrink-0 rounded-md bg-slate-100 dark:bg-white/[0.06]" />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-3 w-2/3 rounded bg-slate-100 dark:bg-white/[0.06]" />
+                      <div className="h-2.5 w-1/2 rounded bg-slate-100 dark:bg-white/[0.06]" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 p-4 text-center text-xs text-slate-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-white/55">
+                Aucun produit récent disponible pour ce filtre.
+              </div>
+            ) : (
+              <ul className="space-y-2">
+                {filtered.slice(0, 12).map((p, i) => {
+                  const meta = CATALOG_META[p.catalog];
+                  const productHref =
+                    p.catalog === "para"   ? `/parapharmacie/${p.slug}` :
+                    p.catalog === "retail" ? `/retail/${p.slug}` :
+                                             `/supermarche/${p.slug}`;
+                  const fresh = i < 3 && tab === "all";
+                  return (
+                    <li key={`${p.catalog}-${p.id}`}>
+                      <Link
+                        href={productHref}
+                        className="group/row flex items-center gap-2.5 rounded-lg border border-slate-100 p-2 transition hover:-translate-y-0.5 hover:border-brand-gold/30 hover:bg-brand-gold/[0.03] dark:border-white/[0.05] dark:hover:bg-white/[0.03]"
+                      >
+                        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md bg-gradient-to-br from-slate-50 to-slate-100 ring-1 ring-slate-200 dark:from-white/[0.05] dark:to-white/[0.02] dark:ring-white/10">
+                          {p.img ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={p.img} alt={p.name} className="h-full w-full object-contain p-0.5 transition duration-500 group-hover/row:scale-110" loading="lazy" />
+                          ) : (
+                            <span className="flex h-full w-full items-center justify-center text-base text-slate-300 dark:text-white/20">📦</span>
+                          )}
+                          {fresh && (
+                            <span className="absolute -right-0.5 -top-0.5 rounded-full bg-brand-red px-1 text-[7px] font-black text-white shadow">
+                              NEW
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            {p.brand && (
+                              <span className="truncate text-[10px] font-extrabold uppercase tracking-wider text-brand-gold">
+                                {p.brand}
+                              </span>
+                            )}
+                            <span className={`shrink-0 rounded-full border px-1.5 py-0 text-[9px] font-bold uppercase tracking-wider ${meta.chip}`}>
+                              {meta.label}
+                            </span>
+                          </div>
+                          <div className="truncate text-[12px] font-bold text-slate-900 dark:text-white">
+                            {p.name}
+                          </div>
+                          <div className="mt-0.5 flex items-center justify-between gap-2 text-[10px]">
+                            <span className="truncate text-slate-500 dark:text-white/50">
+                              {p.shop ?? "—"}
+                              {p.category && <span className="text-slate-300 dark:text-white/30"> · {p.category}</span>}
+                            </span>
+                            <span className="shrink-0 font-bold tabular-nums text-brand-gold">
+                              {fmtPrice(p.price)}
+                            </span>
+                          </div>
+                          <div className="mt-0.5 text-[9.5px] uppercase tracking-wider text-slate-400 dark:text-white/35">
+                            {fmtRelative(p.createdAt)}
+                          </div>
+                        </div>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
 
-          {/* Definition */}
-          <div className="relative mt-3 rounded-lg border border-brand-gold/20 bg-brand-gold/[0.04] p-2.5 text-[11px] leading-relaxed text-slate-600 dark:text-white/65">
-            <span className="font-bold text-brand-gold">Comment lire ce graphique ?</span>{" "}
-            Le <span className="font-semibold text-slate-800 dark:text-white">panier familial</span> regroupe 30 produits de base
-            (lait, huile, pâtes, riz, conserves…) communs aux trois enseignes. Chaque ligne montre le coût total de ce même panier,
-            jour par jour, sur les 7 derniers jours. Plus la courbe est <span className="text-emerald-600 dark:text-emerald-400 font-semibold">basse</span>,
-            plus l'enseigne est <span className="text-emerald-600 dark:text-emerald-400 font-semibold">avantageuse</span> ; une hausse indique une inflation sur les produits suivis.
+          {/* Footer CTA */}
+          <div className="relative mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-2.5 dark:border-white/[0.05]">
+            <span className="text-[10px] text-slate-400 dark:text-white/40 inline-flex items-center gap-1">
+              <Store className="h-3 w-3" />
+              {tab === "all" ? `${counts.all} produits récents` : `${filtered.length} dans cette catégorie`}
+            </span>
+            <Link
+              href={tab === "all" ? "/" : CATALOG_META[tab].href}
+              className="text-[11px] font-bold text-brand-gold transition hover:underline"
+            >
+              Voir le catalogue →
+            </Link>
           </div>
         </div>
 
