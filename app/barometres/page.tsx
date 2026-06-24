@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Loader2, TrendingDown, TrendingUp } from "lucide-react";
+import { Info, Loader2, TrendingDown, TrendingUp } from "lucide-react";
 import { PageShell } from "@/components/site/PageShell";
 import { Reveal } from "@/components/site/Reveal";
 import { AcBarometer } from "@/components/AcBarometer";
@@ -29,6 +29,22 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Beauté & Visage": "from-pink-500 to-rose-600",
   "Cheveux & Soins": "from-fuchsia-500 to-purple-600",
   "Bébé & Maman": "from-sky-500 to-indigo-600",
+};
+
+// Definition shown in the hover/focus tooltip for each barometer card.
+const CATEGORY_DEFINITIONS: Record<string, string> = {
+  "Informatique":
+    "Univers PC, ordinateurs portables, écrans, imprimantes, périphériques et composants. Suivi en continu chez les enseignes spécialisées tech tunisiennes.",
+  "Électroménager":
+    "Gros et petit électroménager : réfrigérateurs, lave-linge, fours, climatiseurs, robots de cuisine. Comparé chez les enseignes physiques et e-commerce.",
+  "Supermarché":
+    "Produits alimentaires, hygiène, entretien et grande distribution suivis dans les 4 plus grandes enseignes : Aziza, Carrefour, Géant et Monoprix.",
+  "Beauté & Visage":
+    "Soins du visage, maquillage et protection solaire issus des parapharmacies en ligne tunisiennes. Indicateur clé pour les achats réguliers de cosmétiques.",
+  "Cheveux & Soins":
+    "Soins capillaires, hygiène corporelle et produits de soins du corps. Inclut shampoings, masques, gels douche et soins quotidiens des principales parapharmacies.",
+  "Bébé & Maman":
+    "Couches, lait infantile, soins bébé, cosmétiques maternité et accessoires. Catégorie sensible — un suivi des prix précis aide les jeunes parents à économiser.",
 };
 
 function fmtNumber(n: number): string {
@@ -87,9 +103,15 @@ export default function BarometresPage() {
               const goodDeal = c.avgDiscount >= 20;
               return (
                 <Reveal key={c.name} delay={i * 0.05}>
-                  <div className="card card-pad group h-full transition hover:-translate-y-1 hover:border-slate-300 dark:hover:border-white/20">
+                  <div
+                    tabIndex={0}
+                    className="card card-pad group relative h-full overflow-visible transition hover:-translate-y-1 hover:border-slate-300 focus:outline-none focus-visible:border-brand-gold/30 dark:hover:border-white/20"
+                  >
+                    {/* Info indicator (top-right corner) */}
+                    <Info className="absolute right-3 top-3 h-3.5 w-3.5 text-slate-300 transition group-hover:text-brand-gold/70 group-focus-visible:text-brand-gold/70 dark:text-white/25" />
+
                     {/* Header */}
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center justify-between gap-3 pr-6">
                       <div className="flex min-w-0 items-center gap-3">
                         <span className={`flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br ${color} p-1.5 shadow-lg`}>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -155,6 +177,21 @@ export default function BarometresPage() {
                         })}
                       </ul>
                     )}
+
+                    {/* Hover / focus tooltip — category definition */}
+                    <div
+                      role="tooltip"
+                      className="pointer-events-none invisible absolute left-1/2 top-full z-30 mt-2 w-[min(20rem,calc(100vw-2rem))] -translate-x-1/2 translate-y-1 rounded-xl border border-brand-gold/30 bg-white p-3 text-left opacity-0 shadow-[0_8px_30px_rgba(0,0,0,0.15)] ring-1 ring-brand-gold/15 transition duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:visible group-focus-visible:translate-y-0 group-focus-visible:opacity-100 dark:border-brand-gold/25 dark:bg-bg-800 dark:shadow-[0_8px_30px_rgba(0,0,0,0.6)]"
+                    >
+                      <span className="absolute -top-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 border-l border-t border-brand-gold/30 bg-white dark:border-brand-gold/25 dark:bg-bg-800" />
+                      <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-brand-gold">
+                        <Info className="h-3 w-3" /> Définition
+                      </div>
+                      <div className="mt-1 text-[12px] font-semibold text-slate-900 dark:text-white">{c.name}</div>
+                      <p className="mt-1 text-[11px] leading-relaxed text-slate-600 dark:text-white/75">
+                        {CATEGORY_DEFINITIONS[c.name] ?? "Catégorie suivie en continu — données issues du marché tunisien."}
+                      </p>
+                    </div>
                   </div>
                 </Reveal>
               );
