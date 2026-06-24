@@ -44,9 +44,9 @@ const catIcons: Record<string, { img: string; grad: string }> = {
   "Informatique": { img: "/InformatiqueBg.png", grad: "from-cyan-500 to-cyan-700" },
   "Électroménager": { img: "/ElectroBg.png", grad: "from-amber-500 to-orange-600" },
   "Supermarché": { img: "/couffin.png", grad: "from-emerald-500 to-emerald-700" },
-  "Beauté & Visage": { img: "/ParaSymbole.png", grad: "from-pink-500 to-purple-600" },
-  "Cheveux & Soins": { img: "/clim.png", grad: "from-sky-400 to-blue-600" },
-  "Bébé & Maman": { img: "/SmartphoneBg.png", grad: "from-blue-500 to-blue-700" },
+  "Beauté & Visage": { img: "/beaute.png", grad: "from-pink-500 to-purple-600" },
+  "Cheveux & Soins": { img: "/cheveux.png", grad: "from-sky-400 to-blue-600" },
+  "Bébé & Maman": { img: "/bebe&maman.png", grad: "from-blue-500 to-blue-700" },
 };
 const FALLBACK_ICON = { img: "/metaBg.png", grad: "from-slate-500 to-slate-700" };
 
