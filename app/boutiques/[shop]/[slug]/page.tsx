@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import BoutiquesProductView from "./BoutiquesProductView";
-import { pageMetadata } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { breadcrumbSchema, pageMetadata, productSchema } from "@/lib/seo";
 import { lookupBoutiqueProduct } from "@/lib/seoProductLookup";
 
 export async function generateMetadata(
@@ -23,6 +24,36 @@ export async function generateMetadata(
   });
 }
 
-export default function BoutiquesProductPage() {
-  return <BoutiquesProductView />;
+export default async function BoutiquesProductPage(
+  { params }: { params: { shop: string; slug: string } }
+) {
+  const p = await lookupBoutiqueProduct(params.shop, params.slug);
+  const path = `/boutiques/${params.shop}/${params.slug}`;
+  return (
+    <>
+      {p && (
+        <>
+          <JsonLd
+            data={productSchema({
+              name: p.name,
+              brand: p.brand,
+              image: p.image,
+              url: path,
+              minPrice: p.minPrice,
+              maxPrice: p.maxPrice,
+            })}
+          />
+          <JsonLd
+            data={breadcrumbSchema([
+              { name: "Accueil", path: "/" },
+              { name: "Boutiques", path: "/boutiques" },
+              { name: p.shopName ?? params.shop, path: `/boutiques/${params.shop}` },
+              { name: p.name, path },
+            ])}
+          />
+        </>
+      )}
+      <BoutiquesProductView />
+    </>
+  );
 }

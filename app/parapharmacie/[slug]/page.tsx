@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CatalogProductDetail } from "@/components/site/CatalogProductDetail";
-import { pageMetadata } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { breadcrumbSchema, pageMetadata, productSchema } from "@/lib/seo";
 import { lookupParaProduct } from "@/lib/seoProductLookup";
 
 export async function generateMetadata(
@@ -23,14 +24,39 @@ export async function generateMetadata(
   });
 }
 
-export default function ParaProductPage({ params }: { params: { slug: string } }) {
+export default async function ParaProductPage({ params }: { params: { slug: string } }) {
+  const p = await lookupParaProduct(params.slug);
+  const path = `/parapharmacie/${params.slug}`;
   return (
-    <CatalogProductDetail
-      slug={params.slug}
-      apiBase="/api/para-products"
-      backHref="/parapharmacie"
-      backLabel="Parapharmacie"
-      comparatorBase="/parapharmacie"
-    />
+    <>
+      {p && (
+        <>
+          <JsonLd
+            data={productSchema({
+              name: p.name,
+              brand: p.brand,
+              image: p.image,
+              url: path,
+              minPrice: p.minPrice,
+              maxPrice: p.maxPrice,
+            })}
+          />
+          <JsonLd
+            data={breadcrumbSchema([
+              { name: "Accueil", path: "/" },
+              { name: "Parapharmacie", path: "/parapharmacie" },
+              { name: p.name, path },
+            ])}
+          />
+        </>
+      )}
+      <CatalogProductDetail
+        slug={params.slug}
+        apiBase="/api/para-products"
+        backHref="/parapharmacie"
+        backLabel="Parapharmacie"
+        comparatorBase="/parapharmacie"
+      />
+    </>
   );
 }

@@ -3,7 +3,9 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/lib/auth";
 import { AuthGate } from "@/components/site/AuthGate";
+import { JsonLd } from "@/components/seo/JsonLd";
 import {
+  organizationSchema,
   SITE_DEFAULT_DESCRIPTION,
   SITE_DEFAULT_TITLE,
   SITE_KEYWORDS,
@@ -14,6 +16,7 @@ import {
   SITE_OG_IMAGE_HEIGHT,
   SITE_OG_IMAGE_WIDTH,
   SITE_URL,
+  websiteSchema,
 } from "@/lib/seo";
 
 export const metadata: Metadata = {
@@ -111,6 +114,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body>
+        {/* Site-wide structured data: Organization + WebSite (with SearchAction) */}
+        <JsonLd data={organizationSchema()} />
+        <JsonLd data={websiteSchema()} />
         <ThemeProvider>
           <AuthProvider>
             <AuthGate>{children}</AuthGate>

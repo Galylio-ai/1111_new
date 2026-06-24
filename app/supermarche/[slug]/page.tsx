@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CatalogProductDetail } from "@/components/site/CatalogProductDetail";
-import { pageMetadata } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { breadcrumbSchema, pageMetadata, productSchema } from "@/lib/seo";
 import { lookupSupermarcheProduct } from "@/lib/seoProductLookup";
 
 export async function generateMetadata(
@@ -23,14 +24,39 @@ export async function generateMetadata(
   });
 }
 
-export default function SupermarcheProductPage({ params }: { params: { slug: string } }) {
+export default async function SupermarcheProductPage({ params }: { params: { slug: string } }) {
+  const p = await lookupSupermarcheProduct(params.slug);
+  const path = `/supermarche/${params.slug}`;
   return (
-    <CatalogProductDetail
-      slug={params.slug}
-      apiBase="/api/super-products"
-      backHref="/supermarche"
-      backLabel="Supermarché"
-      comparatorBase="/supermarche"
-    />
+    <>
+      {p && (
+        <>
+          <JsonLd
+            data={productSchema({
+              name: p.name,
+              brand: p.brand,
+              image: p.image,
+              url: path,
+              minPrice: p.minPrice,
+              maxPrice: p.maxPrice,
+            })}
+          />
+          <JsonLd
+            data={breadcrumbSchema([
+              { name: "Accueil", path: "/" },
+              { name: "Supermarché", path: "/supermarche" },
+              { name: p.name, path },
+            ])}
+          />
+        </>
+      )}
+      <CatalogProductDetail
+        slug={params.slug}
+        apiBase="/api/super-products"
+        backHref="/supermarche"
+        backLabel="Supermarché"
+        comparatorBase="/supermarche"
+      />
+    </>
   );
 }
