@@ -40,6 +40,7 @@ const config: Config = {
         "float": "float 6s ease-in-out infinite",
         "marquee": "marquee 40s linear infinite",
         "couffin-swing": "couffin-swing 3.2s ease-in-out infinite",
+        "shop-pulse": "shop-pulse 2.4s ease-in-out infinite",
       },
       keyframes: {
         shimmer: {
@@ -57,6 +58,10 @@ const config: Config = {
         "couffin-swing": {
           "0%, 100%": { transform: "translateY(0) rotate(-6deg)" },
           "50%": { transform: "translateY(-8px) rotate(6deg)" },
+        },
+        "shop-pulse": {
+          "0%, 100%": { boxShadow: "0 0 0 0 rgba(16,185,129,0)" },
+          "50%":      { boxShadow: "0 0 0 4px rgba(16,185,129,0.18)" },
         },
         wiggle: {
           "0%, 100%": { transform: "rotate(0deg)" },

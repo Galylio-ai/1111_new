@@ -423,17 +423,19 @@ function ParapharmacyPageInner() {
                         return (
                           <div
                             key={shop}
-                            className={`flex items-center justify-between rounded-md px-2 py-1 text-[11px] ${
+                            className={`group/row flex items-center justify-between rounded-md px-2 py-1.5 transition-all duration-300 hover:scale-[1.03] hover:shadow-sm ${
                               si === 0
-                                ? "bg-emerald-50 font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
-                                : "text-slate-600 dark:text-white/60"
+                                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 animate-shop-pulse"
+                                : "text-slate-700 hover:bg-slate-50 dark:text-white/75 dark:hover:bg-white/[0.04]"
                             }`}
                           >
-                            <span className="flex items-center gap-1 truncate">
-                              {si === 0 && <BadgeCheck className="h-3 w-3 shrink-0" />}
-                              <span className="truncate">{shop}</span>
+                            <span className="flex items-center gap-1.5 truncate">
+                              {si === 0 && <BadgeCheck className="h-3.5 w-3.5 shrink-0 animate-pulse" />}
+                              <span className="truncate text-[13px] font-extrabold capitalize tracking-tight transition-transform duration-300 group-hover/row:translate-x-0.5">
+                                {shop}
+                              </span>
                             </span>
-                            <span className="shrink-0 tabular-nums font-bold">{fmt(price)} DT</span>
+                            <span className="shrink-0 text-[12px] tabular-nums font-bold">{fmt(price)} DT</span>
                           </div>
                         );
                       })}
