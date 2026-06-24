@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { catalogPool } from "@/lib/db";
 import { ensureEngagementSchema } from "@/lib/engagement";
 import { resolveProductPrice } from "@/lib/engagementAuth";
-import { priceDropEmail, sendEmail } from "@/lib/mailer";
+import { priceChangeEmail, sendEmail } from "@/lib/mailer";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -34,6 +34,7 @@ async function run() {
 
   let checked = 0;
   let dropped = 0;
+  let raised = 0;
   let emailed = 0;
 
   for (const a of alerts) {
@@ -51,60 +52,78 @@ async function run() {
 
     const baseline = a.baseline_price != null ? parseFloat(a.baseline_price) : null;
 
-    // Price DROP detected: current strictly lower than baseline.
-    if (baseline != null && current < baseline - 0.0001) {
-      dropped++;
-      const productUrl = a.shop_slug
-        ? `${SITE_URL}/boutiques/${a.shop_slug}/${a.slug}`
-        : `${SITE_URL}/comparaison?a=${encodeURIComponent(a.slug)}`;
-
-      // 1) Notification (profile + navbar bell)
+    // No baseline yet (first scan) — just seed it.
+    if (baseline == null) {
       await pool.query(
-        `INSERT INTO user_notifications
-           (user_id, type, title, body, slug, shop_slug, img, old_price, new_price)
-         VALUES ($1,'price_drop',$2,$3,$4,$5,$6,$7,$8)`,
-        [
-          a.user_id,
-          `Baisse de prix : ${a.name}`,
-          `Le prix est passé de ${baseline.toLocaleString("fr-FR")} DT à ${current.toLocaleString("fr-FR")} DT.`,
-          a.slug, a.shop_slug, a.img, baseline, current,
-        ]
-      );
-
-      // 2) Email (French)
-      if (a.email) {
-        const { subject, html } = priceDropEmail({
-          fullName: a.full_name,
-          productName: a.name,
-          oldPrice: baseline,
-          newPrice: current,
-          img: a.img,
-          productUrl,
-        });
-        const ok = await sendEmail(a.email, subject, html);
-        if (ok) emailed++;
-      }
-
-      // 3) Reset baseline to the new (lower) price so we don't re-notify until
-      //    it drops again.
-      await pool.query(
-        `UPDATE user_alerts
-         SET baseline_price = $2, last_price = $2, last_checked_at = $3, last_notified_at = $3
-         WHERE id = $1`,
+        `UPDATE user_alerts SET last_price = $2, baseline_price = $2, last_checked_at = $3 WHERE id = $1`,
         [a.id, current, now]
       );
-    } else {
-      // No drop. If price went UP, raise the baseline so a later dip from the
-      // new high still counts as a drop.
-      const newBaseline = baseline == null ? current : Math.max(baseline, current);
-      await pool.query(
-        `UPDATE user_alerts SET last_price = $2, baseline_price = $3, last_checked_at = $4 WHERE id = $1`,
-        [a.id, current, newBaseline, now]
-      );
+      continue;
     }
+
+    const diff = current - baseline;
+    const direction: "drop" | "rise" | "same" =
+      diff < -0.0001 ? "drop" : diff > 0.0001 ? "rise" : "same";
+
+    if (direction === "same") {
+      await pool.query(
+        `UPDATE user_alerts SET last_price = $2, last_checked_at = $3 WHERE id = $1`,
+        [a.id, current, now]
+      );
+      continue;
+    }
+
+    const productUrl = a.shop_slug
+      ? `${SITE_URL}/boutiques/${a.shop_slug}/${a.slug}`
+      : `${SITE_URL}/comparaison?a=${encodeURIComponent(a.slug)}`;
+
+    const isDrop = direction === "drop";
+    if (isDrop) dropped++;
+    else raised++;
+
+    const title = isDrop ? `Baisse de prix : ${a.name}` : `Hausse de prix : ${a.name}`;
+    const body = `Le prix est passé de ${baseline.toLocaleString("fr-FR")} DT à ${current.toLocaleString("fr-FR")} DT.`;
+
+    // 1) In-app notification
+    await pool.query(
+      `INSERT INTO user_notifications
+         (user_id, type, title, body, slug, shop_slug, img, old_price, new_price)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+      [
+        a.user_id,
+        isDrop ? "price_drop" : "price_rise",
+        title,
+        body,
+        a.slug, a.shop_slug, a.img, baseline, current,
+      ]
+    );
+
+    // 2) Email (French — drop or rise variant)
+    if (a.email) {
+      const { subject, html } = priceChangeEmail({
+        kind: isDrop ? "drop" : "rise",
+        fullName: a.full_name,
+        productName: a.name,
+        oldPrice: baseline,
+        newPrice: current,
+        img: a.img,
+        productUrl,
+      });
+      const ok = await sendEmail(a.email, subject, html);
+      if (ok) emailed++;
+    }
+
+    // 3) Update baseline to the new price so we don't re-notify until it
+    //    changes again (in either direction).
+    await pool.query(
+      `UPDATE user_alerts
+       SET baseline_price = $2, last_price = $2, last_checked_at = $3, last_notified_at = $3
+       WHERE id = $1`,
+      [a.id, current, now]
+    );
   }
 
-  return { checked, dropped, emailed };
+  return { checked, dropped, raised, emailed };
 }
 
 export async function GET(req: NextRequest) {
