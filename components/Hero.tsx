@@ -118,7 +118,7 @@ export function Hero() {
 
               <div className="mt-2 md:mt-3 flex flex-wrap justify-start gap-1 sm:gap-1.5 md:gap-2">
                 {tags.map((t) => (
-                  <Link key={t} href="/comparateur" className="chip">
+                  <Link key={t} href="/categories" className="chip">
                     {t}
                   </Link>
                 ))}
