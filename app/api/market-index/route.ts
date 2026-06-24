@@ -103,22 +103,19 @@ export async function GET() {
       WHERE s.status = 'active'
       GROUP BY s.name
     `;
+    // "Top boutiques en promo" — restrict to parapharmacies only (Mapara,
+    // ParaShop, Parafendri, etc.) so the chart isn't dominated by retail
+    // tech sites that happen to have huge discount counts.
     const shopAgg = new Map<string, { promos: number; products: number; savings: number }>();
-    const shopsRes = await Promise.all([
-      aliPool.query(SHOPS_SQL),
-      paraPool.query(SHOPS_SQL),
-      retailPool.query(SHOPS_SQL),
-    ]);
-    for (const r of shopsRes) {
-      for (const row of r.rows as Array<{ shop: string; promos: number; products: number; savings: string }>) {
-        const key = row.shop.trim();
-        const prev = shopAgg.get(key) ?? { promos: 0, products: 0, savings: 0 };
-        shopAgg.set(key, {
-          promos:   prev.promos   + row.promos,
-          products: prev.products + row.products,
-          savings:  prev.savings  + parseFloat(row.savings),
-        });
-      }
+    const paraShopsRes = await paraPool.query(SHOPS_SQL);
+    for (const row of paraShopsRes.rows as Array<{ shop: string; promos: number; products: number; savings: string }>) {
+      const key = row.shop.trim();
+      const prev = shopAgg.get(key) ?? { promos: 0, products: 0, savings: 0 };
+      shopAgg.set(key, {
+        promos:   prev.promos   + row.promos,
+        products: prev.products + row.products,
+        savings:  prev.savings  + parseFloat(row.savings),
+      });
     }
     const topShops = [...shopAgg.entries()]
       .map(([shop, v]) => ({ x: shop, y: v.promos, products: v.products, savings: Math.round(v.savings) }))
@@ -126,7 +123,16 @@ export async function GET() {
       .sort((a, b) => b.y - a.y)
       .slice(0, 5);
 
-    const totalShops = shopAgg.size;
+    // Total shop count across all 3 catalogs (independent of the para-only top chart).
+    const shopCountsRes = await Promise.all([
+      aliPool.query<{ c: string }>(`SELECT COUNT(DISTINCT name)::text AS c FROM shops WHERE status = 'active'`),
+      paraPool.query<{ c: string }>(`SELECT COUNT(DISTINCT name)::text AS c FROM shops WHERE status = 'active'`),
+      retailPool.query<{ c: string }>(`SELECT COUNT(DISTINCT name)::text AS c FROM shops WHERE status = 'active'`),
+    ]);
+    const totalShops = shopCountsRes.reduce(
+      (acc, r) => acc + (parseInt(r.rows[0]?.c ?? "0", 10) || 0),
+      0
+    );
 
     const yesterdayIndex = +(index * 0.9886).toFixed(2);
 

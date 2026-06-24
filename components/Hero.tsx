@@ -158,7 +158,7 @@ export function Hero() {
           <div className="mt-1">
             <div className="mb-1 flex items-center justify-between">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/50">
-                Top boutiques en promo
+                Top parapharmacies en promo
               </span>
               <span className="text-[10px] text-slate-400 dark:text-white/40">survol pour détails</span>
             </div>
