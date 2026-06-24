@@ -1,8 +1,42 @@
 "use client";
 import { AlertTriangle, Eye, Flame, PackagePlus, Pencil } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+
+type Stats = {
+  pricesModifiedToday: number;
+  activePromos: number;
+  fakePromos: number;
+  newProductsToday: number;
+};
+
+function fmt(n: number): string {
+  return n.toLocaleString("fr-FR");
+}
 
 export function Observatoire() {
+  const [stats, setStats] = useState<Stats | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/stats/observatoire-retail")
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled || !d) return;
+        setStats({
+          pricesModifiedToday: d.pricesModifiedToday ?? 0,
+          activePromos: d.activePromos ?? 0,
+          fakePromos: d.fakePromos ?? 0,
+          newProductsToday: d.newProductsToday ?? 0,
+        });
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  const placeholder = "—";
+  const v = (n: number | undefined): string => (n == null ? placeholder : fmt(n));
+
   return (
     <section className="mx-auto mt-5 max-w-[1600px] px-3 sm:px-4">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1.4fr]">
@@ -14,7 +48,7 @@ export function Observatoire() {
               </span>
               <div>
                 <div className="section-title">Observatoire du marché</div>
-                <div className="text-[11px] text-slate-500 dark:text-white/60">Données collectées aujourd'hui</div>
+                <div className="text-[11px] text-slate-500 dark:text-white/60">Magasins · données collectées aujourd'hui</div>
               </div>
             </div>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-300">
@@ -24,25 +58,25 @@ export function Observatoire() {
           <div className="mt-4 grid grid-cols-2 gap-2.5 md:grid-cols-4">
             <Cell
               icon={Pencil}
-              value="4 238"
+              value={v(stats?.pricesModifiedToday)}
               label="Prix modifiés aujourd'hui"
               tone="emerald"
             />
             <Cell
               icon={Flame}
-              value="152"
+              value={v(stats?.activePromos)}
               label="Promotions actives"
               tone="red"
             />
             <Cell
               icon={AlertTriangle}
-              value="37"
+              value={v(stats?.fakePromos)}
               label="Fausses promos détectées"
               tone="orange"
             />
             <Cell
               icon={PackagePlus}
-              value="428"
+              value={v(stats?.newProductsToday)}
               label="Nouveaux produits aujourd'hui"
               tone="blue"
             />
