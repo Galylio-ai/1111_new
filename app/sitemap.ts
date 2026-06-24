@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { catalogPool } from "@/lib/db";
 import { SITE_URL } from "@/lib/seo";
 
 // Static sitemap index — lists every fixed route on the site.
@@ -46,12 +47,32 @@ const STATIC_ROUTES: Entry[] = [
   { path: "/confidentialite",         changeFrequency: "monthly", priority: 0.3 },
 ];
 
-export default function sitemap(): MetadataRoute.Sitemap {
+// Boutique landing pages — one URL per shop slug — fetched live from the
+// boutiques catalog so we always reflect the current shop roster.
+async function fetchBoutiqueLandings(): Promise<Entry[]> {
+  try {
+    const r = await catalogPool().query<{ slug: string }>(
+      `SELECT DISTINCT slug FROM shops WHERE slug IS NOT NULL ORDER BY slug`
+    );
+    return r.rows.map((row) => ({
+      path: `/boutiques/${row.slug}`,
+      changeFrequency: "weekly" as const,
+      priority: 0.65,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
-  return STATIC_ROUTES.map(({ path, changeFrequency, priority }) => ({
-    url: `${SITE_URL}${path}`,
-    lastModified: now,
-    changeFrequency,
-    priority,
-  }));
+  const boutiqueLandings = await fetchBoutiqueLandings();
+  return [...STATIC_ROUTES, ...boutiqueLandings].map(
+    ({ path, changeFrequency, priority }) => ({
+      url: `${SITE_URL}${path}`,
+      lastModified: now,
+      changeFrequency,
+      priority,
+    })
+  );
 }
