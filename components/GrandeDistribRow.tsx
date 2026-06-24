@@ -74,7 +74,7 @@ export function GrandeDistribRow() {
   const [enseignes, setEnseignes] = useState<EnseigneRow[]>(
     distributionEnseignes.map((e) => ({ name: e.name, price: e.price, diff: e.diff, best: e.best }))
   );
-  const [basketSize, setBasketSize] = useState<number>(5);
+  const [basketSize, setBasketSize] = useState<number>(12);
   const [economy, setEconomy] = useState<string>("8.370");
   const [alert, setAlert] = useState<AlertData | null>(null);
   const [illogicalPromo, setIllogicalPromo] = useState<IllogicalPromo | null>(null);
@@ -127,7 +127,7 @@ export function GrandeDistribRow() {
               {/* Sub-header */}
               <div className="mb-2 text-sm font-semibold text-slate-900 dark:text-white">
                 Panier essentiel{" "}
-                <span className="font-normal text-slate-400 dark:text-white/50">({basketSize} produits : tomate, huile, lait, thon, sucre)</span>
+                <span className="font-normal text-slate-400 dark:text-white/50">({basketSize} produits : tomate, huile, lait, thon, sucre, fromage, bœuf, jambon, poulet, olives, harissa, café)</span>
               </div>
 
               {/* Table header */}

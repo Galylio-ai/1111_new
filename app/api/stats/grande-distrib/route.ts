@@ -6,18 +6,28 @@ const pool = new Pool({
   max: 5,
 });
 
-// 5 staple categories — each is matched via name keyword on the product.
-// We then take the cheapest matching product per shop per category.
-// Categories were chosen to be staples every supermarket carries, so the
-// basket total is comparable across shops.
+// Staple categories — each matched by a name keyword on the product.
+// For each (shop, staple) we take the cheapest matching item in that shop,
+// then sum across staples to compare baskets fairly.
 const BASKET_STAPLES: { label: string; pattern: string }[] = [
-  { label: "Tomate",       pattern: "%tomate%" },
-  { label: "Huile",        pattern: "%huile%" },
-  { label: "Lait",         pattern: "%lait%" },
-  { label: "Thon",         pattern: "%thon%" },
-  { label: "Sucre",        pattern: "%sucre%" },
+  { label: "Tomate",  pattern: "%tomate%" },
+  { label: "Huile",   pattern: "%huile%" },
+  { label: "Lait",    pattern: "%lait%" },
+  { label: "Thon",    pattern: "%thon%" },
+  { label: "Sucre",   pattern: "%sucre%" },
+  { label: "Fromage", pattern: "%fromage%" },
+  { label: "Boeuf",   pattern: "%boeuf%" },
+  { label: "Jambon",  pattern: "%jambon%" },
+  { label: "Poulet",  pattern: "%poulet%" },
+  { label: "Olives",  pattern: "%olive%" },
+  { label: "Harissa", pattern: "%harissa%" },
+  { label: "Café",    pattern: "%caf%" },
 ];
 const BASKET_SIZE = BASKET_STAPLES.length;
+// Shops only need to cover this fraction of the basket to be ranked.
+// 70% lets shops missing a couple of staples still show up so the table
+// always has the expected 5+ enseignes.
+const BASKET_COVERAGE = 0.7;
 const VEILLE_SIZE = 4;
 
 function formatMillimes(n: number): string {
@@ -37,7 +47,10 @@ export async function GET() {
     const labels = BASKET_STAPLES.map((s) => s.label);
     const patterns = BASKET_STAPLES.map((s) => s.pattern);
 
-    const basketRes = await pool.query<{ shop: string; total: string }>(
+    // Min number of staples a shop must carry to be included in the table.
+    const minCovered = Math.max(1, Math.ceil(BASKET_SIZE * BASKET_COVERAGE));
+
+    const basketRes = await pool.query<{ shop: string; total: string; covered: string }>(
       `WITH staples (label, pattern) AS (
          SELECT * FROM UNNEST($1::text[], $2::text[]) AS t(label, pattern)
        ),
@@ -52,18 +65,23 @@ export async function GET() {
          GROUP BY sp.shop_id, st.label
        ),
        per_shop AS (
-         SELECT shop_id, SUM(price) AS total, COUNT(*) AS covered
+         SELECT shop_id,
+                -- normalise: extrapolate full basket from covered items so
+                -- a shop missing 1-2 staples isn't unfairly cheaper.
+                (SUM(price) / COUNT(*) * $4)::numeric AS total,
+                COUNT(*) AS covered
          FROM per_shop_staple
          GROUP BY shop_id
-         HAVING COUNT(*) = $3
+         HAVING COUNT(*) >= $3
        )
        SELECT s.name AS shop,
-              ps.total::text AS total
+              ps.total::text AS total,
+              ps.covered::text AS covered
        FROM per_shop ps
        JOIN shops s ON s.id = ps.shop_id
        ORDER BY ps.total ASC
        LIMIT 6`,
-      [labels, patterns, BASKET_STAPLES.length]
+      [labels, patterns, minCovered, BASKET_SIZE]
     );
 
     const enseignes: Array<{ name: string; total: number }> = basketRes.rows.map((r) => ({
