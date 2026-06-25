@@ -3,6 +3,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/lib/auth";
 import { AuthGate } from "@/components/site/AuthGate";
+import { ChatBot } from "@/components/ChatBot";
 import { JsonLd } from "@/components/seo/JsonLd";
 import {
   organizationSchema,
@@ -120,6 +121,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <AuthProvider>
             <AuthGate>{children}</AuthGate>
+            <ChatBot />
           </AuthProvider>
         </ThemeProvider>
       </body>
