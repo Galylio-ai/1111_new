@@ -130,25 +130,31 @@ async function callTool(BASE_URL: string, name: string, args: Record<string, unk
           return "Aucun produit trouvé pour cette recherche.";
         }
 
-        type RawProduct = { name: string; price: number; oldPrice: number; store: string };
+        type RawProduct = {
+          name: string;
+          slug?: string;
+          img?: string;
+          brand?: string;
+          price: number;
+          oldPrice: number;
+          store: string;
+          source?: "para" | "retail" | "super";
+        };
 
-        // Normalize name to group same product across stores
+        // Group by normalized product name so different shops for the same product land together
         const normalize = (name: string) =>
           name.toLowerCase().replace(/\s+/g, " ").replace(/[''"`]/g, "").trim();
-
-        // Group by normalized name
-        const groups = new Map<string, { displayName: string; offers: { store: string; price: number; oldPrice: number }[] }>();
+        const groups = new Map<string, { meta: RawProduct; offers: { store: string; price: number; oldPrice: number }[] }>();
         for (const p of data.items as RawProduct[]) {
           const key = normalize(p.name);
-          if (!groups.has(key)) groups.set(key, { displayName: p.name, offers: [] });
+          if (!groups.has(key)) groups.set(key, { meta: p, offers: [] });
           const g = groups.get(key)!;
-          // avoid duplicate store entries
           if (!g.offers.find((o) => o.store === p.store)) {
             g.offers.push({ store: p.store, price: p.price, oldPrice: p.oldPrice });
           }
         }
 
-        // Extract distinct brands: first word only, skip generic/descriptor words
+        // Brand-clarification gate
         const genericWords = new Set([
           "CHARGEUR", "ADAPTATEUR", "CABLE", "HOUSSE", "COQUE", "BATTERIE",
           "ANNEAU", "SUPPORT", "ECRAN", "PROTECTION", "ACCESSOIRE", "KIT",
@@ -162,36 +168,48 @@ async function callTool(BASE_URL: string, name: string, args: Record<string, unk
             brands.add(firstWord.charAt(0) + firstWord.slice(1).toLowerCase());
           }
         }
-
-        // If too many distinct brands, signal that clarification is needed
         if (brands.size >= 3 && groups.size >= 5) {
           const brandList = [...brands].slice(0, 8).join(", ");
           return `NEEDS_CLARIFICATION\nBrands: ${brandList}${brands.size > 8 ? ` (+${brands.size - 8})` : ""}`;
         }
 
-        // Sort groups by min price, take top 6
+        // Sort groups by min price, top 6
         const sorted = [...groups.values()]
           .sort((a, b) => Math.min(...a.offers.map((o) => o.price)) - Math.min(...b.offers.map((o) => o.price)))
           .slice(0, 6);
 
-        const blocks = sorted.map((g) => {
-          // Sort offers cheapest first
+        const cards = sorted.map((g) => {
           const offersSorted = [...g.offers].sort((a, b) => a.price - b.price).slice(0, 3);
           const cheapest = offersSorted[0];
-          const offerLines = offersSorted.map((o, i) => {
-            const promo = o.oldPrice > o.price
-              ? ` (promo -${Math.round((1 - o.price / o.oldPrice) * 100)}%)`
-              : "";
-            const tag = i === 0 ? " ✅ moins cher" : i === offersSorted.length - 1 && offersSorted.length > 1 ? " ❌ plus cher" : "";
-            return `   ${i + 1}. ${o.store} → ${o.price.toFixed(3)} DT${promo}${tag}`;
-          });
-          const saving = offersSorted.length > 1
-            ? `\n   💡 Économie : ${(offersSorted[offersSorted.length - 1].price - cheapest.price).toFixed(3)} DT en choisissant ${cheapest.store}`
-            : "";
-          return `📦 ${g.displayName}\n${offerLines.join("\n")}${saving}`;
+          const pricey  = offersSorted[offersSorted.length - 1];
+          const saving  = offersSorted.length > 1 ? +(pricey.price - cheapest.price).toFixed(3) : 0;
+          const promoPct = cheapest.oldPrice > cheapest.price
+            ? Math.round((1 - cheapest.price / cheapest.oldPrice) * 100)
+            : 0;
+          const source = g.meta.source ?? "retail";
+          const href =
+            source === "para"   ? `/parapharmacie/${g.meta.slug ?? ""}` :
+            source === "super"  ? `/supermarche/${g.meta.slug ?? ""}` :
+                                  `/retail/${g.meta.slug ?? ""}`;
+          return {
+            name: g.meta.name,
+            brand: g.meta.brand ?? "",
+            img: g.meta.img ?? "",
+            href,
+            source,
+            cheapestPrice: cheapest.price,
+            cheapestStore: cheapest.store,
+            priciestPrice: pricey.price,
+            priciestStore: pricey.store,
+            promoPct,
+            saving,
+            offers: offersSorted,
+          };
         });
 
-        return `Résultats pour "${args.q}" — ${sorted.length} produit(s), classés du moins cher au plus cher par boutique :\n\n${blocks.join("\n\n")}`;
+        const summary = `Voici ${cards.length} résultat${cards.length > 1 ? "s" : ""} pour "${args.q}", classé${cards.length > 1 ? "s" : ""} du moins cher au plus cher :`;
+        const payload = JSON.stringify({ kind: "products", title: `Résultats pour "${args.q}"`, cards });
+        return `${summary}\n<<CHATDATA:${payload}>>`;
       }
 
       case "get_supermarket_basket": {
@@ -216,7 +234,18 @@ async function callTool(BASE_URL: string, name: string, args: Record<string, unk
         const data = await res.json();
         if (data.error) return "Indice marché indisponible.";
         const s = data.stats ?? {};
-        return `Indice marché 1111.tn : ${data.index ?? "—"}\n• ${s.totalProducts?.toLocaleString("fr-FR") ?? "—"} produits suivis\n• ${s.totalPromos ?? "—"} promotions actives\n• ${s.totalSavingsDT?.toLocaleString("fr-FR") ?? "—"} DT d'économies détectées\n• Remise moyenne : ${s.avgDiscountPct ?? "—"}%`;
+        const payload = JSON.stringify({
+          kind: "stats",
+          title: "Indice du marché 1111.tn",
+          index: data.index ?? null,
+          metrics: [
+            { label: "Produits suivis", value: s.totalProducts ?? null, suffix: "" },
+            { label: "Promotions actives", value: s.totalPromos ?? null, suffix: "", tone: "red" },
+            { label: "Économies détectées", value: s.totalSavingsDT ?? null, suffix: " DT", tone: "emerald" },
+            { label: "Remise moyenne", value: s.avgDiscountPct ?? null, suffix: "%", tone: "gold" },
+          ],
+        });
+        return `Voici l'état actuel du marché 1111.tn :\n<<CHATDATA:${payload}>>`;
       }
 
       case "get_top_offers": {
@@ -224,11 +253,46 @@ async function callTool(BASE_URL: string, name: string, args: Record<string, unk
         const data = await res.json();
         const list = Array.isArray(data.offers) ? data.offers : Array.isArray(data.items) ? data.items : [];
         if (data.error || list.length === 0) return "Aucune offre disponible.";
-        const lines = list.slice(0, 5).map((o: { name: string; brand: string; minPrice: number | string; savings: number | string; offers: Array<{ shop: string; price: number }> }) => {
-          const cheapestShop = o.offers?.[0];
-          return `• ${o.name} (${o.brand}) — à partir de ${o.minPrice ?? "—"} DT chez ${cheapestShop?.shop ?? "—"} (économie : ${o.savings ?? "—"} DT)`;
+
+        type Offer = {
+          name: string;
+          slug?: string;
+          brand: string;
+          img?: string;
+          minPrice: number | string;
+          maxPrice?: number | string;
+          savings: number | string;
+          offers: Array<{ shop: string; price: number | string }>;
+        };
+
+        const cards = (list as Offer[]).slice(0, 6).map((o) => {
+          const offersList = Array.isArray(o.offers) ? o.offers : [];
+          const cheapest = offersList[0];
+          const pricey   = offersList[offersList.length - 1] ?? cheapest;
+          const toNum = (v: number | string | undefined) => typeof v === "number" ? v : parseFloat(String(v ?? "0").replace(/\s/g, "").replace(",", ".")) || 0;
+          const minP = toNum(o.minPrice);
+          const maxP = toNum(o.maxPrice);
+          const savings = toNum(o.savings);
+          const promoPct = maxP > minP ? Math.round((1 - minP / maxP) * 100) : 0;
+          return {
+            name: o.name,
+            brand: o.brand,
+            img: o.img ?? "",
+            href: o.slug ? `/retail/${o.slug}` : "/retail",
+            source: "retail" as const,
+            cheapestPrice: minP,
+            cheapestStore: cheapest?.shop ?? "—",
+            priciestPrice: toNum(pricey?.price),
+            priciestStore: pricey?.shop ?? "—",
+            promoPct,
+            saving: savings,
+            offers: offersList.slice(0, 3).map((x) => ({ store: x.shop, price: toNum(x.price), oldPrice: toNum(x.price) })),
+          };
         });
-        return `Meilleures offres du moment :\n${lines.join("\n")}`;
+
+        const summary = `Voici les ${cards.length} meilleures offres du moment :`;
+        const payload = JSON.stringify({ kind: "products", title: "Meilleures offres du moment", cards });
+        return `${summary}\n<<CHATDATA:${payload}>>`;
       }
 
       case "get_fake_promos": {
@@ -251,12 +315,41 @@ async function callTool(BASE_URL: string, name: string, args: Record<string, unk
         const res = await fetch(`${BASE_URL}/api/stats/latest-price-change`);
         const data = await res.json();
         if (data.error || !data.items?.length) return "Aucune variation récente disponible.";
-        const lines = data.items.map((p: { name: string; shopName: string; oldPrice: number; newPrice: number; catalog: string }) => {
+
+        type Row = {
+          name: string;
+          brand?: string | null;
+          slug?: string;
+          image?: string | null;
+          shopName?: string | null;
+          oldPrice: number;
+          newPrice: number;
+          catalog: string;
+          catalogPath?: string;
+        };
+
+        const cards = (data.items as Row[]).slice(0, 8).map((p) => {
           const diff = p.newPrice - p.oldPrice;
-          const pct = Math.abs(Math.round((diff / p.oldPrice) * 100));
-          return `• ${p.name} chez ${p.shopName} [${p.catalog}] : ${p.oldPrice?.toFixed(3)} → ${p.newPrice?.toFixed(3)} DT (${diff < 0 ? "↘" : "↗"} ${pct}%)`;
+          const pct = p.oldPrice > 0 ? Math.abs(Math.round((diff / p.oldPrice) * 100)) : 0;
+          const down = diff < 0;
+          const path = p.catalogPath ?? (p.catalog === "para" ? "parapharmacie" : p.catalog === "retail" ? "retail" : "supermarche");
+          return {
+            name: p.name,
+            brand: p.brand ?? "",
+            img: p.image ?? "",
+            href: p.slug ? `/${path}/${p.slug}` : `/${path}`,
+            source: (p.catalog === "para" ? "para" : p.catalog === "retail" ? "retail" : "super") as "para" | "retail" | "super",
+            oldPrice: p.oldPrice,
+            newPrice: p.newPrice,
+            shop: p.shopName ?? "—",
+            changePct: pct,
+            down,
+          };
         });
-        return `Dernières variations de prix :\n${lines.join("\n")}`;
+
+        const summary = `Voici les ${cards.length} dernières variations de prix :`;
+        const payload = JSON.stringify({ kind: "price_changes", title: "Dernières variations de prix", cards });
+        return `${summary}\n<<CHATDATA:${payload}>>`;
       }
 
       case "compute_basket": {

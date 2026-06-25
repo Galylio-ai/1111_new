@@ -35,6 +35,238 @@ const SUGGESTIONS = [
   "👶 Couches bébé pas chères",
 ];
 
+// ── Structured chat payload (sent inside <<CHATDATA:...>> sentinel) ───────────
+type ProductOffer = { store: string; price: number; oldPrice: number };
+type ProductCard = {
+  name: string;
+  brand: string;
+  img: string;
+  href: string;
+  source: "para" | "retail" | "super";
+  cheapestPrice: number;
+  cheapestStore: string;
+  priciestPrice: number;
+  priciestStore: string;
+  promoPct: number;
+  saving: number;
+  offers: ProductOffer[];
+};
+type PriceChangeCard = {
+  name: string;
+  brand: string;
+  img: string;
+  href: string;
+  source: "para" | "retail" | "super";
+  oldPrice: number;
+  newPrice: number;
+  shop: string;
+  changePct: number;
+  down: boolean;
+};
+type StatsMetric = { label: string; value: number | null; suffix?: string; tone?: "red" | "emerald" | "gold" };
+type ChatPayload =
+  | { kind: "products"; title: string; cards: ProductCard[] }
+  | { kind: "price_changes"; title: string; cards: PriceChangeCard[] }
+  | { kind: "stats"; title: string; index: number | null; metrics: StatsMetric[] };
+
+function parseChatData(content: string): { intro: string; data: ChatPayload | null } {
+  const match = content.match(/<<CHATDATA:([\s\S]*?)>>/);
+  if (!match) return { intro: content, data: null };
+  try {
+    const data = JSON.parse(match[1]) as ChatPayload;
+    const intro = content.slice(0, match.index).trim();
+    return { intro, data };
+  } catch {
+    return { intro: content.replace(/<<CHATDATA:[\s\S]*?>>/, "").trim(), data: null };
+  }
+}
+
+const SOURCE_CHIP: Record<ProductCard["source"], { label: string; cls: string }> = {
+  para:   { label: "Para",        cls: "bg-rose-500/15 text-rose-300 border-rose-500/30" },
+  retail: { label: "Retail",      cls: "bg-blue-500/15 text-blue-300 border-blue-500/30" },
+  super:  { label: "Supermarché", cls: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30" },
+};
+
+function fmtPrice(n: number): string {
+  if (!Number.isFinite(n)) return "—";
+  return `${n.toFixed(2).replace(/\.?0+$/, "").replace(".", ",")} DT`;
+}
+
+function CountUp({ value, suffix = "" }: { value: number; suffix?: string }) {
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    if (!Number.isFinite(value)) return;
+    const start = performance.now();
+    const dur = 900;
+    let frame = 0;
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - start) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setDisplay(value * eased);
+      if (p < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [value]);
+  return <>{Math.round(display).toLocaleString("fr-FR")}{suffix}</>;
+}
+
+function ProductCardItem({ c }: { c: ProductCard }) {
+  const chip = SOURCE_CHIP[c.source];
+  return (
+    <a
+      href={c.href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group/card flex gap-2.5 rounded-xl border border-white/10 bg-white/[0.04] p-2.5 transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-gold/40 hover:bg-white/[0.06] hover:shadow-[0_4px_20px_rgba(246,196,83,0.15)]"
+    >
+      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-white/5 ring-1 ring-white/10">
+        {c.img ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={c.img}
+            alt={c.name}
+            className="h-full w-full object-contain p-1 transition-transform duration-500 group-hover/card:scale-110"
+            loading="lazy"
+            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+          />
+        ) : (
+          <span className="flex h-full w-full items-center justify-center text-lg opacity-50">📦</span>
+        )}
+        {c.promoPct > 0 && (
+          <span className="absolute -right-0.5 -top-0.5 rounded-full bg-brand-red px-1.5 py-0.5 text-[9px] font-black text-white shadow animate-pulse">
+            −{c.promoPct}%
+          </span>
+        )}
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5">
+          {c.brand && (
+            <span className="truncate text-[10px] font-extrabold uppercase tracking-wider text-brand-gold">{c.brand}</span>
+          )}
+          <span className={`shrink-0 rounded-full border px-1.5 py-0 text-[9px] font-bold uppercase tracking-wider ${chip.cls}`}>
+            {chip.label}
+          </span>
+        </div>
+        <div className="mt-0.5 line-clamp-2 text-[12px] font-bold text-white">{c.name}</div>
+
+        <div className="mt-1 flex items-baseline gap-1.5">
+          <span className="text-[14px] font-black tabular-nums text-brand-gold drop-shadow-[0_0_8px_rgba(246,196,83,0.4)]">
+            {fmtPrice(c.cheapestPrice)}
+          </span>
+          {c.priciestPrice > c.cheapestPrice && (
+            <span className="text-[10px] text-white/35 line-through tabular-nums">{fmtPrice(c.priciestPrice)}</span>
+          )}
+        </div>
+
+        <div className="mt-0.5 text-[10px] text-white/55">
+          chez <span className="font-bold text-emerald-400">{c.cheapestStore}</span>
+          {c.saving > 0 && (
+            <> · économisez <span className="font-bold text-emerald-400">{fmtPrice(c.saving)}</span></>
+          )}
+        </div>
+      </div>
+    </a>
+  );
+}
+
+function PriceChangeCardItem({ c }: { c: PriceChangeCard }) {
+  const chip = SOURCE_CHIP[c.source];
+  return (
+    <a
+      href={c.href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group/card flex gap-2.5 rounded-xl border border-white/10 bg-white/[0.04] p-2.5 transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-gold/40 hover:bg-white/[0.06]"
+    >
+      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-white/5 ring-1 ring-white/10">
+        {c.img ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={c.img}
+            alt={c.name}
+            className="h-full w-full object-contain p-1 transition-transform duration-500 group-hover/card:scale-110"
+            loading="lazy"
+            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+          />
+        ) : (
+          <span className="flex h-full w-full items-center justify-center text-lg opacity-50">📦</span>
+        )}
+        <span className={`absolute -right-0.5 -top-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-black text-white shadow ${c.down ? "bg-emerald-500" : "bg-red-500"} animate-pulse`}>
+          {c.down ? "↘" : "↗"} {c.changePct}%
+        </span>
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5">
+          {c.brand && <span className="truncate text-[10px] font-extrabold uppercase tracking-wider text-brand-gold">{c.brand}</span>}
+          <span className={`shrink-0 rounded-full border px-1.5 py-0 text-[9px] font-bold uppercase tracking-wider ${chip.cls}`}>{chip.label}</span>
+        </div>
+        <div className="mt-0.5 line-clamp-2 text-[12px] font-bold text-white">{c.name}</div>
+        <div className="mt-1 flex items-baseline gap-1.5 text-[12px] tabular-nums">
+          <span className="text-white/40 line-through">{fmtPrice(c.oldPrice)}</span>
+          <span className="text-white/30">→</span>
+          <span className={`font-black ${c.down ? "text-emerald-400" : "text-red-400"} drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]`}>
+            {fmtPrice(c.newPrice)}
+          </span>
+        </div>
+        <div className="mt-0.5 text-[10px] text-white/55">chez <span className="font-bold text-white/80">{c.shop}</span></div>
+      </div>
+    </a>
+  );
+}
+
+function StatsPanel({ data }: { data: Extract<ChatPayload, { kind: "stats" }> }) {
+  const toneCls: Record<NonNullable<StatsMetric["tone"]>, string> = {
+    red: "text-red-400 from-red-500/20 to-red-500/0",
+    emerald: "text-emerald-400 from-emerald-500/20 to-emerald-500/0",
+    gold: "text-brand-gold from-brand-gold/20 to-brand-gold/0",
+  };
+  return (
+    <div className="rounded-xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-white/[0.02] p-3">
+      {data.index != null && (
+        <div className="mb-3 flex items-baseline gap-2">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-white/45">Indice</span>
+          <span className="text-2xl font-black tabular-nums text-brand-gold drop-shadow-[0_0_10px_rgba(246,196,83,0.4)]">
+            <CountUp value={data.index} />
+          </span>
+        </div>
+      )}
+      <div className="grid grid-cols-2 gap-2">
+        {data.metrics.map((m) => (
+          <div key={m.label} className={`rounded-lg border border-white/5 bg-gradient-to-br ${m.tone ? toneCls[m.tone] : "from-white/[0.04] to-white/[0.01]"} p-2`}>
+            <div className={`text-base font-black tabular-nums ${m.tone ? toneCls[m.tone].split(" ")[0] : "text-white"}`}>
+              {m.value != null ? <CountUp value={m.value} suffix={m.suffix ?? ""} /> : "—"}
+            </div>
+            <div className="mt-0.5 text-[10px] font-medium text-white/50">{m.label}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StructuredReply({ data }: { data: ChatPayload }) {
+  if (data.kind === "products") {
+    return (
+      <div className="mt-2 space-y-1.5">
+        {data.cards.map((c, i) => <ProductCardItem key={`${c.name}-${i}`} c={c} />)}
+      </div>
+    );
+  }
+  if (data.kind === "price_changes") {
+    return (
+      <div className="mt-2 space-y-1.5">
+        {data.cards.map((c, i) => <PriceChangeCardItem key={`${c.name}-${i}`} c={c} />)}
+      </div>
+    );
+  }
+  if (data.kind === "stats") {
+    return <div className="mt-2"><StatsPanel data={data} /></div>;
+  }
+  return null;
+}
+
 export function ChatBot() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -263,27 +495,34 @@ export function ChatBot() {
           ) : (
             /* ── Messages ── */
             <div className="px-4 py-4 space-y-3">
-              {messages.map((msg, i) => (
-                <div
-                  key={i}
-                  className={`flex gap-2 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
-                >
-                  {msg.role === "assistant" && (
-                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full overflow-hidden bg-[#161b27]">
-                      <Image src="/mascot.png" alt="Assistant" width={24} height={24} className="object-contain" />
-                    </div>
-                  )}
+              {messages.map((msg, i) => {
+                const parsed = msg.role === "assistant" ? parseChatData(msg.content) : { intro: msg.content, data: null };
+                const isStructured = parsed.data !== null;
+                return (
                   <div
-                    className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
-                      msg.role === "user"
-                        ? "rounded-tr-sm bg-gradient-to-br from-brand-red to-brand-redDark text-white shadow-md"
-                        : "rounded-tl-sm bg-white/[0.07] text-white/90"
-                    }`}
+                    key={i}
+                    className={`flex gap-2 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
                   >
-                    {msg.content}
+                    {msg.role === "assistant" && (
+                      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full overflow-hidden bg-[#161b27]">
+                        <Image src="/mascot.png" alt="Assistant" width={24} height={24} className="object-contain" />
+                      </div>
+                    )}
+                    <div
+                      className={`rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
+                        msg.role === "user"
+                          ? "max-w-[80%] rounded-tr-sm bg-gradient-to-br from-brand-red to-brand-redDark text-white shadow-md"
+                          : isStructured
+                            ? "w-[88%] rounded-tl-sm bg-white/[0.07] text-white/90"
+                            : "max-w-[80%] rounded-tl-sm bg-white/[0.07] text-white/90"
+                      }`}
+                    >
+                      {parsed.intro && <div>{parsed.intro}</div>}
+                      {parsed.data && <StructuredReply data={parsed.data} />}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
 
               {loading && (
                 <div className="flex gap-2">
