@@ -62,31 +62,50 @@ function compute(): ShopRow[] {
   const file = path.join(process.cwd(), "app/api/retail-products/data.json");
   const products = JSON.parse(readFileSync(file, "utf8")) as Product[];
 
-  const agg: Record<string, { total: number; similar: number; cheapest: number }> = {};
-
+  // Pass 1: per-shop totals + cheapest count, to pick the top 5.
+  const agg: Record<string, { total: number; cheapest: number }> = {};
   for (const p of products) {
     if (!Array.isArray(p.shopNames) || p.shopNames.length === 0) continue;
-    const cheapest = p.shopNames[0];
-    const isShared = p.shopNames.length > 1;
+    const cheapest = p.shopNames[0]; // data.json lists the cheapest shop first
     for (const shop of p.shopNames) {
-      if (!agg[shop]) agg[shop] = { total: 0, similar: 0, cheapest: 0 };
+      if (!agg[shop]) agg[shop] = { total: 0, cheapest: 0 };
       agg[shop].total += 1;
-      if (isShared) agg[shop].similar += 1;
       if (shop === cheapest) agg[shop].cheapest += 1;
     }
   }
 
-  const rows: ShopRow[] = Object.entries(agg).map(([shop, a]) => ({
+  // Top 5 by number of products where the shop offers the best price.
+  const top5 = Object.entries(agg)
+    .sort((a, b) => b[1].cheapest - a[1].cheapest)
+    .slice(0, 5)
+    .map(([shop]) => shop);
+  const top5Set = new Set(top5);
+
+  // Pass 2: "similar" = products this shop carries that are ALSO sold by at
+  // least one OTHER top-5 shop (the meaningful head-to-head overlap among the
+  // top retailers — not just "sold by any shop", which every product satisfies).
+  const similar: Record<string, number> = {};
+  for (const shop of top5) similar[shop] = 0;
+
+  for (const p of products) {
+    if (!Array.isArray(p.shopNames) || p.shopNames.length === 0) continue;
+    // Which top-5 shops carry this product?
+    const top5Carriers = p.shopNames.filter((s) => top5Set.has(s));
+    if (top5Carriers.length < 2) continue; // needs ≥2 top-5 shops to be "shared"
+    // Every top-5 carrier here shares this product with another top-5 shop.
+    for (const shop of top5Carriers) similar[shop] += 1;
+  }
+
+  const rows: ShopRow[] = top5.map((shop) => ({
     shop,
     displayName: pretty(shop),
     logo: LOGO_FILES[shop.toLowerCase()] ?? null,
-    totalProducts: a.total,
-    similarProducts: a.similar,
-    cheapestCount: a.cheapest,
+    totalProducts: agg[shop].total,
+    similarProducts: similar[shop] ?? 0,
+    cheapestCount: agg[shop].cheapest,
   }));
 
-  rows.sort((a, b) => b.cheapestCount - a.cheapestCount);
-  cache = rows.slice(0, 5);
+  cache = rows;
   return cache;
 }
 
