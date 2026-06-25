@@ -24,8 +24,8 @@ export async function GET(req: NextRequest) {
     idx++;
   }
   if (shop) {
-    conditions.push(`lower(s.name) LIKE $${idx}`);
-    params.push(`%${shop}%`);
+    conditions.push(`s.shop_key = $${idx}`);
+    params.push(shop);
     idx++;
   }
 
