@@ -4,14 +4,12 @@
  * Import the CLEAN canonical supermarché catalog (products-all-shops-clean.jsonl)
  * into the alimentation Postgres DB.
  *
- * This file's shape (one canonical product per line):
- *   {
- *     canonical_product_id, name, brand, size[], category,
- *     image_url, shop_keys[], shop_count, confidence,
- *     offers: [ { shop_key, catalogue_type, name, brand, size[], category,
- *                 price, regular_price, url, image_url, ean, source_id } ],
- *     review_flags[]
- *   }
+ * This file's shape (one canonical product per line). Two layouts supported:
+ *   v1 (canonical merge): { canonical_product_id, name, brand, size[], category,
+ *                           image_url, offers: [{ shop_key, price, regular_price, url, ... }] }
+ *   v2 (clean per-product): { id, name, brand, size, category, image_url,
+ *                             offers: [{ shop_name, price, url }] }
+ *   For v2, shop_key is derived from shop_name via slugify().
  *
  * Target schema (authoritative):
  *   backend/services/alimentation/src/db/migrations/001_catalog_schema.js
@@ -281,16 +279,20 @@ function buildRecord(raw) {
   const prices = [];
   const seenShopKeys = new Set();
   for (const o of offers) {
-    if (!o || !o.shop_key) continue;
-    if (seenShopKeys.has(o.shop_key)) continue; // one row per shop (PK)
+    if (!o) continue;
+    // Newer feeds emit `shop_name` only (e.g. "Carrefour"); older canonical
+    // feeds use explicit `shop_key`. Accept both — derive a key when missing.
+    const shopKey = o.shop_key || (o.shop_name ? slugify(o.shop_name).replace(/-/g, "_") : null);
+    if (!shopKey) continue;
+    if (seenShopKeys.has(shopKey)) continue; // one row per shop (PK)
     const cur = num(o.price);
     if (!(cur && cur > 0)) continue;
     const url = o.url || fallbackUrl;
     if (!url) continue; // can't satisfy NOT NULL url
-    seenShopKeys.add(o.shop_key);
+    seenShopKeys.add(shopKey);
     const reg = num(o.regular_price);
     prices.push({
-      shopKey: o.shop_key,
+      shopKey,
       current: cur,
       regular: reg && reg > 0 ? reg : null,
       url: String(url),
