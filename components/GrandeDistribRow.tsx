@@ -1,5 +1,5 @@
 "use client";
-import { ArrowDownRight, Bell, ChevronRight, ShieldAlert, TrendingDown, TrendingUp, Trophy } from "lucide-react";
+import { ChevronRight, ShieldAlert, Store, TrendingDown, TrendingUp, Trophy } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { distributionEnseignes, getStoreLogo } from "@/lib/data";
@@ -16,22 +16,6 @@ function siteName(domain: string): string {
 }
 
 type EnseigneRow = { name: string; price: string; diff: string; best?: boolean };
-type AlertData = {
-  name: string;
-  brand: string;
-  shop: string;
-  price: string;
-  oldPrice: string;
-  change: string;
-  down: boolean;
-  saved: string;
-  min: string;
-  max: string;
-  slug?: string;
-  href?: string;
-  img?: string | null;
-};
-
 type IllogicalPromo = {
   productId: number;
   name: string;
@@ -50,15 +34,14 @@ type IllogicalPromo = {
   href: string;
 };
 
-function shopLogoSrc(shop: string): string | null {
-  const key = shop.trim().toLowerCase();
-  if (key.includes("aziza")) return "/aziza-logo.jpg";
-  if (key.includes("carrefour market")) return "/carrefour-market.png";
-  if (key.includes("carrefour")) return "/Carrefour-Logo.png";
-  if (key.includes("monoprix")) return "/monoprix.png";
-  if (key.includes("géant") || key.includes("geant")) return "/geant-logo.png";
-  return null;
-}
+type RetailShopRow = {
+  shop: string;
+  displayName: string;
+  logo: string | null;
+  totalProducts: number;
+  similarProducts: number;
+  cheapestCount: number;
+};
 
 function enseigneLogo(name: string) {
   const key = name.trim().toLowerCase();
@@ -76,8 +59,8 @@ export function GrandeDistribRow() {
   );
   const [basketSize, setBasketSize] = useState<number>(12);
   const [economy] = useState<string>("8 370");
-  const [alert, setAlert] = useState<AlertData | null>(null);
   const [illogicalPromo, setIllogicalPromo] = useState<IllogicalPromo | null>(null);
+  const [topRetailShops, setTopRetailShops] = useState<RetailShopRow[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -87,7 +70,6 @@ export function GrandeDistribRow() {
         if (cancelled) return;
         if (Array.isArray(d?.enseignes) && d.enseignes.length > 0) setEnseignes(d.enseignes);
         if (typeof d?.basketSize === "number") setBasketSize(d.basketSize);
-        if (d?.alert && typeof d.alert === "object") setAlert(d.alert as AlertData);
       })
       .catch(() => {});
 
@@ -96,6 +78,14 @@ export function GrandeDistribRow() {
       .then((d) => {
         if (cancelled) return;
         if (d?.promo) setIllogicalPromo(d.promo as IllogicalPromo);
+      })
+      .catch(() => {});
+
+    fetch("/api/stats/top-retail-shops")
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return;
+        if (Array.isArray(d?.shops)) setTopRetailShops(d.shops as RetailShopRow[]);
       })
       .catch(() => {});
 
@@ -272,139 +262,94 @@ export function GrandeDistribRow() {
           </Link>
         </div>
 
-        {/* ALERTE PRIX */}
-        <div className="card card-pad relative flex flex-col overflow-hidden border-brand-red/40">
-          <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-brand-red/20 blur-2xl" />
-          <div className="absolute -left-10 bottom-0 h-32 w-32 rounded-full bg-brand-red/10 blur-3xl" />
+        {/* TOP 5 RETAIL CHEAPEST */}
+        <div className="card card-pad relative flex flex-col overflow-hidden border-emerald-500/30">
+          <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-emerald-500/20 blur-2xl" />
+          <div className="absolute -left-10 bottom-0 h-32 w-32 rounded-full bg-emerald-500/10 blur-3xl" />
 
-          {/* Header with live pulse */}
+          {/* Header */}
           <div className="relative flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="relative flex h-7 w-7 items-center justify-center rounded-lg bg-brand-red/15 ring-1 ring-brand-red/40">
-                <Bell className="h-3.5 w-3.5 text-brand-red" />
-                <span className="absolute -right-0.5 -top-0.5 flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-red opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-red" />
-                </span>
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/15 ring-1 ring-emerald-500/40">
+                <Store className="h-3.5 w-3.5 text-emerald-500" />
               </span>
               <div className="leading-tight">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-brand-red">Alerte Prix</div>
-                <div className="font-arabic text-[10px] text-slate-400 dark:text-white/40" dir="rtl">تنبيه فوري</div>
+                <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Top 5 Retails</div>
+                <div className="font-arabic text-[10px] text-slate-400 dark:text-white/40" dir="rtl">أرخص متاجر التجزئة</div>
               </div>
             </div>
             <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-300">
-              ● Live
+              Moins chers
             </span>
           </div>
 
-          {/* Product */}
-          <div className="relative mt-3 flex items-center gap-3 rounded-xl border border-slate-200 bg-bg-700 p-2.5 dark:border-white/5 dark:bg-bg-800">
-            <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white ring-1 ring-slate-200 dark:ring-white/10">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-400/15 via-transparent to-brand-red/10" />
-              {alert?.img ? (
-                <img
-                  src={alert.img}
-                  alt={alert.name ?? "Pot crème emmental fondu"}
-                  className="relative h-full w-full object-contain p-1 animate-float drop-shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
-                />
-              ) : (
-                <span className="relative animate-float text-4xl">🧀</span>
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-semibold text-slate-900 dark:text-white">
-                {alert?.name ?? "Pot crème 100% emmental fondu"}
-              </div>
-              <div className="truncate text-[11px] text-slate-500 dark:text-white/50">
-                {alert?.brand || "—"}
-              </div>
-            </div>
+          {/* Sub-header */}
+          <div className="relative mt-2 text-[11px] text-slate-500 dark:text-white/55">
+            Classement par produits au meilleur prix · <span className="font-semibold text-slate-700 dark:text-white/80">similaires / total</span>
           </div>
 
-          {/* Price block */}
-          <div className="relative mt-3">
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-white/40">Prix actuel</div>
-            <div className="mt-0.5 flex items-baseline gap-2">
-              <span className="text-4xl font-black tabular-nums text-slate-900 dark:text-white">
-                {alert?.price ?? "3.150"}
-              </span>
-              <span className="text-sm font-bold text-brand-gold">DT</span>
-              <span className="ml-auto inline-flex items-center gap-0.5 rounded-md bg-emerald-500/15 px-1.5 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-300">
-                <ArrowDownRight className="h-3 w-3" />
-                {alert?.change ?? "−12%"}
-              </span>
-            </div>
-            <div className="text-[11px] text-slate-500 dark:text-white/50">
-              Moyenne : <span className="line-through">{alert?.oldPrice ?? "3.570"} DT</span>
-              <span className="mx-1.5 text-slate-300 dark:text-white/20">·</span>
-              <span className="text-emerald-600 dark:text-emerald-300">Économie {alert?.saved ?? "0.420"} DT</span>
-            </div>
-          </div>
-
-          {/* Mini price history (7 days) */}
-          <div className="relative mt-3">
-            <div className="mb-1 flex items-center justify-between text-[10px] text-slate-400 dark:text-white/40">
-              <span className="font-semibold uppercase tracking-wider">Plage des prix</span>
-              <span className="tabular-nums">Min {alert?.min ?? "3.15"} · Max {alert?.max ?? "3.57"}</span>
-            </div>
-            <div className="flex h-12 items-end gap-1">
-              {[3.57, 3.55, 3.53, 3.53, 3.50, 3.49, 3.15].map((v, i, arr) => {
-                const min = Math.min(...arr);
-                const max = Math.max(...arr);
-                const h = ((v - min) / (max - min)) * 100;
-                const isLast = i === arr.length - 1;
-                return (
-                  <div key={i} className="group relative flex flex-1 flex-col items-center">
+          {/* Rows */}
+          <ul className="relative mt-3 space-y-2">
+            {(topRetailShops.length > 0 ? topRetailShops : Array.from({ length: 5 }).map((_, i) => ({
+              shop: `shop-${i}`,
+              displayName: "—",
+              logo: null,
+              totalProducts: 0,
+              similarProducts: 0,
+              cheapestCount: 0,
+            }))).slice(0, 5).map((s, i) => {
+              const rankBg =
+                i === 0 ? "bg-gradient-to-br from-emerald-400 to-emerald-600 text-white ring-1 ring-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" :
+                i === 1 ? "bg-gradient-to-br from-lime-400 to-lime-600 text-white ring-1 ring-lime-400" :
+                i === 2 ? "bg-gradient-to-br from-yellow-400 to-amber-500 text-white ring-1 ring-yellow-400" :
+                i === 3 ? "bg-gradient-to-br from-orange-400 to-orange-600 text-white ring-1 ring-orange-400" :
+                          "bg-gradient-to-br from-red-500 to-red-700 text-white ring-1 ring-red-500";
+              const pct = s.totalProducts > 0 ? Math.round((s.similarProducts / s.totalProducts) * 100) : 0;
+              return (
+                <li key={s.shop} className="rounded-xl border border-slate-200 bg-slate-50 p-2 dark:border-white/5 dark:bg-bg-800">
+                  <div className="flex items-center gap-2.5">
+                    <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-black shadow-sm ${rankBg}`}>
+                      {i === 0 ? "🏆" : i + 1}
+                    </span>
+                    {s.logo ? (
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white p-1 ring-1 ring-slate-200 dark:ring-white/10">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={s.logo} alt={s.displayName} className="h-full w-full object-contain" />
+                      </span>
+                    ) : (
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-200 text-xs font-black text-slate-600 dark:bg-white/10 dark:text-white/70">
+                        {s.displayName.slice(0, 1).toUpperCase()}
+                      </span>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-xs font-semibold text-slate-900 dark:text-white">{s.displayName}</div>
+                      <div className="truncate text-[10px] text-slate-500 dark:text-white/55">
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{s.similarProducts.toLocaleString("fr-FR")}</span>
+                        <span className="mx-0.5 text-slate-400 dark:text-white/40">/</span>
+                        <span className="tabular-nums">{s.totalProducts.toLocaleString("fr-FR")}</span>
+                        <span className="ml-1">produits</span>
+                      </div>
+                    </div>
+                    <div className="text-right leading-tight">
+                      <div className="text-base font-black tabular-nums text-emerald-600 dark:text-emerald-400">{s.cheapestCount.toLocaleString("fr-FR")}</div>
+                      <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/50">Meilleur prix</div>
+                    </div>
+                  </div>
+                  {/* Similarity bar */}
+                  <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-white/10">
                     <div
-                      className={`w-full rounded-t-sm transition ${
-                        isLast
-                          ? "bg-gradient-to-t from-brand-red to-brand-red/60"
-                          : "bg-slate-300 group-hover:bg-slate-400 dark:bg-white/15 dark:group-hover:bg-white/25"
-                      }`}
-                      style={{ height: `${Math.max(h, 8)}%` }}
+                      className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600 transition-all"
+                      style={{ width: `${pct}%` }}
                     />
                   </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Store */}
-          <div className="relative mt-3 flex items-center justify-between rounded-xl border border-slate-200 bg-bg-700 p-2 dark:border-white/5 dark:bg-bg-800">
-            <div className="flex items-center gap-2 text-sm">
-              {(() => {
-                const logo = shopLogoSrc(alert?.shop ?? "Aziza");
-                return logo ? (
-                  <span className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-white p-1 ring-2 ring-emerald-400/40 shadow-[0_0_16px_-4px_rgba(16,185,129,0.5)]">
-                    <span className="absolute inset-0 animate-pulse-slow rounded-full bg-emerald-400/10" />
-                    <img
-                      src={logo}
-                      alt={alert?.shop ?? "Aziza"}
-                      className="relative h-full w-full object-contain animate-float"
-                    />
-                  </span>
-                ) : (
-                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-red-700 text-sm font-black text-white ring-1 ring-white/10">
-                    {(alert?.shop ?? "A").slice(0, 1).toUpperCase()}
-                  </span>
-                );
-              })()}
-              <div className="leading-tight">
-                <div className="text-sm font-semibold text-slate-900 dark:text-white">{alert?.shop ?? "Aziza"}</div>
-                <div className="text-[10px] text-slate-500 dark:text-white/50">Meilleur prix</div>
-              </div>
-            </div>
-            <button className="rounded-md border border-slate-200 bg-slate-100 px-2 py-1 text-[10px] font-medium text-slate-600 hover:bg-slate-200 hover:text-slate-900 dark:border-white/10 dark:bg-white/5 dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white">
-              Itinéraire
-            </button>
-          </div>
+                </li>
+              );
+            })}
+          </ul>
 
           {/* Actions */}
           <div className="relative mt-auto pt-3">
-            <Link href={alert?.href ?? "/supermarche/pot-creme-100-emmental-fondu"} className="btn-primary w-full">Voir l'offre</Link>
-            <Link href="/alertes" className="mt-1.5 block w-full rounded-lg py-1.5 text-center text-xs font-medium text-slate-500 hover:text-slate-900 dark:text-white/60 dark:hover:text-white">
-              Me rappeler plus tard
-            </Link>
+            <Link href="/retail" className="btn-primary w-full">Voir le catalogue retail</Link>
           </div>
         </div>
 
