@@ -1,5 +1,5 @@
 "use client";
-import { ChefHat, Sparkles, Store } from "lucide-react";
+import { ChefHat, ChevronLeft, ChevronRight, Sparkles, Store } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { OjjaOrbit } from "./OjjaOrbit";
@@ -76,6 +76,89 @@ function LatestProductThumb({ src, name }: { src: string | null; name: string })
   );
 }
 
+// Shows the cheapest-basket items 2 at a time, auto-advancing every few seconds
+// with manual prev/next arrows. Pauses auto-rotation while hovered.
+function PanierSlider({ items }: { items: typeof qoffaBestItems }) {
+  const perPage = 2;
+  const pages = Math.max(1, Math.ceil(items.length / perPage));
+  const [page, setPage] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  const go = (next: number) => setPage(((next % pages) + pages) % pages);
+
+  useEffect(() => {
+    if (paused || pages <= 1) return;
+    const id = setInterval(() => setPage(p => (p + 1) % pages), 3500);
+    return () => clearInterval(id);
+  }, [paused, pages]);
+
+  const current = items.slice(page * perPage, page * perPage + perPage);
+
+  return (
+    <div
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
+      <div className="flex items-stretch gap-1.5">
+        <button
+          type="button"
+          aria-label="Précédent"
+          onClick={() => go(page - 1)}
+          className="flex w-6 shrink-0 items-center justify-center rounded-lg border border-slate-200/70 bg-white/60 text-slate-500 transition hover:border-brand-gold/40 hover:text-brand-gold dark:border-white/5 dark:bg-bg-900/55 dark:text-white/50"
+        >
+          <ChevronLeft className="h-3.5 w-3.5" />
+        </button>
+
+        <div className="grid min-w-0 flex-1 grid-cols-1 gap-1.5 sm:grid-cols-2">
+          {current.map((item) => (
+            <div
+              key={`${item.name}-${item.shop}`}
+              className="min-w-0 rounded-lg border border-slate-200/70 bg-white/60 px-2 py-1.5 dark:border-white/5 dark:bg-bg-900/55"
+            >
+              <div className="flex min-w-0 items-center justify-between gap-2">
+                <span className="truncate text-[11px] font-extrabold text-slate-900 dark:text-white">
+                  {item.name}
+                </span>
+                <span className="shrink-0 text-[11px] font-black tabular-nums text-emerald-600 dark:text-emerald-300">
+                  {fmtPrice(item.price)}
+                </span>
+              </div>
+              <div className="mt-0.5 flex items-center justify-between gap-2 text-[10px] text-slate-500 dark:text-white/50">
+                <span>{item.qty}</span>
+                <span className="truncate font-semibold">{item.shop}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          aria-label="Suivant"
+          onClick={() => go(page + 1)}
+          className="flex w-6 shrink-0 items-center justify-center rounded-lg border border-slate-200/70 bg-white/60 text-slate-500 transition hover:border-brand-gold/40 hover:text-brand-gold dark:border-white/5 dark:bg-bg-900/55 dark:text-white/50"
+        >
+          <ChevronRight className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      {/* Dots */}
+      <div className="mt-2 flex items-center justify-center gap-1.5">
+        {Array.from({ length: pages }).map((_, i) => (
+          <button
+            type="button"
+            key={i}
+            aria-label={`Aller à la page ${i + 1}`}
+            onClick={() => go(i)}
+            className={`h-1.5 rounded-full transition-all ${
+              i === page ? "w-4 bg-brand-gold" : "w-1.5 bg-slate-300 dark:bg-white/20"
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function QoffaSection() {
   const [items, setItems] = useState<LatestProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -139,27 +222,7 @@ export function QoffaSection() {
                 par enseigne
               </span>
             </div>
-            <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-              {qoffaBestItems.map((item) => (
-                <div
-                  key={`${item.name}-${item.shop}`}
-                  className="min-w-0 rounded-lg border border-slate-200/70 bg-white/60 px-2 py-1.5 dark:border-white/5 dark:bg-bg-900/55"
-                >
-                  <div className="flex min-w-0 items-center justify-between gap-2">
-                    <span className="truncate text-[11px] font-extrabold text-slate-900 dark:text-white">
-                      {item.name}
-                    </span>
-                    <span className="shrink-0 text-[11px] font-black tabular-nums text-emerald-600 dark:text-emerald-300">
-                      {fmtPrice(item.price)}
-                    </span>
-                  </div>
-                  <div className="mt-0.5 flex items-center justify-between gap-2 text-[10px] text-slate-500 dark:text-white/50">
-                    <span>{item.qty}</span>
-                    <span className="truncate font-semibold">{item.shop}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <PanierSlider items={qoffaBestItems} />
           </div>
         </div>
 

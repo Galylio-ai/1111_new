@@ -44,11 +44,27 @@ const catIcons: Record<string, { img: string; grad: string }> = {
   "Informatique": { img: "/InformatiqueBg.png", grad: "from-cyan-500 to-cyan-700" },
   "Électroménager": { img: "/ElectroBg.png", grad: "from-amber-500 to-orange-600" },
   "Supermarché": { img: "/couffin.png", grad: "from-emerald-500 to-emerald-700" },
-  "Beauté & Visage": { img: "/beaute.png", grad: "from-pink-500 to-purple-600" },
-  "Cheveux & Soins": { img: "/cheveux.png", grad: "from-sky-400 to-blue-600" },
-  "Bébé & Maman": { img: "/bebe&maman.png", grad: "from-blue-500 to-blue-700" },
+  "Beauté & Visage": { img: "/beauté.png", grad: "from-pink-500 to-purple-600" },
+  "Cheveux & Soins": { img: "/cheveux-category.png", grad: "from-sky-400 to-blue-600" },
+  "Bébé & Maman": { img: "/bébé.png", grad: "from-blue-500 to-blue-700" },
 };
 const FALLBACK_ICON = { img: "/metaBg.png", grad: "from-slate-500 to-slate-700" };
+
+// Definition shown in the hover/focus tooltip for each barometer card.
+const catDefinitions: Record<string, string> = {
+  "Informatique":
+    "Univers PC, ordinateurs portables, écrans, imprimantes, périphériques et composants. Suivi en continu chez les enseignes spécialisées tech tunisiennes.",
+  "Électroménager":
+    "Gros et petit électroménager : réfrigérateurs, lave-linge, fours, climatiseurs, robots de cuisine. Comparé chez les enseignes physiques et e-commerce.",
+  "Supermarché":
+    "Produits alimentaires, hygiène, entretien et grande distribution suivis dans les 4 plus grandes enseignes : Aziza, Carrefour, Géant et Monoprix.",
+  "Beauté & Visage":
+    "Soins du visage, maquillage et protection solaire issus des parapharmacies en ligne tunisiennes. Indicateur clé pour les achats réguliers de cosmétiques.",
+  "Cheveux & Soins":
+    "Soins capillaires, hygiène corporelle et produits de soins du corps. Inclut shampoings, masques, gels douche et soins quotidiens des principales parapharmacies.",
+  "Bébé & Maman":
+    "Couches, lait infantile, soins bébé, cosmétiques maternité et accessoires. Catégorie sensible — un suivi des prix précis aide les jeunes parents à économiser.",
+};
 
 const rankBadges = ["bg-amber-500 text-black", "bg-blue-500 text-white", "bg-blue-400 text-white"];
 
@@ -292,7 +308,7 @@ export function MarketIndex() {
       </div>
 
       {/* BAROMÈTRES PAR CATÉGORIE */}
-      <div className="card card-pad relative mt-5 overflow-hidden">
+      <div className="card card-pad relative mt-5 overflow-visible">
         <div className="relative mb-4 flex items-center justify-between gap-3">
           <div className="flex flex-wrap items-baseline gap-3">
             <span className="text-lg font-black uppercase tracking-wide text-brand-gold">
@@ -317,12 +333,18 @@ export function MarketIndex() {
             return (
               <div
                 key={c?.name ?? ci}
-                className="flex flex-col rounded-2xl border border-brand-gold/15 bg-slate-50 p-3.5 ring-1 ring-brand-gold/10 dark:bg-bg-800"
+                tabIndex={c ? 0 : -1}
+                className="group relative flex flex-col overflow-visible rounded-2xl border border-brand-gold/15 bg-slate-50 p-3.5 ring-1 ring-brand-gold/10 transition hover:border-brand-gold/30 focus:outline-none focus-visible:border-brand-gold/40 dark:bg-bg-800"
               >
+                {/* Info indicator (top-right corner) */}
+                {c && (
+                  <Info className="absolute right-2.5 top-2.5 h-3.5 w-3.5 text-slate-300 transition group-hover:text-brand-gold/70 group-focus-visible:text-brand-gold/70 dark:text-white/25" />
+                )}
+
                 {/* Top: icon + name + headline (real avg discount) */}
                 <div className="flex items-start gap-3">
                   <span
-                    className={`flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br ${ic.grad} p-1 shadow-lg`}
+                    className={`flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br ${ic.grad} p-1.5 shadow-lg`}
                   >
                     <img src={ic.img} alt={c?.name ?? ""} className="h-full w-full object-contain" />
                   </span>
@@ -371,6 +393,23 @@ export function MarketIndex() {
                     Voir le baromètre
                   </Link>
                 </div>
+
+                {/* Hover / focus tooltip — category definition */}
+                {c && (
+                  <div
+                    role="tooltip"
+                    className="pointer-events-none invisible absolute bottom-full left-1/2 z-30 mb-2 w-[min(18rem,calc(100vw-2rem))] -translate-x-1/2 translate-y-1 rounded-xl border border-brand-gold/30 bg-white p-3 text-left opacity-0 shadow-[0_8px_30px_rgba(0,0,0,0.15)] ring-1 ring-brand-gold/15 transition duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:visible group-focus-visible:translate-y-0 group-focus-visible:opacity-100 dark:border-brand-gold/25 dark:bg-bg-800 dark:shadow-[0_8px_30px_rgba(0,0,0,0.6)]"
+                  >
+                    <span className="absolute -bottom-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 border-b border-r border-brand-gold/30 bg-white dark:border-brand-gold/25 dark:bg-bg-800" />
+                    <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-brand-gold">
+                      <Info className="h-3 w-3" /> Définition
+                    </div>
+                    <div className="mt-1 text-[12px] font-semibold text-slate-900 dark:text-white">{c.name}</div>
+                    <p className="mt-1 text-[11px] leading-relaxed text-slate-600 dark:text-white/75">
+                      {catDefinitions[c.name] ?? "Catégorie suivie en continu — données issues du marché tunisien."}
+                    </p>
+                  </div>
+                )}
               </div>
             );
           })}

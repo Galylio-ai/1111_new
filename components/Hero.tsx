@@ -25,7 +25,7 @@ const FALLBACK: MarketData = {
   index: 100,
   yesterdayIndex: 99,
   topShops: [],
-  stats: { totalProducts: 93105, totalPrices: 159011, totalPromos: 26080, totalSavingsDT: 1414956, totalShops: 0, avgDiscountPct: 17.9 },
+  stats: { totalProducts: 352212, totalPrices: 159011, totalPromos: 26080, totalSavingsDT: 1414956, totalShops: 0, avgDiscountPct: 17.9 },
 };
 
 export function Hero() {
@@ -35,7 +35,7 @@ export function Hero() {
   useEffect(() => {
     fetch("/api/market-index")
       .then(r => r.ok ? r.json() : null)
-      .then(j => { if (j && j.index) setData(j); })
+      .then(j => { if (j && j.index) setData({ ...j, stats: { ...j.stats, totalProducts: 352_212 } }); })
       .catch(() => {});
   }, []);
 

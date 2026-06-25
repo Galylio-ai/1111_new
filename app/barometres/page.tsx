@@ -126,7 +126,7 @@ export default function BarometresPage() {
                     {/* Header */}
                     <div className="flex items-center justify-between gap-3 pr-6">
                       <div className="flex min-w-0 items-center gap-3">
-                        <span className={`flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br ${color} p-1.5 shadow-lg`}>
+                        <span className={`flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br ${color} p-1.5 shadow-lg`}>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={image} alt={c.name} className="h-full w-full object-contain" />
                         </span>
