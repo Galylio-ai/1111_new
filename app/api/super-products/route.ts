@@ -13,6 +13,7 @@ export async function GET(req: NextRequest) {
   const limit = Math.min(48, Math.max(1, parseInt(searchParams.get("limit") ?? "24", 10)));
   const q     = (searchParams.get("q")    ?? "").trim();
   const shop  = (searchParams.get("shop") ?? "").trim().toLowerCase();
+  const similarOnly = ["1", "true", "yes"].includes((searchParams.get("similar") ?? "").trim().toLowerCase());
 
   const conditions: string[] = [];
   const params: (string | number)[] = [];
@@ -24,20 +25,36 @@ export async function GET(req: NextRequest) {
     idx++;
   }
   if (shop) {
-    conditions.push(`s.shop_key = $${idx}`);
+    if (similarOnly) {
+      conditions.push(`EXISTS (
+        SELECT 1
+        FROM shop_prices sp_shop
+        JOIN shops s_shop ON s_shop.id = sp_shop.shop_id
+        WHERE sp_shop.product_id = p.id
+          AND s_shop.shop_key = $${idx}
+      )`);
+    } else {
+      conditions.push(`s.shop_key = $${idx}`);
+    }
     params.push(shop);
     idx++;
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+  const having = similarOnly ? "HAVING COUNT(DISTINCT s.id) > 1" : "";
 
   const countSql = `
-    SELECT COUNT(DISTINCT p.id) AS total
-    FROM products p
-    LEFT JOIN brands b ON b.id = p.brand_id
-    JOIN shop_prices sp ON sp.product_id = p.id
-    JOIN shops s ON s.id = sp.shop_id
-    ${where}
+    SELECT COUNT(*) AS total
+    FROM (
+      SELECT p.id
+      FROM products p
+      LEFT JOIN brands b ON b.id = p.brand_id
+      JOIN shop_prices sp ON sp.product_id = p.id
+      JOIN shops s ON s.id = sp.shop_id
+      ${where}
+      GROUP BY p.id
+      ${having}
+    ) matches
   `;
 
   const itemsSql = `
@@ -55,6 +72,7 @@ export async function GET(req: NextRequest) {
     JOIN shops s ON s.id = sp.shop_id
     ${where}
     GROUP BY p.id, p.name, b.name
+    ${having}
     ORDER BY COUNT(DISTINCT s.id) DESC, p.id
     LIMIT $${idx} OFFSET $${idx + 1}
   `;
@@ -78,7 +96,7 @@ export async function GET(req: NextRequest) {
         : null,
     }));
 
-    return NextResponse.json({ total, page, limit, items });
+    return NextResponse.json({ total, page, limit, similarOnly, items });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }

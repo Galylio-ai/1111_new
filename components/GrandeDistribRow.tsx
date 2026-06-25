@@ -1,21 +1,11 @@
 "use client";
-import { ArrowDownRight, Bell, ChevronRight, ShieldAlert, TrendingDown, TrendingUp, Trophy } from "lucide-react";
+import { ArrowDownRight, Bell, ShieldAlert, TrendingDown, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { distributionEnseignes, getStoreLogo } from "@/lib/data";
-import { topRetailSites, retailSitesMonth } from "@/lib/topRetailSites";
-
-// favicon for a domain (Google's service, themed-neutral, cached by browser)
-function faviconFor(domain: string): string {
-  return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
-}
-// "tunisianet.com.tn" -> "Tunisianet"
-function siteName(domain: string): string {
-  const base = domain.replace(/\.(com\.tn|co\.uk|com|tn|fr|de|ae|ca|qa|net|to|co)$/i, "").split(".")[0];
-  return base.charAt(0).toUpperCase() + base.slice(1);
-}
+import { distributionEnseignes, getStoreLogo, veilleProducts } from "@/lib/data";
 
 type EnseigneRow = { name: string; price: string; diff: string; best?: boolean };
+type VeilleRow = { name: string; price: string; change: string; down: boolean };
 type AlertData = {
   name: string;
   brand: string;
@@ -74,7 +64,8 @@ export function GrandeDistribRow() {
   const [enseignes, setEnseignes] = useState<EnseigneRow[]>(
     distributionEnseignes.map((e) => ({ name: e.name, price: e.price, diff: e.diff, best: e.best }))
   );
-  const [basketSize, setBasketSize] = useState<number>(12);
+  const [veille, setVeille] = useState<VeilleRow[]>(veilleProducts);
+  const [basketSize, setBasketSize] = useState<number>(29);
   const [economy, setEconomy] = useState<string>("8.370");
   const [alert, setAlert] = useState<AlertData | null>(null);
   const [illogicalPromo, setIllogicalPromo] = useState<IllogicalPromo | null>(null);
@@ -86,6 +77,7 @@ export function GrandeDistribRow() {
       .then((d) => {
         if (cancelled) return;
         if (Array.isArray(d?.enseignes) && d.enseignes.length > 0) setEnseignes(d.enseignes);
+        if (Array.isArray(d?.veille) && d.veille.length > 0) setVeille(d.veille);
         if (typeof d?.basketSize === "number") setBasketSize(d.basketSize);
         if (typeof d?.economy === "string") setEconomy(d.economy);
         if (d?.alert && typeof d.alert === "object") setAlert(d.alert as AlertData);
@@ -121,13 +113,13 @@ export function GrandeDistribRow() {
           </div>
 
           {/* Two-column body */}
-          <div className="mt-3 flex flex-col gap-3 min-[420px]:flex-row min-[420px]:gap-4">
+          <div className="mt-3 flex gap-4">
             {/* LEFT — table */}
             <div className="min-w-0 flex-1">
               {/* Sub-header */}
               <div className="mb-2 text-sm font-semibold text-slate-900 dark:text-white">
-                Panier essentiel{" "}
-                <span className="font-normal text-slate-400 dark:text-white/50">({basketSize} produits : tomate, huile, lait, thon, sucre, fromage, bœuf, jambon, poulet, olives, harissa, café)</span>
+                Comparaison panier familial{" "}
+                <span className="font-normal text-slate-400 dark:text-white/50">({basketSize} produits)</span>
               </div>
 
               {/* Table header */}
@@ -139,14 +131,8 @@ export function GrandeDistribRow() {
 
               {/* Rows */}
               <ul className="mt-1 divide-y divide-slate-100 dark:divide-white/5">
-                {enseignes.map((e, idx) => {
+                {enseignes.map((e) => {
                   const logo = enseigneLogo(e.name);
-                  const rank = idx + 1;
-                  const rankCls =
-                    rank === 1 ? "bg-gradient-to-br from-yellow-300 to-amber-500 text-yellow-950 ring-1 ring-yellow-300" :
-                    rank === 2 ? "bg-gradient-to-br from-slate-200 to-slate-400 text-slate-900 ring-1 ring-slate-300" :
-                    rank === 3 ? "bg-gradient-to-br from-orange-400 to-amber-700 text-amber-50 ring-1 ring-orange-400" :
-                                 "bg-slate-100 text-slate-500 ring-1 ring-slate-200 dark:bg-white/[0.06] dark:text-white/55 dark:ring-white/10";
                   return (
                   <li
                     key={e.name}
@@ -154,11 +140,8 @@ export function GrandeDistribRow() {
                       e.best ? "rounded-lg bg-emerald-500/10" : "hover:bg-slate-50 dark:hover:bg-white/[0.03]"
                     }`}
                   >
-                    {/* Rank + Logo + name */}
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-black tabular-nums ${rankCls}`}>
-                        {rank}
-                      </span>
+                    {/* Logo + name */}
+                    <div className="flex items-center gap-2.5 min-w-0">
                       {getStoreLogo(e.name) ? (
                         <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white p-1 ring-1 ring-slate-200 shadow-sm dark:ring-white/10">
                           <img src={getStoreLogo(e.name)} alt={e.name} className="h-full w-full object-contain" />
@@ -187,19 +170,19 @@ export function GrandeDistribRow() {
               </ul>
 
               {/* Button */}
-              <Link href="/couffin" className="mt-4 block w-full rounded-xl bg-brand-gold py-2.5 text-center text-sm font-black text-black hover:bg-brand-gold/90 transition">
+              <Link href="/grande-distribution" className="mt-4 block w-full rounded-xl bg-brand-gold py-2.5 text-center text-sm font-black text-black hover:bg-brand-gold/90 transition">
                 Comparer Mon Panier
               </Link>
             </div>
 
             {/* RIGHT — basket image + economy box */}
-            <div className="flex w-full shrink-0 flex-row items-center justify-center gap-3 min-[420px]:w-36 min-[420px]:flex-col">
+            <div className="flex w-36 shrink-0 flex-col items-center gap-3">
               <img
                 src="/kathya.png"
                 alt="Panier de courses"
-                className="h-[clamp(5.75rem,28vw,9rem)] w-[clamp(5.75rem,28vw,9rem)] object-contain drop-shadow-[0_8px_24px_rgba(0,0,0,0.5)] lg:h-24 lg:w-24 xl:h-36 xl:w-36"
+                className="h-36 w-36 object-contain drop-shadow-[0_8px_24px_rgba(0,0,0,0.5)]"
               />
-              <div className="w-full max-w-[11rem] rounded-xl bg-bg-700 p-3 text-center ring-1 ring-slate-200 dark:bg-bg-800 dark:ring-white/10 min-[420px]:max-w-none">
+              <div className="w-full rounded-xl bg-bg-700 p-3 text-center ring-1 ring-slate-200 dark:bg-bg-800 dark:ring-white/10">
                 <div className="text-[11px] text-slate-500 dark:text-white/60">Économie possible</div>
                 <div className="mt-0.5 text-2xl font-black tabular-nums text-emerald-600 dark:text-emerald-400">{economy} DT</div>
                 <div className="text-[10px] text-slate-400 dark:text-white/50">vs l'enseigne la plus chère</div>
@@ -208,71 +191,52 @@ export function GrandeDistribRow() {
           </div>
         </div>
 
-        {/* SITES LES PLUS VISITÉS — top retail websites in Tunisia */}
+        {/* VEILLE PRIX CONSOMMATEUR */}
         <div className="card card-pad">
           <div className="mb-1 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Trophy className="h-4 w-4 text-amber-500" />
-              <span className="section-title">Sites les plus visités</span>
+              <Bell className="h-4 w-4 text-brand-gold" />
+              <span className="section-title">Veille prix consommateur</span>
             </div>
-            <span className="rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-300">
-              Top 5
-            </span>
           </div>
           <div className="font-arabic text-[11px] text-slate-400 dark:text-white/50" dir="rtl">
-            المواقع الأكثر زيارة
-          </div>
-          <div className="mt-1 text-[11px] text-slate-500 dark:text-white/55">
-            Les sites e-commerce les plus consultés en Tunisie · <span className="font-semibold text-slate-700 dark:text-white/80">{retailSitesMonth}</span>
+            ثبت في السعر بلا ما تفتكش
           </div>
 
-          <ul className="mt-3 space-y-2">
-            {topRetailSites.slice(0, 5).map((s, i) => {
-              const up = s.mom.includes("↑");
-              const rankBg =
-                i === 0 ? "bg-gradient-to-br from-yellow-400 to-amber-600 text-yellow-950" :
-                i === 1 ? "bg-gradient-to-br from-slate-300 to-slate-500 text-slate-900" :
-                i === 2 ? "bg-gradient-to-br from-orange-400 to-orange-700 text-orange-50" :
-                          "bg-slate-200 text-slate-600 dark:bg-white/10 dark:text-white/70";
-              const maxVisits = topRetailSites[0]?.visitsNum || 1;
-              const barPct = (s.visitsNum / maxVisits) * 100;
-              return (
-                <li key={s.domain} className="rounded-xl border border-slate-200 bg-slate-50 p-2 dark:border-white/5 dark:bg-bg-800">
-                  <div className="flex items-center gap-2.5">
-                    <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-black shadow-sm ${rankBg}`}>
-                      {i + 1}
-                    </span>
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white p-1 ring-1 ring-slate-200 dark:ring-white/10">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={faviconFor(s.domain)} alt={s.domain} referrerPolicy="no-referrer" loading="lazy" className="h-full w-full object-contain" />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-xs font-semibold text-slate-900 dark:text-white">{siteName(s.domain)}</div>
-                      <div className="truncate text-[10px] text-slate-500 dark:text-white/55">{s.domain}</div>
-                    </div>
-                    <div className="text-right leading-tight">
-                      <div className="text-base font-black tabular-nums text-amber-600 dark:text-amber-300">{s.visits}</div>
-                      <div className={`flex items-center justify-end gap-0.5 text-[9px] font-bold ${up ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
-                        {up ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
-                        {s.mom.replace(/[↑↓]/g, "")}
-                      </div>
-                    </div>
-                  </div>
-                  {/* Mini visits bar */}
-                  <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-white/10">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 transition-all"
-                      style={{ width: `${barPct}%` }}
-                    />
-                  </div>
-                </li>
-              );
-            })}
+          <div className="mt-3 flex items-center gap-2 rounded-xl border border-bg-border bg-bg-700 p-1.5 dark:bg-bg-800">
+            <input
+              className="flex-1 bg-transparent px-2 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder:text-white/40"
+              placeholder="Rechercher un produit à surveiller…"
+            />
+            <button className="rounded-lg bg-brand-red px-3 py-1.5 text-xs font-semibold text-white">
+              Surveiller
+            </button>
+          </div>
+
+          <div className="mt-3 text-[11px] uppercase tracking-wider text-slate-400 dark:text-white/40">Mes produits suivis</div>
+          <ul className="mt-1 divide-y divide-bg-border/50">
+            {veille.map((p) => (
+              <li key={p.name} className="flex items-center justify-between py-2 text-sm">
+                <span className="flex items-center gap-2 text-slate-700 dark:text-white/90">
+                  <span className="h-1.5 w-1.5 rounded-full bg-brand-gold" />
+                  {p.name}
+                </span>
+                <span className="flex items-center gap-3">
+                  <span className="tabular-nums text-slate-900 dark:text-white">{p.price}</span>
+                  <span
+                    className={`inline-flex items-center gap-0.5 text-xs ${
+                      p.down ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-300"
+                    }`}
+                  >
+                    {p.down ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />}
+                    {p.change}
+                  </span>
+                </span>
+              </li>
+            ))}
           </ul>
-
-          <Link href="/sites-les-plus-visites" className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 py-2 text-center text-xs font-semibold text-amber-700 transition hover:bg-amber-100 dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-300 dark:hover:bg-amber-500/20">
-            Voir le classement complet
-            <ChevronRight className="h-3.5 w-3.5" />
+          <Link href="/veille" className="mt-3 block w-full rounded-lg border border-bg-border bg-bg-700 py-2 text-center text-xs font-medium text-slate-600 hover:bg-bg-800 dark:bg-bg-800 dark:text-white/80 dark:hover:bg-bg-700">
+            Voir tous mes produits
           </Link>
         </div>
 
@@ -308,19 +272,19 @@ export function GrandeDistribRow() {
               {alert?.img ? (
                 <img
                   src={alert.img}
-                  alt={alert.name ?? "Pot crème emmental fondu"}
+                  alt={alert.name}
                   className="relative h-full w-full object-contain p-1 animate-float drop-shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
                 />
               ) : (
-                <span className="relative animate-float text-4xl">🧀</span>
+                <span className="relative animate-float text-4xl">🥛</span>
               )}
             </div>
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-semibold text-slate-900 dark:text-white">
-                {alert?.name ?? "Pot crème 100% emmental fondu"}
+                {alert?.name ?? "Lait Délice 1L"}
               </div>
               <div className="truncate text-[11px] text-slate-500 dark:text-white/50">
-                {alert?.brand || "—"}
+                {alert?.brand || "Demi-écrémé · UHT"}
               </div>
             </div>
           </div>
@@ -330,18 +294,18 @@ export function GrandeDistribRow() {
             <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-white/40">Prix actuel</div>
             <div className="mt-0.5 flex items-baseline gap-2">
               <span className="text-4xl font-black tabular-nums text-slate-900 dark:text-white">
-                {alert?.price ?? "3.150"}
+                {alert?.price ?? "2.080"}
               </span>
               <span className="text-sm font-bold text-brand-gold">DT</span>
               <span className="ml-auto inline-flex items-center gap-0.5 rounded-md bg-emerald-500/15 px-1.5 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-300">
                 <ArrowDownRight className="h-3 w-3" />
-                {alert?.change ?? "−12%"}
+                {alert?.change ?? "−7.5%"}
               </span>
             </div>
             <div className="text-[11px] text-slate-500 dark:text-white/50">
-              Moyenne : <span className="line-through">{alert?.oldPrice ?? "3.570"} DT</span>
+              Moyenne : <span className="line-through">{alert?.oldPrice ?? "2.250"} DT</span>
               <span className="mx-1.5 text-slate-300 dark:text-white/20">·</span>
-              <span className="text-emerald-600 dark:text-emerald-300">Économie {alert?.saved ?? "0.420"} DT</span>
+              <span className="text-emerald-600 dark:text-emerald-300">Économie {alert?.saved ?? "0.170"} DT</span>
             </div>
           </div>
 
@@ -349,10 +313,10 @@ export function GrandeDistribRow() {
           <div className="relative mt-3">
             <div className="mb-1 flex items-center justify-between text-[10px] text-slate-400 dark:text-white/40">
               <span className="font-semibold uppercase tracking-wider">Plage des prix</span>
-              <span className="tabular-nums">Min {alert?.min ?? "3.15"} · Max {alert?.max ?? "3.57"}</span>
+              <span className="tabular-nums">Min {alert?.min ?? "2.05"} · Max {alert?.max ?? "2.25"}</span>
             </div>
             <div className="flex h-12 items-end gap-1">
-              {[3.57, 3.55, 3.53, 3.53, 3.50, 3.49, 3.15].map((v, i, arr) => {
+              {[2.25, 2.22, 2.18, 2.20, 2.15, 2.10, 2.08].map((v, i, arr) => {
                 const min = Math.min(...arr);
                 const max = Math.max(...arr);
                 const h = ((v - min) / (max - min)) * 100;
@@ -405,7 +369,7 @@ export function GrandeDistribRow() {
 
           {/* Actions */}
           <div className="relative mt-auto pt-3">
-            <Link href={alert?.href ?? "/supermarche/pot-creme-100-emmental-fondu"} className="btn-primary w-full">Voir l'offre</Link>
+            <Link href={alert?.href ?? "/alertes"} className="btn-primary w-full">Voir l'offre</Link>
             <Link href="/alertes" className="mt-1.5 block w-full rounded-lg py-1.5 text-center text-xs font-medium text-slate-500 hover:text-slate-900 dark:text-white/60 dark:hover:text-white">
               Me rappeler plus tard
             </Link>
@@ -413,16 +377,13 @@ export function GrandeDistribRow() {
         </div>
 
         {/* PROMOTIONS ILLOGIQUES DÉTECTÉES */}
-        <div
-          data-home-card=""
-          className="relative flex flex-col overflow-hidden rounded-2xl border border-red-200 bg-white dark:border-red-800/60 dark:bg-[#0d1117]"
-        >
+        <div className="relative flex flex-col overflow-hidden rounded-2xl border border-red-200 bg-white dark:border-red-800/60 dark:bg-[#0d1117]">
           {/* Red corner glow (dark only) */}
           <div className="pointer-events-none absolute -bottom-10 -right-10 h-48 w-48 rounded-full bg-red-700/25 blur-3xl dark:opacity-100 opacity-0" />
           <div className="pointer-events-none absolute -left-6 bottom-1/3 h-32 w-32 rounded-full bg-red-900/30 blur-2xl dark:opacity-100 opacity-0" />
 
           {/* Title block */}
-          <div className="relative px-4 pt-4 pb-2 sm:px-5 sm:pt-5">
+          <div className="relative px-5 pt-5 pb-2">
             <div className="text-lg font-black uppercase leading-tight text-red-600 dark:text-red-500">
               Promotions illogiques détectées
             </div>
@@ -432,32 +393,31 @@ export function GrandeDistribRow() {
           </div>
 
           {/* Product area */}
-          <div className="relative mt-2 flex flex-1 flex-col gap-0 px-4 sm:px-5">
+          <div className="relative mt-2 flex flex-1 flex-col gap-0 px-5">
             {/* Image + details side by side */}
-            <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:gap-4">
-              <div className="flex h-24 w-full shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-100 dark:bg-white/5 xl:h-28 xl:w-28">
+            <div className="flex items-center gap-4">
+              <div className="h-28 w-28 shrink-0 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center overflow-hidden">
                 <img
-                  src={illogicalPromo?.img ?? "https://jumbo.tn/4425-large_default/tv-hisense-l5g-series-100-uhd-4k-smart-laser-tv-android-wifi.jpg"}
-                  alt={illogicalPromo?.name ?? "TV Hisense L5G 100\""}
-                  className="h-20 w-20 object-contain drop-shadow-[0_4px_16px_rgba(239,68,68,0.3)] xl:h-24 xl:w-24"
+                  src={illogicalPromo?.img ?? "/clim.png"}
+                  alt={illogicalPromo?.name ?? "Réfrigérateur"}
+                  className="h-24 w-24 object-contain drop-shadow-[0_4px_16px_rgba(239,68,68,0.3)]"
                 />
               </div>
               <div className="space-y-1.5 min-w-0">
                 <div className="text-base font-semibold text-slate-900 dark:text-white line-clamp-2">
-                  {illogicalPromo?.name ?? "TV Hisense L5G 100\" UHD 4K Smart Laser TV"}
+                  {illogicalPromo?.name ?? "Réfrigérateur Hyundai Side By Side 549L"}
                 </div>
                 <div className="text-base text-slate-600 dark:text-white/70">
-                  {illogicalPromo?.shop ?? "Kamounhome"}
+                  {illogicalPromo?.shop ?? "Tunisianet"}
                 </div>
                 <div className="text-sm text-slate-500 dark:text-white/60">
-                  Prix affiché : <span className="text-slate-900 dark:text-white">{illogicalPromo?.currentPrice ?? "14 020"} DT</span>
+                  Prix affiché : <span className="text-slate-900 dark:text-white">{illogicalPromo?.currentPrice ?? "2 799"} DT</span>
                 </div>
                 <div className="text-sm text-slate-500 dark:text-white/60">
-                  Prix avant promo : <span className="text-slate-900 dark:text-white line-through">{illogicalPromo?.regularPrice ?? "29 830"} DT</span>
+                  Prix avant promo : <span className="text-slate-900 dark:text-white line-through">{illogicalPromo?.regularPrice ?? "4 889"} DT</span>
                 </div>
                 <div className="text-sm text-slate-500 dark:text-white/60">
-                  Vrai prix marché : <span className="font-semibold text-emerald-600 dark:text-emerald-400">{illogicalPromo?.marketMin ?? "6 999"} DT</span>
-                  <span className="ml-1 text-[10px] text-slate-400">chez Jumbo</span>
+                  Vrai prix marché : <span className="font-semibold text-emerald-600 dark:text-emerald-400">{illogicalPromo?.marketMin ?? "2 689"} DT</span>
                 </div>
               </div>
             </div>
@@ -469,14 +429,14 @@ export function GrandeDistribRow() {
                 ? illogicalPromo.currentPriceRaw <= illogicalPromo.marketMinRaw
                   ? `−${illogicalPromo.realDiscount} DT`
                   : `+${Math.round(illogicalPromo.currentPriceRaw - illogicalPromo.marketMinRaw).toLocaleString("fr-FR").replace(/ /g, " ")} DT plus cher que le marché`
-                : "+7 021 DT plus cher que le marché"}
+                : "− 300 DT"}
             </div>
           </div>
 
           {/* ILLOGIQUE! button */}
-          <div className="relative mt-auto px-4 pb-4 pt-5 sm:px-5 sm:pb-5 sm:pt-6">
+          <div className="relative px-5 pb-5 mt-auto pt-6">
             <Link
-              href={illogicalPromo?.href ?? "/retail/tv-hisense-l5g-series-100-quot-uhd-4k-smart-laser-tv-android-wifi"}
+              href={illogicalPromo?.href ?? "/alertes"}
               className="flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-b from-red-600 to-red-700 border border-red-500 py-3.5 shadow-[0_0_24px_-4px_rgba(239,68,68,0.4)] hover:shadow-[0_0_32px_-4px_rgba(239,68,68,0.6)] transition dark:from-red-900/80 dark:to-red-950/90 dark:border-red-700/50"
             >
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-red-600 shadow-md dark:from-orange-400 dark:to-red-600">

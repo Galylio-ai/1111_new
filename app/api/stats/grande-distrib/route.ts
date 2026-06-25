@@ -6,29 +6,8 @@ const pool = new Pool({
   max: 5,
 });
 
-// Staple categories — each matched by a name keyword on the product.
-// For each (shop, staple) we take the cheapest matching item in that shop,
-// then sum across staples to compare baskets fairly.
-const BASKET_STAPLES: { label: string; pattern: string }[] = [
-  { label: "Tomate",  pattern: "%tomate%" },
-  { label: "Huile",   pattern: "%huile%" },
-  { label: "Lait",    pattern: "%lait%" },
-  { label: "Thon",    pattern: "%thon%" },
-  { label: "Sucre",   pattern: "%sucre%" },
-  { label: "Fromage", pattern: "%fromage%" },
-  { label: "Boeuf",   pattern: "%boeuf%" },
-  { label: "Jambon",  pattern: "%jambon%" },
-  { label: "Poulet",  pattern: "%poulet%" },
-  { label: "Olives",  pattern: "%olive%" },
-  { label: "Harissa", pattern: "%harissa%" },
-  { label: "Café",    pattern: "%caf%" },
-];
-const BASKET_SIZE = BASKET_STAPLES.length;
-// Shops only need to cover this fraction of the basket to be ranked.
-// 50% lets smaller shops (Carrefour Market/Express, Monoprix Glovo) still
-// appear so the table consistently shows 5+ enseignes.
-const BASKET_COVERAGE = 0.5;
-const VEILLE_SIZE = 4;
+const BASKET_SIZE = 29;
+const VEILLE_SIZE = 5;
 
 function formatMillimes(n: number): string {
   return n.toFixed(3);
@@ -41,53 +20,44 @@ function formatPrice(n: number): string {
 
 export async function GET() {
   try {
-    // 1+2. Build a 5-staple basket (tomate, huile, lait, thon, sucre).
-    //      For each (shop, staple), take the cheapest matching product in that
-    //      shop. Sum the 5 cheapest per shop. Keep only shops covering all 5.
-    const labels = BASKET_STAPLES.map((s) => s.label);
-    const patterns = BASKET_STAPLES.map((s) => s.pattern);
-
-    // Min number of staples a shop must carry to be included in the table.
-    const minCovered = Math.max(1, Math.ceil(BASKET_SIZE * BASKET_COVERAGE));
-
-    const basketRes = await pool.query<{ shop: string; total: string; covered: string }>(
-      `WITH staples (label, pattern) AS (
-         SELECT * FROM UNNEST($1::text[], $2::text[]) AS t(label, pattern)
-       ),
-       per_shop_staple AS (
-         SELECT sp.shop_id,
-                st.label,
-                MIN(sp.current_price) AS price
-         FROM shop_prices sp
-         JOIN products p ON p.id = sp.product_id
-         JOIN staples st ON lower(p.name) LIKE st.pattern
-         WHERE sp.current_price > 0
-         GROUP BY sp.shop_id, st.label
-       ),
-       per_shop AS (
-         SELECT shop_id,
-                -- normalise: extrapolate full basket from covered items so
-                -- a shop missing 1-2 staples isn't unfairly cheaper.
-                (SUM(price) / COUNT(*) * $4)::numeric AS total,
-                COUNT(*) AS covered
-         FROM per_shop_staple
-         GROUP BY shop_id
-         HAVING COUNT(*) >= $3
-       )
-       SELECT s.name AS shop,
-              ps.total::text AS total,
-              ps.covered::text AS covered
-       FROM per_shop ps
-       JOIN shops s ON s.id = ps.shop_id
-       ORDER BY ps.total ASC
-       LIMIT 6`,
-      [labels, patterns, minCovered, BASKET_SIZE]
+    // 1. Pick the BASKET_SIZE products that appear in the most shops (most universal items)
+    const basketProductsRes = await pool.query<{ id: number; name: string }>(
+      `SELECT p.id, p.name
+       FROM products p
+       JOIN shop_prices sp ON sp.product_id = p.id
+       GROUP BY p.id, p.name
+       ORDER BY COUNT(DISTINCT sp.shop_id) DESC, p.id
+       LIMIT $1`,
+      [BASKET_SIZE]
     );
+    const basketIds = basketProductsRes.rows.map((r) => r.id);
 
-    const enseignes: Array<{ name: string; total: number }> = basketRes.rows.map((r) => ({
-      name: r.shop,
-      total: parseFloat(r.total) || 0,
-    }));
+    // 2. For each shop, sum the price of these basket products (use min when shop has duplicates)
+    let enseignes: Array<{ name: string; total: number }> = [];
+    if (basketIds.length > 0) {
+      const basketRes = await pool.query<{ shop: string; total: string; covered: string }>(
+        `SELECT s.name AS shop,
+                SUM(min_price) AS total,
+                COUNT(*)::text AS covered
+         FROM (
+           SELECT sp.shop_id, sp.product_id, MIN(sp.current_price) AS min_price
+           FROM shop_prices sp
+           WHERE sp.product_id = ANY($1::int[])
+           GROUP BY sp.shop_id, sp.product_id
+         ) t
+         JOIN shops s ON s.id = t.shop_id
+         GROUP BY s.name
+         HAVING COUNT(*) >= $2
+         ORDER BY total ASC
+         LIMIT 6`,
+        [basketIds, Math.ceil(basketIds.length * 0.5)]
+      );
+
+      enseignes = basketRes.rows.map((r) => ({
+        name: r.shop,
+        total: parseFloat(r.total) || 0,
+      }));
+    }
 
     const cheapest = enseignes[0]?.total ?? 0;
     const mostExpensive = enseignes.length ? enseignes[enseignes.length - 1].total : 0;
@@ -100,87 +70,56 @@ export async function GET() {
       best: i === 0,
     }));
 
-    // 3. Top économies: products with the biggest absolute saving (max-min) between shops,
-    //    sold in 3+ shops. Returns image, cheapest shop name, and DT savings — so the card
-    //    tells a complete story: "switch shops for this product, save X DT".
+    // 3. Veille: pick VEILLE_SIZE most-universal products and show min current price.
+    //    Change% is derived from spread (min vs max) as a proxy — flagged "down" when min < avg.
     const veilleRes = await pool.query<{
+      id: number;
       name: string;
       min_price: string;
       max_price: string;
-      cheapest_shop: string;
-      img: string | null;
-      slug: string;
+      avg_price: string;
     }>(
-      `WITH ranked AS (
-         SELECT p.id,
-                p.name,
-                p.slug,
-                MIN(sp.current_price) AS min_price,
-                MAX(sp.current_price) AS max_price,
-                COUNT(DISTINCT sp.shop_id) AS shop_count
-         FROM products p
-         JOIN shop_prices sp ON sp.product_id = p.id
-         WHERE sp.current_price > 0
-         GROUP BY p.id, p.name, p.slug
-         HAVING COUNT(DISTINCT sp.shop_id) >= 3
-            AND MAX(sp.current_price) > 0
-            AND (MAX(sp.current_price) - MIN(sp.current_price)) / MAX(sp.current_price) >= 0.10
-       )
-       SELECT r.name,
-              r.slug,
-              r.min_price::text,
-              r.max_price::text,
-              (
-                SELECT s.name FROM shop_prices sp2
-                JOIN shops s ON s.id = sp2.shop_id
-                WHERE sp2.product_id = r.id AND sp2.current_price = r.min_price
-                ORDER BY s.id ASC LIMIT 1
-              ) AS cheapest_shop,
-              (
-                SELECT image_url FROM product_images
-                WHERE product_id = r.id AND image_url LIKE 'https://%'
-                ORDER BY id ASC LIMIT 1
-              ) AS img
-       FROM ranked r
-       ORDER BY (r.max_price - r.min_price) DESC
+      `SELECT p.id, p.name,
+              MIN(sp.current_price) AS min_price,
+              MAX(sp.current_price) AS max_price,
+              AVG(sp.current_price) AS avg_price
+       FROM products p
+       JOIN shop_prices sp ON sp.product_id = p.id
+       GROUP BY p.id, p.name
+       HAVING COUNT(DISTINCT sp.shop_id) >= 2
+       ORDER BY COUNT(DISTINCT sp.shop_id) DESC, p.id
        LIMIT $1`,
       [VEILLE_SIZE]
     );
 
     const veille = veilleRes.rows.map((r) => {
       const min = parseFloat(r.min_price) || 0;
-      const max = parseFloat(r.max_price) || min;
-      const saving = max - min;
-      const pct = max > 0 ? ((max - min) / max) * 100 : 0;
+      const avg = parseFloat(r.avg_price) || 0;
+      const pct = avg > 0 ? Math.round(((min - avg) / avg) * 1000) / 10 : 0;
+      const down = pct <= 0;
       return {
         name: r.name,
-        slug: r.slug,
-        minPrice: formatMillimes(min),
-        maxPrice: formatMillimes(max),
-        saving: formatMillimes(saving),
-        savingPct: `${pct.toFixed(0)}%`,
-        cheapestShop: r.cheapest_shop || "—",
-        img: r.img,
+        price: formatMillimes(min),
+        change: `${pct > 0 ? "+" : ""}${pct.toFixed(1)}%`,
+        down,
       };
     });
 
-    // 4. Pot crème 100% emmental fondu — featured product for the price-alert card.
-    //    Look up by slug first (post-import), with a name LIKE fallback for safety.
-    const TARGET_SLUG = "pot-creme-100-emmental-fondu";
+    // 4. Cheapest "Lait 1/2 écrémé" (slug: lait-1-2-ecreme) for the price-alert card.
+    //    Find the product whose slug matches, then return the cheapest shop offer.
+    const TARGET_SLUG = "lait-1-2-ecreme";
+    const slugify = (s: string) =>
+      s
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[̀-ͯ]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
 
-    let candidates = await pool.query<{ id: number; name: string }>(
-      `SELECT id, name FROM products WHERE slug = $1 LIMIT 1`,
-      [TARGET_SLUG]
+    const candidates = await pool.query<{ id: number; name: string }>(
+      `SELECT id, name FROM products WHERE lower(name) LIKE '%lait%'`
     );
-    if (candidates.rows.length === 0) {
-      candidates = await pool.query<{ id: number; name: string }>(
-        `SELECT id, name FROM products
-         WHERE lower(name) LIKE '%emmental%fondu%'
-            OR lower(name) LIKE '%pot%cr_me%emmental%'
-         LIMIT 1`
-      );
-    }
-    const target = candidates.rows[0] ?? null;
+    const target = candidates.rows.find((r) => slugify(r.name) === TARGET_SLUG);
 
     let milkRes: { rows: Array<{ name: string; brand: string; shop: string; min_price: string; max_price: string; avg_price: string; img: string | null }> } = { rows: [] };
     if (target) {
@@ -245,7 +184,7 @@ export async function GET() {
 
     return NextResponse.json({
       enseignes: enseigneList,
-      basketSize: BASKET_SIZE,
+      basketSize: basketIds.length,
       economy: formatPrice(economy),
       veille,
       alert,

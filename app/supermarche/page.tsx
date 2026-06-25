@@ -21,12 +21,12 @@ type Product = {
 
 /* ── Shops ───────────────────────────────────────────────────────────────── */
 const shops = [
-  { key: "aziza",             name: "Aziza",             count: 17982, color: "bg-green-600",  logo: "/aziza-logo.jpg",       logoSize: "h-28 px-4", imgs: ["https://clusteraz.flesk.fr/images/100013251.jpg","https://clusteraz.flesk.fr/images/100013271.jpg","https://clusteraz.flesk.fr/images/100009532.jpg","https://clusteraz.flesk.fr/images/100003869.jpg"] },
-  { key: "carrefour",         name: "Carrefour",         count: 26069, color: "bg-blue-600",   logo: "/Carrefour-Logo.png",    logoSize: "h-14 px-6", imgs: ["https://www.carrefour.tn/gel-machine-clean-power-5l-6192477622435-1.html/","https://cdn.monoprix.tn/ennasr/163018-home_default/nectar.jpg","https://www.geantdrive.tn/tunis-city/1320846-home_default/lot-shampooing.jpg","https://cdn.monoprix.tn/ennasr/178113-home_default/lessive-machine.jpg"] },
-  { key: "geant",             name: "Géant",             count: 34412, color: "bg-red-600",    logo: "/geant-logo.png",        logoSize: "h-28 px-4", imgs: ["https://www.geantdrive.tn/tunis-city/1320846-home_default/lot-shampooing.jpg","https://www.geantdrive.tn/tunis-city/1320847-home_default/lot-shampooing.jpg","https://www.geantdrive.tn/tunis-city/178113-home_default/lessive.jpg","https://www.geantdrive.tn/tunis-city/163018-home_default/nectar.jpg"] },
-  { key: "monoprix",          name: "Monoprix",          count: 12582, color: "bg-orange-500", logo: "/monoprix.png",          logoSize: "h-28 px-4", imgs: ["https://cdn.monoprix.tn/ennasr/178113-home_default/lessive-machine.jpg","https://cdn.monoprix.tn/ennasr/163018-home_default/nectar.jpg","https://cdn.monoprix.tn/ennasr/100003869-home_default/produit.jpg","https://cdn.monoprix.tn/ennasr/100009532-home_default/produit.jpg"] },
-  { key: "carrefour_market",  name: "Carrefour Market",  count: 5049,  color: "bg-sky-600",    logo: "/carrefour-market.png",  logoSize: "h-28 px-4", imgs: ["https://cdn.monoprix.tn/ennasr/178113-home_default/lessive-machine.jpg","https://cdn.monoprix.tn/ennasr/163018-home_default/nectar.jpg","https://clusteraz.flesk.fr/images/100013251.jpg","https://clusteraz.flesk.fr/images/100003869.jpg"] },
-  { key: "carrefour_express", name: "Carrefour Express", count: 3779,  color: "bg-indigo-500", logo: "/Carrefour_Express.png",  logoSize: "h-28 px-4", imgs: ["https://cdn.monoprix.tn/ennasr/163018-home_default/nectar.jpg","https://cdn.monoprix.tn/ennasr/178113-home_default/lessive-machine.jpg","https://clusteraz.flesk.fr/images/100013271.jpg","https://clusteraz.flesk.fr/images/100009532.jpg"] },
+  { key: "aziza",             name: "Aziza",             count: 12195, color: "bg-green-600",  logo: "/aziza-logo.jpg",       logoSize: "h-28 px-4", imgs: ["https://clusteraz.flesk.fr/images/100013251.jpg","https://clusteraz.flesk.fr/images/100013271.jpg","https://clusteraz.flesk.fr/images/100009532.jpg","https://clusteraz.flesk.fr/images/100003869.jpg"] },
+  { key: "carrefour",         name: "Carrefour",         count: 19367, color: "bg-blue-600",   logo: "/Carrefour-Logo.png",    logoSize: "h-14 px-6", imgs: ["https://www.carrefour.tn/gel-machine-clean-power-5l-6192477622435-1.html/","https://cdn.monoprix.tn/ennasr/163018-home_default/nectar.jpg","https://www.geantdrive.tn/tunis-city/1320846-home_default/lot-shampooing.jpg","https://cdn.monoprix.tn/ennasr/178113-home_default/lessive-machine.jpg"] },
+  { key: "geant",             name: "Géant",             count: 21307, color: "bg-red-600",    logo: "/geant-logo.png",        logoSize: "h-28 px-4", imgs: ["https://www.geantdrive.tn/tunis-city/1320846-home_default/lot-shampooing.jpg","https://www.geantdrive.tn/tunis-city/1320847-home_default/lot-shampooing.jpg","https://www.geantdrive.tn/tunis-city/178113-home_default/lessive.jpg","https://www.geantdrive.tn/tunis-city/163018-home_default/nectar.jpg"] },
+  { key: "monoprix",          name: "Monoprix",          count: 6835,  color: "bg-orange-500", logo: "/monoprix.png",          logoSize: "h-28 px-4", imgs: ["https://cdn.monoprix.tn/ennasr/178113-home_default/lessive-machine.jpg","https://cdn.monoprix.tn/ennasr/163018-home_default/nectar.jpg","https://cdn.monoprix.tn/ennasr/100003869-home_default/produit.jpg","https://cdn.monoprix.tn/ennasr/100009532-home_default/produit.jpg"] },
+  { key: "carrefour_market",  name: "Carrefour Market",  count: 5028,  color: "bg-sky-600",    logo: "/carrefour-market.png",  logoSize: "h-28 px-4", imgs: ["https://cdn.monoprix.tn/ennasr/178113-home_default/lessive-machine.jpg","https://cdn.monoprix.tn/ennasr/163018-home_default/nectar.jpg","https://clusteraz.flesk.fr/images/100013251.jpg","https://clusteraz.flesk.fr/images/100003869.jpg"] },
+  { key: "carrefour_express", name: "Carrefour Express", count: 2820,  color: "bg-indigo-500", logo: "/Carrefour_Express.png",  logoSize: "h-28 px-4", imgs: ["https://cdn.monoprix.tn/ennasr/163018-home_default/nectar.jpg","https://cdn.monoprix.tn/ennasr/178113-home_default/lessive-machine.jpg","https://clusteraz.flesk.fr/images/100013271.jpg","https://clusteraz.flesk.fr/images/100009532.jpg"] },
 ];
 
 /* ── Custom Dropdown ─────────────────────────────────────────────────────── */
@@ -77,15 +77,17 @@ export default function SupermarchePage() {
   const [page, setPage]             = useState(0);
   const [loading, setLoading]       = useState(false);
   const [activeShop, setActiveShop] = useState("");
+  const [similarOnly, setSimilarOnly] = useState(false);
   const [search, setSearch]         = useState("");
   const [query, setQuery]           = useState("");
 
-  const fetchProducts = useCallback(async (p: number, q: string, shop: string) => {
+  const fetchProducts = useCallback(async (p: number, q: string, shop: string, similar: boolean) => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ page: String(p), limit: String(LIMIT) });
       if (q)    params.set("q", q);
       if (shop) params.set("shop", shop);
+      if (similar) params.set("similar", "1");
       const res  = await fetch(`/api/super-products?${params}`);
       const data = await res.json();
       setProducts(data.items ?? []);
@@ -95,14 +97,14 @@ export default function SupermarchePage() {
     }
   }, []);
 
-  useEffect(() => { fetchProducts(0, "", ""); }, [fetchProducts]);
+  useEffect(() => { fetchProducts(0, "", "", false); }, [fetchProducts]);
 
   useEffect(() => {
     setPage(0);
-    fetchProducts(0, query, activeShop);
-  }, [activeShop, query, fetchProducts]);
+    fetchProducts(0, query, activeShop, similarOnly);
+  }, [activeShop, query, similarOnly, fetchProducts]);
 
-  useEffect(() => { fetchProducts(page, query, activeShop); }, [page]); // eslint-disable-line
+  useEffect(() => { fetchProducts(page, query, activeShop, similarOnly); }, [page]); // eslint-disable-line
 
   useEffect(() => {
     const t = setTimeout(() => setQuery(search), 350);
@@ -262,8 +264,34 @@ export default function SupermarchePage() {
             options={shops.map(s => ({ value: s.key, label: s.name }))}
           />
 
-          {(activeShop || search) && (
-            <button onClick={() => { setActiveShop(""); setSearch(""); }}
+          <div className="flex h-[42px] rounded-xl border border-slate-300 bg-white p-1 dark:border-white/10 dark:bg-white/[0.04]">
+            <button
+              type="button"
+              onClick={() => setSimilarOnly(false)}
+              className={`rounded-lg px-3 text-xs font-black transition ${
+                !similarOnly
+                  ? "bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-950"
+                  : "text-slate-500 hover:text-slate-800 dark:text-white/50 dark:hover:text-white"
+              }`}
+            >
+              Catalogue
+            </button>
+            <button
+              type="button"
+              onClick={() => setSimilarOnly(true)}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 text-xs font-black transition ${
+                similarOnly
+                  ? "bg-brand-gold text-black shadow-sm"
+                  : "text-slate-500 hover:text-slate-800 dark:text-white/50 dark:hover:text-white"
+              }`}
+            >
+              <Tag className="h-3 w-3" />
+              Similaires
+            </button>
+          </div>
+
+          {(activeShop || search || similarOnly) && (
+            <button onClick={() => { setActiveShop(""); setSearch(""); setSimilarOnly(false); }}
               className="flex items-center gap-1.5 rounded-xl border border-slate-300 bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-200 dark:border-white/10 dark:bg-white/[0.06] dark:text-white/60 dark:hover:bg-white/[0.1]">
               Réinitialiser <X className="h-3 w-3" />
             </button>
