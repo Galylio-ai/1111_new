@@ -324,12 +324,9 @@ export function GrandeDistribRow() {
                     )}
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-xs font-semibold text-slate-900 dark:text-white">{s.displayName}</div>
-                      <div className="truncate text-[10px] text-slate-500 dark:text-white/55">
+                      <div className="text-[10px] text-slate-500 dark:text-white/55">
                         <span className="tabular-nums font-semibold text-slate-700 dark:text-white/75">{s.totalProducts.toLocaleString("fr-FR")}</span>
-                        <span className="ml-1">produits</span>
-                        <span className="mx-1 text-slate-300 dark:text-white/25">·</span>
-                        <span className="font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{s.similarProducts.toLocaleString("fr-FR")}</span>
-                        <span className="ml-1">en concurrence</span>
+                        <span className="ml-1">produits au total</span>
                       </div>
                     </div>
                     <div className="text-right leading-tight">
@@ -337,8 +334,16 @@ export function GrandeDistribRow() {
                       <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/50">Meilleur prix</div>
                     </div>
                   </div>
-                  {/* Competition bar — % of this shop's products also sold by another top-5 */}
-                  <div className="mt-2 flex items-center gap-2">
+                  {/* Competition: similar / total products shared with another top-5 shop */}
+                  <div className="mt-2 flex items-center justify-between text-[10px]">
+                    <span className="text-slate-500 dark:text-white/50">Produits en concurrence</span>
+                    <span className="tabular-nums">
+                      <span className="font-black text-emerald-600 dark:text-emerald-400">{s.similarProducts.toLocaleString("fr-FR")}</span>
+                      <span className="mx-0.5 text-slate-400 dark:text-white/40">/</span>
+                      <span className="font-semibold text-slate-600 dark:text-white/65">{s.totalProducts.toLocaleString("fr-FR")}</span>
+                    </span>
+                  </div>
+                  <div className="mt-1 flex items-center gap-2">
                     <div className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-white/10">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-600 transition-all duration-700"
