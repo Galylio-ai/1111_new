@@ -117,9 +117,9 @@ async function groqChat(
 }
 
 // ── Tool execution ─────────────────────────────────────────────────────────────
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
-
-async function callTool(name: string, args: Record<string, unknown>): Promise<string> {
+// Base URL is derived per-request from the inbound request origin, so the same
+// code works in dev (localhost:3000), VPS prod (production.1111.tn), and Netlify.
+async function callTool(BASE_URL: string, name: string, args: Record<string, unknown>): Promise<string> {
   try {
     switch (name) {
       case "search_products": {
@@ -222,10 +222,11 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<st
       case "get_top_offers": {
         const res = await fetch(`${BASE_URL}/api/stats/top-offers`);
         const data = await res.json();
-        if (data.error || !data.items?.length) return "Aucune offre disponible.";
-        const lines = data.items.slice(0, 5).map((o: { name: string; brand: string; minPrice: number; savings: number; offers: Array<{ shop: string; price: number }> }) => {
+        const list = Array.isArray(data.offers) ? data.offers : Array.isArray(data.items) ? data.items : [];
+        if (data.error || list.length === 0) return "Aucune offre disponible.";
+        const lines = list.slice(0, 5).map((o: { name: string; brand: string; minPrice: number | string; savings: number | string; offers: Array<{ shop: string; price: number }> }) => {
           const cheapestShop = o.offers?.[0];
-          return `• ${o.name} (${o.brand}) — à partir de ${o.minPrice?.toFixed(3)} DT chez ${cheapestShop?.shop ?? "—"} (économie jusqu'à ${o.savings?.toFixed(3)} DT)`;
+          return `• ${o.name} (${o.brand}) — à partir de ${o.minPrice ?? "—"} DT chez ${cheapestShop?.shop ?? "—"} (économie : ${o.savings ?? "—"} DT)`;
         });
         return `Meilleures offres du moment :\n${lines.join("\n")}`;
       }
@@ -233,10 +234,16 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<st
       case "get_fake_promos": {
         const res = await fetch(`${BASE_URL}/api/stats/illogical-promo`);
         const data = await res.json();
-        if (data.error || !data.items?.length) return "Aucune fausse promo détectée actuellement.";
-        const lines = data.items.slice(0, 5).map((p: { name: string; shopName: string; currentPrice: number; claimedDiscountPct: number; effectiveDiscountPct: number }) =>
-          `• ${p.name} chez ${p.shopName} — affiché à -${p.claimedDiscountPct}% mais réelle baisse : -${p.effectiveDiscountPct}% (prix réel : ${p.currentPrice?.toFixed(3)} DT)`
-        );
+        // Endpoint may return either { item } (singular, current) or { items } (array)
+        const list: Array<{ name: string; shopName?: string; shop?: string; currentPrice: number; oldPrice?: number; honestMin?: number }> =
+          data.items ?? (data.item ? [data.item] : []);
+        if (data.error || list.length === 0) return "Aucune fausse promo détectée actuellement.";
+        const lines = list.slice(0, 5).map((p) => {
+          const shopName = p.shopName ?? p.shop ?? "?";
+          const claimed = p.oldPrice && p.currentPrice ? Math.round(((p.oldPrice - p.currentPrice) / p.oldPrice) * 100) : null;
+          const honest = p.honestMin && p.currentPrice ? Math.round(((p.honestMin - p.currentPrice) / p.honestMin) * 100) : null;
+          return `• ${p.name} chez ${shopName} — affichée${claimed != null ? ` à -${claimed}%` : ""}${honest != null ? ` mais réelle : -${honest}%` : ""} (prix : ${p.currentPrice?.toFixed?.(3) ?? p.currentPrice} DT)`;
+        });
         return `Fausses promotions détectées :\n${lines.join("\n")}`;
       }
 
@@ -338,6 +345,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "messages requis" }, { status: 400 });
     }
 
+    // Resolve the base URL for tool calls so we hit *this* Next.js instance's
+    // /api/* endpoints regardless of which host/port it's running on.
+    const BASE_URL =
+      process.env.NEXT_PUBLIC_BASE_URL ||
+      request.nextUrl.origin ||
+      "http://localhost:3000";
+
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
       return NextResponse.json({ error: "Clé API manquante" }, { status: 500 });
@@ -381,7 +395,7 @@ export async function POST(request: NextRequest) {
       const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
       if (lastUserMsg) {
         const q = extractSearchQuery(lastUserMsg.content);
-        const result = await callTool("search_products", { q });
+        const result = await callTool(BASE_URL, "search_products", { q });
         const clean = result.replace(/^NEEDS_CLARIFICATION\n/, "").trim();
         return NextResponse.json({ reply: clean });
       }
@@ -402,7 +416,7 @@ export async function POST(request: NextRequest) {
         const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
         if (lastUserMsg) {
           const q = extractSearchQuery(lastUserMsg.content);
-          const result = await callTool("search_products", { q });
+          const result = await callTool(BASE_URL, "search_products", { q });
           const clean = result.replace(/^NEEDS_CLARIFICATION\n/, "").trim();
           return NextResponse.json({ reply: clean });
         }
@@ -417,7 +431,7 @@ export async function POST(request: NextRequest) {
       if (lastUserMsg && !greetings.test(lastUserMsg.content.trim())) {
         const q = extractSearchQuery(lastUserMsg.content);
         if (q.length >= 2) {
-          const result = await callTool("search_products", { q });
+          const result = await callTool(BASE_URL, "search_products", { q });
           const clean = result.replace(/^NEEDS_CLARIFICATION\n/, "").trim();
           return NextResponse.json({ reply: clean });
         }
@@ -434,7 +448,7 @@ export async function POST(request: NextRequest) {
     const toolResults = await Promise.all(
       toolCalls.map(async (tc) => {
         const args = JSON.parse(tc.function.arguments ?? "{}");
-        const result = await callTool(tc.function.name, args);
+        const result = await callTool(BASE_URL, tc.function.name, args);
         return { tool_call_id: tc.id, role: "tool" as const, content: result, name: tc.function.name };
       })
     );
