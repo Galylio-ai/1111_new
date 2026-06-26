@@ -6,7 +6,7 @@ import {
   ArrowRight, BadgeCheck, ChevronDown, ChevronRight, Loader2, Monitor, Search, Store, Tag, X,
 } from "lucide-react";
 
-/* ── Custom dropdown ─────────────────────────────────────────────────────── */
+/* ── Custom searchable dropdown ──────────────────────────────────────────── */
 function Dropdown({
   value, onChange, options, placeholder,
 }: {
@@ -15,17 +15,29 @@ function Dropdown({
   options: { value: string; label: string }[];
   placeholder: string;
 }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  const selected = options.find(o => o.value === value);
+  const [open, setOpen]       = useState(false);
+  const [search, setSearch]   = useState("");
+  const ref                   = useRef<HTMLDivElement>(null);
+  const inputRef              = useRef<HTMLInputElement>(null);
+  const selected              = options.find(o => o.value === value);
+  const filtered              = search.trim()
+    ? options.filter(o => o.label.toLowerCase().includes(search.toLowerCase()))
+    : options;
 
   useEffect(() => {
     function handler(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false); setSearch("");
+      }
     }
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  useEffect(() => {
+    if (open) setTimeout(() => inputRef.current?.focus(), 50);
+    else setSearch("");
+  }, [open]);
 
   return (
     <div ref={ref} className="relative">
@@ -34,31 +46,51 @@ function Dropdown({
         onClick={() => setOpen(o => !o)}
         className="flex h-[42px] min-w-[170px] items-center justify-between gap-2 rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition hover:border-brand-gold/40 dark:border-white/10 dark:bg-white/[0.06] dark:text-white"
       >
-        <span className={selected ? "" : "text-slate-400 dark:text-white/35"}>
+        <span className={`truncate max-w-[140px] ${selected ? "" : "text-slate-400 dark:text-white/35"}`}>
           {selected ? selected.label : placeholder}
         </span>
         <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform text-slate-400 dark:text-white/40 ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
-        <div className="absolute left-0 top-[46px] z-50 min-w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-white/10 dark:bg-[#0f1422]">
-          <button
-            type="button"
-            onClick={() => { onChange(""); setOpen(false); }}
-            className={`w-full px-4 py-2.5 text-left text-sm transition hover:bg-slate-50 dark:hover:bg-white/[0.06] ${!value ? "font-bold text-brand-gold" : "text-slate-500 dark:text-white/50"}`}
-          >
-            {placeholder}
-          </button>
-          {options.map(o => (
+        <div className="absolute left-0 top-[46px] z-50 w-64 rounded-xl border border-slate-200 bg-white shadow-xl dark:border-white/10 dark:bg-[#0f1422]">
+          {/* search input */}
+          <div className="p-2 border-b border-slate-100 dark:border-white/[0.06]">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400 dark:text-white/30" />
+              <input
+                ref={inputRef}
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Rechercher…"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-7 pr-3 text-xs text-slate-700 outline-none placeholder:text-slate-400 focus:border-brand-gold/40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/30"
+              />
+            </div>
+          </div>
+          {/* list */}
+          <div className="max-h-56 overflow-y-auto">
             <button
-              key={o.value}
               type="button"
-              onClick={() => { onChange(o.value); setOpen(false); }}
-              className={`w-full px-4 py-2.5 text-left text-sm transition hover:bg-slate-50 dark:hover:bg-white/[0.06] ${value === o.value ? "font-bold text-brand-gold bg-brand-gold/5" : "text-slate-700 dark:text-white/80"}`}
+              onClick={() => { onChange(""); setOpen(false); setSearch(""); }}
+              className={`w-full px-4 py-2 text-left text-sm transition hover:bg-slate-50 dark:hover:bg-white/[0.06] ${!value ? "font-bold text-brand-gold" : "text-slate-500 dark:text-white/50"}`}
             >
-              {o.label}
+              {placeholder}
             </button>
-          ))}
+            {filtered.length === 0 && (
+              <p className="px-4 py-3 text-xs text-slate-400 dark:text-white/30">Aucun résultat</p>
+            )}
+            {filtered.map(o => (
+              <button
+                key={o.value}
+                type="button"
+                onClick={() => { onChange(o.value); setOpen(false); setSearch(""); }}
+                className={`w-full px-4 py-2 text-left text-sm transition hover:bg-slate-50 dark:hover:bg-white/[0.06] ${value === o.value ? "font-bold text-brand-gold bg-brand-gold/5" : "text-slate-700 dark:text-white/80"}`}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>
