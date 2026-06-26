@@ -43,6 +43,13 @@ type RetailShopRow = {
   cheapestCount: number;
 };
 
+type AlertData = {
+  type: "warning" | "info" | "danger";
+  message: string;
+  productName?: string;
+  slug?: string;
+};
+
 function enseigneLogo(name: string) {
   const key = name.trim().toLowerCase();
   if (key.includes("aziza")) return { bg: "bg-green-600", text: "✓", textColor: "text-white" };
@@ -54,33 +61,17 @@ function enseigneLogo(name: string) {
 }
 
 export function GrandeDistribRow() {
-  const [enseignes, setEnseignes] = useState<EnseigneRow[]>(
+  const [enseignes] = useState<EnseigneRow[]>(
     distributionEnseignes.map((e) => ({ name: e.name, price: e.price, diff: e.diff, best: e.best }))
   );
-  const [basketSize, setBasketSize] = useState<number>(12);
-  const [economy] = useState<string>("8 370");
-  const [illogicalPromo, setIllogicalPromo] = useState<IllogicalPromo | null>(null);
+  const basketSize = 12;
+  const economy = "8 370";
+  // const alert: AlertData | null = null;
+  const illogicalPromo = null as IllogicalPromo | null;
   const [topRetailShops, setTopRetailShops] = useState<RetailShopRow[]>([]);
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/stats/grande-distrib")
-      .then((r) => r.json())
-      .then((d) => {
-        if (cancelled) return;
-        if (Array.isArray(d?.enseignes) && d.enseignes.length > 0) setEnseignes(d.enseignes);
-        if (typeof d?.basketSize === "number") setBasketSize(d.basketSize);
-      })
-      .catch(() => {});
-
-    fetch("/api/stats/illogical-promo")
-      .then((r) => r.json())
-      .then((d) => {
-        if (cancelled) return;
-        if (d?.promo) setIllogicalPromo(d.promo as IllogicalPromo);
-      })
-      .catch(() => {});
-
     fetch("/api/stats/top-retail-shops")
       .then((r) => r.json())
       .then((d) => {
@@ -88,10 +79,7 @@ export function GrandeDistribRow() {
         if (Array.isArray(d?.shops)) setTopRetailShops(d.shops as RetailShopRow[]);
       })
       .catch(() => {});
-
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   return (
@@ -202,7 +190,7 @@ export function GrandeDistribRow() {
               <span className="section-title">Sites les plus visités</span>
             </div>
             <span className="rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-300">
-              Top 5
+              Top 8
             </span>
           </div>
           <div className="font-arabic text-[11px] text-slate-400 dark:text-white/50" dir="rtl">
@@ -213,7 +201,7 @@ export function GrandeDistribRow() {
           </div>
 
           <ul className="mt-3 space-y-2">
-            {topRetailSites.slice(0, 5).map((s, i) => {
+            {topRetailSites.slice(0, 8).map((s, i) => {
               const up = s.mom.includes("↑");
               const rankBg =
                 i === 0 ? "bg-gradient-to-br from-yellow-400 to-amber-600 text-yellow-950" :
@@ -375,48 +363,46 @@ export function GrandeDistribRow() {
           <div className="pointer-events-none absolute -left-6 bottom-1/3 h-32 w-32 rounded-full bg-red-900/30 blur-2xl dark:opacity-100 opacity-0" />
 
           {/* Title block */}
-          <div className="relative px-4 pt-4 pb-2 sm:px-5 sm:pt-5">
+          <div className="relative px-4 pt-4 pb-3 sm:px-5 sm:pt-5">
             <div className="text-lg font-black uppercase leading-tight text-red-600 dark:text-red-500">
               Promotions illogiques détectées
             </div>
-            <div className="font-arabic mt-1 text-sm font-semibold text-red-500 dark:text-red-400" dir="rtl">
+            <div className="font-arabic mt-4 text-sm font-semibold text-red-500 dark:text-red-400" dir="rtl">
               عروض غير منطقية تم اكتشافها
             </div>
           </div>
 
           {/* Product area */}
-          <div className="relative mt-2 flex flex-1 flex-col gap-0 px-4 sm:px-5">
-            {/* Image + details side by side */}
-            <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:gap-4">
-              <div className="flex h-24 w-full shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-100 dark:bg-white/5 xl:h-28 xl:w-28">
-                <img
-                  src={illogicalPromo?.img ?? "https://jumbo.tn/4425-large_default/tv-hisense-l5g-series-100-uhd-4k-smart-laser-tv-android-wifi.jpg"}
-                  alt={illogicalPromo?.name ?? "TV Hisense L5G 100\""}
-                  className="h-20 w-20 object-contain drop-shadow-[0_4px_16px_rgba(239,68,68,0.3)] xl:h-24 xl:w-24"
-                />
+          <div className="relative flex flex-1 flex-col px-4 sm:px-5">
+            {/* Image — pleine largeur, en haut */}
+            <div className="flex w-full items-center justify-center overflow-hidden rounded-xl bg-slate-100 py-4 dark:bg-white/5">
+              <img
+                src={illogicalPromo?.img ?? "https://jumbo.tn/4425-large_default/tv-hisense-l5g-series-100-uhd-4k-smart-laser-tv-android-wifi.jpg"}
+                alt={illogicalPromo?.name ?? "TV Hisense L5G 100\""}
+                className="max-h-40 w-full object-contain drop-shadow-[0_4px_16px_rgba(239,68,68,0.3)]"
+              />
+            </div>
+
+            {/* Détails sous l'image */}
+            <div className="mt-8 space-y-2">
+              <div className="line-clamp-2 text-sm font-semibold leading-snug text-slate-900 dark:text-white">
+                {illogicalPromo?.name ?? "TV Hisense L5G 100\" UHD 4K Smart Laser TV"}
               </div>
-              <div className="space-y-1.5 min-w-0">
-                <div className="text-base font-semibold text-slate-900 dark:text-white line-clamp-2">
-                  {illogicalPromo?.name ?? "TV Hisense L5G 100\" UHD 4K Smart Laser TV"}
-                </div>
-                <div className="text-base text-slate-600 dark:text-white/70">
-                  {illogicalPromo?.shop ?? "Kamounhome"}
-                </div>
-                <div className="text-sm text-slate-500 dark:text-white/60">
-                  Prix affiché : <span className="text-slate-900 dark:text-white">{illogicalPromo?.currentPrice ?? "14 020"} DT</span>
-                </div>
-                <div className="text-sm text-slate-500 dark:text-white/60">
-                  Prix avant promo : <span className="text-slate-900 dark:text-white line-through">{illogicalPromo?.regularPrice ?? "29 830"} DT</span>
-                </div>
-                <div className="text-sm text-slate-500 dark:text-white/60">
-                  Vrai prix marché : <span className="font-semibold text-emerald-600 dark:text-emerald-400">{illogicalPromo?.marketMin ?? "6 999"} DT</span>
-                  <span className="ml-1 text-[10px] text-slate-400">chez Jumbo</span>
-                </div>
+              <div className="text-xs text-slate-500 dark:text-white/60">{illogicalPromo?.shop ?? "Kamounhome"}</div>
+              <div className="text-xs text-slate-500 dark:text-white/60">
+                Prix affiché : <span className="font-medium text-slate-900 dark:text-white">{illogicalPromo?.currentPrice ?? "6 999"} DT</span>
+              </div>
+              <div className="text-xs text-slate-500 dark:text-white/60">
+                Prix avant promo : <span className="text-slate-900 line-through dark:text-white">{illogicalPromo?.regularPrice ?? "14 020"} DT</span>
+              </div>
+              <div className="text-xs text-slate-500 dark:text-white/60">
+                Vrai prix marché : <span className="font-semibold text-emerald-600 dark:text-emerald-400">{illogicalPromo?.marketMin ?? "6 999"} DT</span>
+                <span className="ml-1 text-[10px] text-slate-400">chez Jumbo</span>
               </div>
             </div>
 
             {/* Remise effective */}
-            <div className="mt-5 text-base font-bold text-red-600 dark:text-red-500">
+            <div className="mt-8 text-sm font-bold leading-snug text-red-600 dark:text-red-500">
               Remise réelle :{" "}
               {illogicalPromo
                 ? illogicalPromo.currentPriceRaw <= illogicalPromo.marketMinRaw
@@ -427,7 +413,7 @@ export function GrandeDistribRow() {
           </div>
 
           {/* ILLOGIQUE! button */}
-          <div className="relative mt-auto px-4 pb-4 pt-5 sm:px-5 sm:pb-5 sm:pt-6">
+          <div className="relative mt-auto px-4 pb-4 pt-4 sm:px-5 sm:pb-5">
             <Link
               href={illogicalPromo?.href ?? "/retail/tv-hisense-l5g-series-100-quot-uhd-4k-smart-laser-tv-android-wifi"}
               className="flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-b from-red-600 to-red-700 border border-red-500 py-3.5 shadow-[0_0_24px_-4px_rgba(239,68,68,0.4)] hover:shadow-[0_0_32px_-4px_rgba(239,68,68,0.6)] transition dark:from-red-900/80 dark:to-red-950/90 dark:border-red-700/50"

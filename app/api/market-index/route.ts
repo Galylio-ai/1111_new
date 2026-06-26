@@ -14,6 +14,7 @@ const BASE_RETAIL_AVG = 965.06;
 
 type Stats = {
   products: number;
+  comparable_products: number;
   price_entries: number;
   promos: number;
   savings: string;
@@ -28,6 +29,7 @@ async function queryStats(pool: Pool): Promise<Stats> {
     const r = await client.query<Stats>(`
       SELECT
         COUNT(DISTINCT p.id)::int                                AS products,
+        COUNT(DISTINCT CASE WHEN sp2.shop_count >= 2 THEN p.id END)::int AS comparable_products,
         COUNT(*)::int                                            AS price_entries,
         COUNT(CASE WHEN sp.current_price < sp.regular_price
                     AND sp.regular_price > 0
@@ -44,6 +46,11 @@ async function queryStats(pool: Pool): Promise<Stats> {
         (SELECT COUNT(*)::int FROM shops WHERE status = 'active')                          AS shops
       FROM products p
       JOIN shop_prices sp ON sp.product_id = p.id
+      LEFT JOIN (
+        SELECT product_id, COUNT(DISTINCT shop_id)::int AS shop_count
+        FROM shop_prices
+        GROUP BY product_id
+      ) sp2 ON sp2.product_id = p.id
     `);
     return r.rows[0];
   } finally {

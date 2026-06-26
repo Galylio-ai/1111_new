@@ -181,7 +181,7 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div className="relative flex flex-col items-center justify-between gap-3 border-t border-slate-200 px-6 py-5 text-xs text-slate-400 md:flex-row md:px-10 dark:border-white/10 dark:text-white/50">
-          <div>© {new Date().getFullYear()} 1111.tn — Tous droits réservés.</div>
+          <div>© {new Date().getFullYear()} 1111.tn — Tous droits réservés. · <span className="text-slate-500 dark:text-white/60">1111.tn by <span className="font-semibold text-brand-gold">TunData</span></span></div>
           <div className="flex items-center gap-4">
             <Link href="/conditions-utilisation" className="transition hover:text-brand-gold">CGU</Link>
             <Link href="/confidentialite" className="transition hover:text-brand-gold">Confidentialité</Link>

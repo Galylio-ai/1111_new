@@ -23,6 +23,14 @@ export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
   const megaRef = useRef<HTMLDivElement>(null);
+  const [weather, setWeather] = useState<{ temp: number; icon: string } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/weather")
+      .then((r) => r.json())
+      .then((d) => setWeather({ temp: d.temp, icon: d.icon }))
+      .catch(() => {});
+  }, []);
 
   async function handleLogout() {
     await logout();
@@ -35,11 +43,8 @@ export function Header() {
         {/* Top live ticker strip */}
         <div className="border-b border-slate-200 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:border-white/5 dark:bg-gradient-to-r dark:from-[#0a0e1a] dark:via-[#0f1422] dark:to-[#0a0e1a]">
           <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-3 px-3 py-1.5 text-[11px] sm:px-4">
-            <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-300">
-              <span className="live-dot" />
-              <span className="font-semibold uppercase tracking-wider">En direct</span>
-              <span className="hidden sm:inline text-slate-300 dark:text-white/40">·</span>
-              <span className="hidden sm:inline text-slate-500 dark:text-white/60">Marché Tunisien</span>
+            <div className="flex items-center gap-1.5 text-slate-500 dark:text-white/60">
+              <span className="hidden sm:inline">Marché Tunisien</span>
             </div>
             <div className="hidden md:flex items-center gap-5 text-slate-600 dark:text-white/70">
               {tickerItems.map((t) => (
@@ -56,7 +61,7 @@ export function Header() {
               ))}
             </div>
             <div className="hidden lg:flex items-center gap-3 text-slate-400 dark:text-white/40">
-              <span>Tunis · 28°C ☀️</span>
+              <span>Tunis · {weather ? `${weather.temp}°C ${weather.icon}` : "28°C ☀️"}</span>
               <span className="text-slate-300 dark:text-white/20">·</span>
               <span className="font-arabic">تونس</span>
             </div>
@@ -80,9 +85,6 @@ export function Header() {
                 />
                 <span className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-tr from-white/10 via-transparent to-transparent" />
               </div>
-              <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-500 ring-2 ring-white dark:ring-bg-900">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
-              </span>
             </div>
             <div className="min-w-0 leading-tight">
               <div className="flex items-baseline gap-1 text-lg sm:text-[1.35rem] font-black tracking-tight text-slate-900 dark:text-white">
