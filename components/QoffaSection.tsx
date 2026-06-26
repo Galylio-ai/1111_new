@@ -121,8 +121,8 @@ function PanierSlider({ items }: { items: QoffaBasketItem[] }) {
                 <span className="truncate text-[11px] font-extrabold text-slate-900 dark:text-white">
                   {item.name}
                 </span>
-                <span className="shrink-0 text-[11px] font-black tabular-nums text-emerald-600 dark:text-emerald-300">
-                  {fmtPrice(item.price)}
+                <span className="shrink-0 rounded-md border border-emerald-500/35 bg-emerald-500/15 px-1.5 py-0.5 text-[11px] font-black tabular-nums text-emerald-700 dark:border-emerald-400/40 dark:bg-emerald-500/20 dark:text-emerald-200">
+                  {fmtPrice(item.price)} DT
                 </span>
               </div>
               <div className="mt-0.5 flex items-center justify-between gap-2 text-[10px] text-slate-500 dark:text-white/50">
@@ -236,7 +236,7 @@ export function QoffaSection({ contained = true }: { contained?: boolean }) {
         </div>
 
         {/* RECETTES POPULAIRES */}
-        <div className="card card-pad relative overflow-hidden">
+        <div className="card card-pad relative overflow-visible">
           {/* Watermark icon */}
           <ChefHat
             className="pointer-events-none absolute -right-2 -top-2 h-28 w-28 text-white/[0.04]"
@@ -262,7 +262,7 @@ export function QoffaSection({ contained = true }: { contained?: boolean }) {
             </span>
           </div>
 
-          <div className="relative mt-4">
+          <div className="relative mt-4 overflow-visible pb-3">
             <div className="mb-3 flex items-center justify-between text-[10px]">
               <span className="font-bold uppercase tracking-wider text-brand-gold">
                 Décortiquez le plat

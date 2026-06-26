@@ -68,7 +68,10 @@ export type StrictPlateReport = {
 export type OrbitIngredient = {
   name: string;
   qty: string;
+  /** Prix catalogue du produit (enseigne) */
   price: string;
+  /** Coût consommé pour la portion du plat */
+  portionPrice: string;
   icon: string;
   accent: string;
 };
@@ -160,6 +163,34 @@ const INGREDIENT_ACCENTS: Record<string, string> = {
   Thon: "#60a5fa",
 };
 
+const RECIPE_INGREDIENT_ORDER: Record<PlateId, string[]> = {
+  "ojja-simple": ["Oeufs", "Tomate/concentre", "Harissa", "Huile", "Cumin"],
+  "makrouna-thon": ["Spaghetti", "Thon", "Tomate/concentre", "Harissa", "Huile", "Cumin"],
+};
+
+function formatOrbitQuantity(note: string, ingredient: string): string {
+  const n = note.toLowerCase();
+  if (n.includes("4 egg")) return "4 œufs";
+  if (n.includes("20g")) return "20 g harissa";
+  if (n.includes("30ml")) return "30 ml";
+  if (n.includes("5g")) return "5 g cumin";
+  if (n.includes("400g") || n.includes("can used")) return "1 boîte tomate";
+  if (ingredient === "Spaghetti") return "1 portion";
+  if (ingredient === "Thon") return "1 boîte thon";
+  const cleaned = note.replace(/^[^:]+:\s*/i, "").trim();
+  if (!cleaned) return ingredient;
+  return cleaned.length > 24 ? `${cleaned.slice(0, 22)}…` : cleaned;
+}
+
+function sortOrbitRows(rows: StrictRaw["product_rows"], plateId: PlateId) {
+  const order = RECIPE_INGREDIENT_ORDER[plateId];
+  return [...rows].sort((a, b) => {
+    const ai = order.indexOf(a.ingredient);
+    const bi = order.indexOf(b.ingredient);
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+  });
+}
+
 export function fmtDt(n: number): string {
   return n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 3 });
 }
@@ -217,14 +248,18 @@ function parseStrict(raw: StrictRaw): StrictPlateReport {
     }
   }
 
-  const orbitRows = raw.product_rows.filter(
-    (r) => r.cluster_id === featuredClusterId && r.shop_name === featuredShop,
+  const orbitRows = sortOrbitRows(
+    raw.product_rows.filter(
+      (r) => r.cluster_id === featuredClusterId && r.shop_name === featuredShop,
+    ),
+    raw.plate,
   );
 
   const orbitIngredients: OrbitIngredient[] = orbitRows.map((r) => ({
     name: r.ingredient,
-    qty: r.used_quantity_note.replace(/^[^:]+:\s*/i, "").slice(0, 28) || r.used_quantity_note,
-    price: fmtDt(r.consumed_cost),
+    qty: formatOrbitQuantity(r.used_quantity_note, r.ingredient),
+    price: fmtDt(r.price),
+    portionPrice: fmtDt(r.consumed_cost),
     icon: INGREDIENT_ICONS[r.ingredient] ?? "/food/ojja.svg",
     accent: INGREDIENT_ACCENTS[r.ingredient] ?? "#f6c453",
   }));
