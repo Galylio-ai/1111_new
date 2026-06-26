@@ -61,7 +61,20 @@ export async function GET() {
         JOIN low_categories lc2 ON lc2.id = sc2.low_category_id
         WHERE lc2.top_category_id = tc.id
       )
-      AND tc.slug ~* '(informati|ordinat|portable|smartphone|telephone|tablette|gaming|console|audio|casque|haut.parleur|enceinte|tv|televi|ecran|moniteur|composant|stockage|reseau|imprimante|peripherique|electromenager|refriger|congelat|lave|climatiseur|climatisation|aspirateur|four|cuisiniere|batterie|chargeur|cable|accessoire|camera|photo|scanner|onduleur|clavier|souris|processeur|ram|carte.graphique|boitier|alimentation|refroidissement|disque|ssd|usb|hdmi|gamer|gaming)'
+      AND tc.slug = ANY(ARRAY[
+        'accessoires-informatiques','accessoires-telephonie','accessoires-gamer',
+        'audio-casques-et-haut-parleurs','batteries-et-chargeurs','climatisation-et-chauffage',
+        'composants','consoles','ecrans-et-moniteurs','encre-et-toner',
+        'froid-et-refrigeration','gros-electromenager','home-cinema-et-streaming',
+        'imprimantes-et-scanners','jeux-video','lavage','manettes',
+        'montres-et-objets-connectes','onduleurs-et-alimentation','ordinateurs-apple',
+        'pc-de-bureau','pc-de-bureau-gamer','pc-portables','pc-portables-gamer',
+        'petit-electromenager','reseaux-serveurs-et-securite','smartphones',
+        'stockage','tablettes','televisions','videoprojecteurs',
+        'appareils-photo','aspirateurs-et-nettoyage','chaises-et-bureaux-gamer',
+        'cuisson','logiciels','materiel-point-de-vente','telephones-classiques',
+        'eclairage-et-electricite'
+      ])
       ORDER BY tc.name ASC, sc.name ASC
     `);
 

@@ -115,28 +115,28 @@ type Product = {
 // id = comma-separated DB slugs that map to this card
 const categories = [
   {
-    id: "informatique,pc-portables,ordinateurs-de-bureau,tablettes,smartphones,telephonie",
+    id: "pc-portables,pc-de-bureau,ordinateurs-apple,tablettes,smartphones,telephones-classiques,pc-portables-gamer,pc-de-bureau-gamer",
     fr: "Informatique",
     ar: "المعلوماتية",
     count: null,
     img: "/informatique.png",
   },
   {
-    id: "electromenager,gros-electromenager,petit-electromenager,climatisation-et-chauffage,climatiseurs,refrigerateurs,lave-linge,aspirateurs-et-nettoyage",
+    id: "gros-electromenager,petit-electromenager,climatisation-et-chauffage,froid-et-refrigeration,lavage,aspirateurs-et-nettoyage,cuisson",
     fr: "Électroménager",
     ar: "الأجهزة المنزلية",
     count: null,
     img: "/electromenager.png",
   },
   {
-    id: "gaming,composants,cartes-graphiques,ram,processeurs,ecrans,moniteurs,accessoires-gaming,accessoires-gamer,chaises-et-bureaux-gamer,consoles,jeux-video",
+    id: "composants,ecrans-et-moniteurs,accessoires-gamer,chaises-et-bureaux-gamer,consoles,jeux-video,manettes,videoprojecteurs",
     fr: "Gaming & PC",
     ar: "الألعاب والحاسوب",
     count: null,
     img: "/gaming.png",
   },
   {
-    id: "audio-casques-et-haut-parleurs,cameras,appareils-photo,accessoires-telephonie,accessoires-informatiques,batteries-et-chargeurs,cables-adaptateurs,divers,tv-home-cinema,television",
+    id: "audio-casques-et-haut-parleurs,appareils-photo,accessoires-telephonie,accessoires-informatiques,batteries-et-chargeurs,stockage,televisions,home-cinema-et-streaming,montres-et-objets-connectes,reseaux-serveurs-et-securite,imprimantes-et-scanners,encre-et-toner",
     fr: "Divers & Accessoires",
     ar: "متنوعات وملحقات",
     count: null,
