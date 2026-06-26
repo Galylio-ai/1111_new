@@ -346,7 +346,7 @@ function RetailPageInner() {
                     : "text-slate-500 hover:text-slate-700 dark:text-white/40 dark:hover:text-white/70"
                 }`}
               >
-                {tab.icon && <Tag className="h-3 w-3 opacity-70" />}
+                {"icon" in tab && <Tag className="h-3 w-3 opacity-70" />}
                 {tab.label}
               </button>
             ))}
