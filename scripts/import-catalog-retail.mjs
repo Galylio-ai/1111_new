@@ -43,9 +43,11 @@ async function getOrInsertShop(client, shopKey, shopName) {
   const display = shopName || shopKey.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
   const slug    = slugify(shopKey);
   const r = await client.query(
-    `INSERT INTO shops (shop_key, name, slug)
-     VALUES ($1, $2, $3)
-     ON CONFLICT (shop_key) DO UPDATE SET name = EXCLUDED.name
+    `INSERT INTO shops (shop_key, name, slug, source_clusters)
+     VALUES ($1, $2, $3, ARRAY['retail'])
+     ON CONFLICT (shop_key) DO UPDATE
+       SET name = EXCLUDED.name,
+           source_clusters = array(SELECT DISTINCT unnest(shops.source_clusters || ARRAY['retail']))
      RETURNING id`,
     [shopKey, display, slug]
   );
@@ -127,17 +129,17 @@ async function flushBatch(client, batch) {
        (shop_id, source_cluster, source_product_id, name, slug, brand, image, url,
         top_category, low_category, subcategory, price, old_price)
      VALUES ${vals.join(",")}
-     ON CONFLICT (shop_id, source_product_id) DO UPDATE SET
-       name       = EXCLUDED.name,
-       brand      = EXCLUDED.brand,
-       image      = EXCLUDED.image,
-       url        = EXCLUDED.url,
+     ON CONFLICT (shop_id, source_product_id) WHERE source_product_id IS NOT NULL DO UPDATE SET
+       name         = EXCLUDED.name,
+       brand        = EXCLUDED.brand,
+       image        = EXCLUDED.image,
+       url          = EXCLUDED.url,
        top_category = EXCLUDED.top_category,
        low_category = EXCLUDED.low_category,
        subcategory  = EXCLUDED.subcategory,
-       price      = EXCLUDED.price,
-       old_price  = EXCLUDED.old_price,
-       updated_at = now()`,
+       price        = EXCLUDED.price,
+       old_price    = EXCLUDED.old_price,
+       updated_at   = now()`,
     params
   );
 }
