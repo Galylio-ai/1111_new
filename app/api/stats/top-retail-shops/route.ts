@@ -66,7 +66,7 @@ function compute(): ShopRow[] {
   const agg: Record<string, { total: number; cheapest: number }> = {};
   for (const p of products) {
     if (!Array.isArray(p.shopNames) || p.shopNames.length === 0) continue;
-    const cheapest = p.shopNames[0]; // data.json lists the cheapest shop first
+    const cheapest = p.shopNames[0];
     for (const shop of p.shopNames) {
       if (!agg[shop]) agg[shop] = { total: 0, cheapest: 0 };
       agg[shop].total += 1;
@@ -82,17 +82,14 @@ function compute(): ShopRow[] {
   const top5Set = new Set(top5);
 
   // Pass 2: "similar" = products this shop carries that are ALSO sold by at
-  // least one OTHER top-5 shop (the meaningful head-to-head overlap among the
-  // top retailers — not just "sold by any shop", which every product satisfies).
+  // least one OTHER top-5 shop.
   const similar: Record<string, number> = {};
   for (const shop of top5) similar[shop] = 0;
 
   for (const p of products) {
     if (!Array.isArray(p.shopNames) || p.shopNames.length === 0) continue;
-    // Which top-5 shops carry this product?
     const top5Carriers = p.shopNames.filter((s) => top5Set.has(s));
-    if (top5Carriers.length < 2) continue; // needs ≥2 top-5 shops to be "shared"
-    // Every top-5 carrier here shares this product with another top-5 shop.
+    if (top5Carriers.length < 2) continue;
     for (const shop of top5Carriers) similar[shop] += 1;
   }
 
