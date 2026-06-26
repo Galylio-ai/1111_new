@@ -1,111 +1,101 @@
 import { NextResponse } from "next/server";
-import { readFileSync } from "fs";
-import path from "path";
+import { Pool } from "pg";
 
-type Product = {
-  name: string;
-  brand: string;
-  category: string;
-  img: string;
-  minPrice: number;
-  maxPrice: number;
-  shopNames: string[];
-  discount: number | null;
-};
+const pool = new Pool({ connectionString: process.env.RETAIL_DB_URL, max: 2 });
 
-type ShopRow = {
-  shop: string;
-  displayName: string;
-  logo: string | null;
-  totalProducts: number;
-  similarProducts: number;
-  cheapestCount: number;
-};
+export const dynamic = "force-dynamic";
 
-const DISPLAY_NAMES: Record<string, string> = {
-  tunisianet: "Tunisianet",
-  mytek: "Mytek",
-  spacenet: "Spacenet",
-  megapc: "MegaPC",
-  sbs: "SBS Informatique",
-  agora: "Agora",
-  wiki: "Wiki",
-  jumbo: "Jumbo",
-  zoom: "Zoom",
-  fnac: "Fnac",
-  scoop: "Scoop",
-  primini: "Primini",
-};
-
-const LOGO_FILES: Record<string, string> = {
+const LOGO_FILES: Record<string, string | null> = {
   tunisianet: "/shop-logos/tunisianet.jpg",
   mytek: "/shop-logos/mytek.png",
   spacenet: "/shop-logos/spacenet.svg",
   megapc: "/shop-logos/megapc.png",
-  sbs: "/shop-logos/sbs.png",
   agora: "/shop-logos/agora.png",
   wiki: "/shop-logos/wiki.png",
   jumbo: "/shop-logos/jumbo.jpg",
-  zoom: "/shop-logos/zoom.jpg",
-  scoop: "/shop-logos/scoop.png",
+  bstech: "/shop-logos/bstech.webp",
+  kamounhome: "/shop-logos/kamounhome.png",
+  technopro: "/shop-logos/technopro.jpg",
+  affariyet: "/shop-logos/affariyet.webp",
+  krichen: "/shop-logos/krichen.png",
+  maalejaudio: "/shop-logos/maalejaudio.png",
+  graiet: "/shop-logos/graiet.png",
+  electrohadjkacem: null,
+  electrochaabani: "/shop-logos/electrochaabani.png",
 };
 
-function pretty(key: string): string {
-  return DISPLAY_NAMES[key.toLowerCase()] ?? key.charAt(0).toUpperCase() + key.slice(1);
+function logoFor(key: string): string | null {
+  if (key in LOGO_FILES) return LOGO_FILES[key];
+  return `/shop-logos/${key}.png`;
 }
 
-let cache: ShopRow[] | null = null;
-
-function compute(): ShopRow[] {
-  if (cache) return cache;
-
-  const file = path.join(process.cwd(), "app/api/retail-products/data.json");
-  const products = JSON.parse(readFileSync(file, "utf8")) as Product[];
-
-  // Pass 1: per-shop totals + cheapest count, to pick the top 5.
-  const agg: Record<string, { total: number; cheapest: number }> = {};
-  for (const p of products) {
-    if (!Array.isArray(p.shopNames) || p.shopNames.length === 0) continue;
-    const cheapest = p.shopNames[0];
-    for (const shop of p.shopNames) {
-      if (!agg[shop]) agg[shop] = { total: 0, cheapest: 0 };
-      agg[shop].total += 1;
-      if (shop === cheapest) agg[shop].cheapest += 1;
-    }
-  }
-
-  // Top 5 by number of products where the shop offers the best price.
-  const top5 = Object.entries(agg)
-    .sort((a, b) => b[1].cheapest - a[1].cheapest)
-    .slice(0, 5)
-    .map(([shop]) => shop);
-  const top5Set = new Set(top5);
-
-  // Pass 2: "similar" = products this shop carries that are ALSO sold by at
-  // least one OTHER top-5 shop.
-  const similar: Record<string, number> = {};
-  for (const shop of top5) similar[shop] = 0;
-
-  for (const p of products) {
-    if (!Array.isArray(p.shopNames) || p.shopNames.length === 0) continue;
-    const top5Carriers = p.shopNames.filter((s) => top5Set.has(s));
-    if (top5Carriers.length < 2) continue;
-    for (const shop of top5Carriers) similar[shop] += 1;
-  }
-
-  const rows: ShopRow[] = top5.map((shop) => ({
-    shop,
-    displayName: pretty(shop),
-    logo: LOGO_FILES[shop.toLowerCase()] ?? null,
-    totalProducts: agg[shop].total,
-    similarProducts: similar[shop] ?? 0,
-    cheapestCount: agg[shop].cheapest,
-  }));
-
-  cache = rows;
-  return cache;
+function displayName(key: string): string {
+  return key.replace(/[_-]+/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 }
 
 export async function GET() {
-  return NextResponse.json({ shops: compute() });
+  const client = await pool.connect();
+  try {
+    // Top 5 shops by cheapest_count (number of products where they have the best price)
+    // Only matched products (is_matched=true) for accuracy
+    const res = await client.query(`
+      WITH shop_stats AS (
+        SELECT
+          s.shop_key,
+          s.name                                          AS display_name,
+          COUNT(DISTINCT sp.product_id)                   AS total_products,
+          -- cheapest: shop has the lowest current_price for that product
+          COUNT(DISTINCT CASE
+            WHEN sp.current_price = (
+              SELECT MIN(sp2.current_price)
+              FROM shop_prices sp2
+              WHERE sp2.product_id = sp.product_id
+                AND sp2.current_price IS NOT NULL
+            ) THEN sp.product_id
+          END)                                            AS cheapest_count
+        FROM shops s
+        JOIN shop_prices sp ON sp.shop_id = s.id
+        JOIN products p ON p.id = sp.product_id
+        WHERE p.is_matched = true
+          AND sp.current_price IS NOT NULL
+        GROUP BY s.id, s.shop_key, s.name
+        HAVING COUNT(DISTINCT sp.product_id) >= 10
+        ORDER BY cheapest_count DESC
+        LIMIT 5
+      )
+      SELECT
+        ss.shop_key,
+        ss.display_name,
+        ss.total_products,
+        ss.cheapest_count,
+        -- similar: products this shop carries that at least one OTHER top-5 also carries
+        (
+          SELECT COUNT(DISTINCT sp3.product_id)
+          FROM shop_prices sp3
+          JOIN shops s3 ON s3.id = sp3.shop_id
+          WHERE sp3.product_id IN (
+            SELECT sp4.product_id FROM shop_prices sp4
+            JOIN shops s4 ON s4.id = sp4.shop_id
+            WHERE s4.shop_key = ss.shop_key
+          )
+          AND s3.shop_key != ss.shop_key
+          AND s3.shop_key IN (SELECT shop_key FROM shop_stats)
+        )                                                 AS similar_products
+      FROM shop_stats ss
+      ORDER BY ss.cheapest_count DESC
+    `);
+
+    const shops = res.rows.map(r => ({
+      shop: r.shop_key,
+      displayName: displayName(r.shop_key),
+      logo: logoFor(r.shop_key),
+      totalProducts: Number(r.total_products),
+      similarProducts: Number(r.similar_products),
+      cheapestCount: Number(r.cheapest_count),
+    }));
+
+    return NextResponse.json({ shops });
+  } finally {
+    client.release();
+  }
 }

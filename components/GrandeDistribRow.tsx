@@ -1,8 +1,7 @@
 "use client";
 import { ChevronRight, ShieldAlert, Store, TrendingDown, TrendingUp, Trophy } from "lucide-react";
 import Link from "next/link";
-// import { useEffect, useState } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { distributionEnseignes, getStoreLogo } from "@/lib/data";
 import { topRetailSites, retailSitesMonth } from "@/lib/topRetailSites";
 
@@ -69,40 +68,19 @@ export function GrandeDistribRow() {
   const economy = "8 370";
   // const alert: AlertData | null = null;
   const illogicalPromo = null as IllogicalPromo | null;
-  const topRetailShops = [] as RetailShopRow[];
+  const [topRetailShops, setTopRetailShops] = useState<RetailShopRow[]>([]);
 
-  // useEffect(() => {
-  //   let cancelled = false;
-  //   fetch("/api/stats/grande-distrib")
-  //     .then((r) => r.json())
-  //     .then((d) => {
-  //       if (cancelled) return;
-  //       if (Array.isArray(d?.enseignes) && d.enseignes.length > 0) setEnseignes(d.enseignes);
-  //       if (typeof d?.basketSize === "number") setBasketSize(d.basketSize);
-  //       if (d?.alert && typeof d.alert === "object") setAlert(d.alert as AlertData);
-  //     })
-  //     .catch(() => {});
-  //
-  //   fetch("/api/stats/illogical-promo")
-  //     .then((r) => r.json())
-  //     .then((d) => {
-  //       if (cancelled) return;
-  //       if (d?.promo) setIllogicalPromo(d.promo as IllogicalPromo);
-  //     })
-  //     .catch(() => {});
-  //
-  //   fetch("/api/stats/top-retail-shops")
-  //     .then((r) => r.json())
-  //     .then((d) => {
-  //       if (cancelled) return;
-  //       if (Array.isArray(d?.shops)) setTopRetailShops(d.shops as RetailShopRow[]);
-  //     })
-  //     .catch(() => {});
-  //
-  //   return () => {
-  //     cancelled = true;
-  //   };
-  // }, []);
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/stats/top-retail-shops")
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return;
+        if (Array.isArray(d?.shops)) setTopRetailShops(d.shops as RetailShopRow[]);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <section className="mx-auto mt-6 max-w-[1600px] px-3 sm:px-4">
