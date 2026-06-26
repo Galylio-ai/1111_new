@@ -110,14 +110,14 @@ export function EssentialBasketRanking({
       </ul>
 
       {showEconomy && leader && (
-        <div className="mt-3 rounded-xl border border-emerald-500/25 bg-emerald-500/5 px-3 py-2.5 text-center dark:bg-emerald-500/[0.06]">
-          <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-white/50">
+        <div className="mt-3 rounded-xl border border-emerald-500/25 bg-emerald-500/5 px-3 py-2.5 text-center dark:border-emerald-400/45 dark:bg-gradient-to-br dark:from-emerald-900/85 dark:to-emerald-950/90">
+          <div className="text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-700 dark:text-emerald-200">
             Économie possible
           </div>
-          <div className="mt-0.5 text-2xl font-black tabular-nums text-emerald-600 dark:text-emerald-400">
+          <div className="mt-1 text-2xl font-black tabular-nums text-emerald-600 dark:text-emerald-300">
             {fmtDt(fiveShop.maxSavings)} DT
           </div>
-          <div className="text-[10px] text-slate-400 dark:text-white/45">
+          <div className="mt-1 text-[10px] font-medium text-slate-500 dark:text-emerald-100/75">
             vs {shopDisplayName(fiveShop.ranking[fiveShop.ranking.length - 1]?.shop ?? "")} · panier strict 5 enseignes
           </div>
         </div>

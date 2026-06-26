@@ -6,11 +6,10 @@ import type { StrictPlateReport } from "@/lib/popularPlates";
 import { fmtDt } from "@/lib/popularPlates";
 
 const CARD = 78;
-const PADDING = 10;
-const STAGE_HEIGHT = 380;
-const BOTTOM_BLEED = 14;
+const PADDING = 6;
+const STAGE_HEIGHT = 360;
 const ROTATE_MS = 9000;
-const FADE_MS = 420;
+const FADE_MS = 380;
 
 type Props = {
   plates: StrictPlateReport[];
@@ -22,13 +21,19 @@ function orbitLabel(name: string): string {
   return name;
 }
 
+function plateKicker(title: string): string {
+  if (title.toLowerCase().includes("ojja")) return "Ojja";
+  if (title.toLowerCase().includes("makrouna")) return "Makrouna";
+  return title.split(" ")[0] ?? title;
+}
+
 export function PlateOrbit({ plates }: Props) {
   const stageRef = useRef<HTMLDivElement>(null);
   const fadeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [width, setWidth] = useState(360);
   const [paused, setPaused] = useState(false);
   const [index, setIndex] = useState(0);
-  const [visible, setVisible] = useState(true);
+  const [fading, setFading] = useState(false);
 
   const plate = plates[index] ?? plates[0];
   const ingredients = plate?.orbitIngredients ?? [];
@@ -46,26 +51,22 @@ export function PlateOrbit({ plates }: Props) {
     return () => ro.disconnect();
   }, []);
 
-  const transitionTo = useCallback(
+  useEffect(() => () => {
+    if (fadeTimer.current) clearTimeout(fadeTimer.current);
+  }, []);
+
+  const switchTo = useCallback(
     (next: number) => {
-      if (plates.length <= 1 || next === index) return;
-
+      if (plates.length <= 1 || next === index || fading) return;
       if (fadeTimer.current) clearTimeout(fadeTimer.current);
-      setVisible(false);
-
+      setFading(true);
       fadeTimer.current = setTimeout(() => {
         setIndex(next);
-        requestAnimationFrame(() => setVisible(true));
+        requestAnimationFrame(() => setFading(false));
       }, FADE_MS);
     },
-    [index, plates.length],
+    [fading, index, plates.length],
   );
-
-  useEffect(() => {
-    return () => {
-      if (fadeTimer.current) clearTimeout(fadeTimer.current);
-    };
-  }, []);
 
   const indexRef = useRef(index);
   indexRef.current = index;
@@ -74,11 +75,11 @@ export function PlateOrbit({ plates }: Props) {
     if (plates.length <= 1 || paused) return;
     const id = window.setInterval(() => {
       const next = (indexRef.current + 1) % plates.length;
-      setVisible(false);
       if (fadeTimer.current) clearTimeout(fadeTimer.current);
+      setFading(true);
       fadeTimer.current = setTimeout(() => {
         setIndex(next);
-        requestAnimationFrame(() => setVisible(true));
+        requestAnimationFrame(() => setFading(false));
       }, FADE_MS);
     }, ROTATE_MS);
     return () => window.clearInterval(id);
@@ -87,20 +88,18 @@ export function PlateOrbit({ plates }: Props) {
   if (!plate) return null;
 
   const count = Math.max(ingredients.length, 1);
-  const card = width < 320 ? 64 : width < 420 ? 72 : count <= 6 ? 84 : CARD;
-  const height = width < 320 ? 322 : width < 420 ? 352 : STAGE_HEIGHT;
+  const card = width < 320 ? 60 : width < 420 ? 68 : CARD;
+  const height = width < 320 ? 300 : width < 420 ? 330 : STAGE_HEIGHT;
   const halfW = width / 2;
   const halfH = height / 2;
-  const radius = Math.max(
-    0,
-    Math.min(halfW, halfH - BOTTOM_BLEED * 0.5) - card / 2 - PADDING,
-  );
+  const radius = Math.max(0, Math.min(halfW, halfH) - card / 2 - PADDING);
   const ring = 2 * radius + card;
   const center = ring / 2;
-  const spinPaused = paused || !visible;
+  const spinPaused = paused || fading;
+  const fadeClass = fading ? "plate-orbit-fade--out" : "plate-orbit-fade--in";
 
   return (
-    <div className="plate-orbit-wrap" style={{ paddingBottom: BOTTOM_BLEED }}>
+    <div className="plate-orbit-wrap">
       <div
         ref={stageRef}
         className="ojja-stage plate-orbit-root"
@@ -108,62 +107,69 @@ export function PlateOrbit({ plates }: Props) {
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
+        {/* Badge, guide, plate — same stacking as OjjaOrbit (cost z-index 6 above spinner) */}
+        <div className={`ojja-center-cost ${fadeClass}`}>
+          <span className="ojja-center-cost-kicker">{plateKicker(plate.title)}</span>
+          <strong>{fmtDt(plate.featuredConsumedTotal)} DT</strong>
+          <span className="ojja-center-cost-shop">
+            {plate.featuredShop} · identiques
+          </span>
+        </div>
+
+        <div
+          className={`ojja-orbit-guide ${fadeClass}`}
+          style={{ width: 2 * radius, height: 2 * radius }}
+        />
+
+        <div className={`ojja-center-plate ${fadeClass}`}>
+          <div className="ojja-plate-halo" />
+          <img src={plate.image} alt={plate.title} className="ojja-plate-img" />
+        </div>
+
+        {/* Spinner remounts per plate so ring + counter-rotation stay in sync */}
         <div
           key={plate.id}
-          className={`plate-orbit-layer${visible ? " plate-orbit-layer--visible" : ""}`}
+          className={`ojja-spinner plate-orbit-spinner ${fadeClass}`}
+          style={{
+            width: ring,
+            height: ring,
+            animationPlayState: spinPaused ? "paused" : "running",
+          }}
         >
-          <div className="ojja-center-cost">
-            <span className="ojja-center-cost-kicker">{orbitLabel(plate.title.split(" ")[0])}</span>
-            <strong>{fmtDt(plate.featuredConsumedTotal)} DT</strong>
-            <span className="ojja-center-cost-shop">
-              {plate.featuredShop} · identiques
-            </span>
-          </div>
-
-          <div className="ojja-orbit-guide" style={{ width: 2 * radius, height: 2 * radius }} />
-
-          <div className="ojja-center-plate">
-            <div className="ojja-plate-halo" />
-            <img src={plate.image} alt={plate.title} className="ojja-plate-img" />
-          </div>
-
-          <div
-            className="ojja-spinner"
-            style={{
-              width: ring,
-              height: ring,
-              animationPlayState: spinPaused ? "paused" : "running",
-            }}
-          >
-            {ingredients.map((ing, i) => {
-              const angle = (2 * Math.PI * i) / count - Math.PI / 2;
-              const x = center + radius * Math.cos(angle) - card / 2;
-              const y = center + radius * Math.sin(angle) - card / 2;
-              return (
+          {ingredients.map((ing, i) => {
+            const angle = (2 * Math.PI * i) / count - Math.PI / 2;
+            const x = center + radius * Math.cos(angle) - card / 2;
+            const y = center + radius * Math.sin(angle) - card / 2;
+            return (
+              <div
+                key={ing.name}
+                className="ojja-card-slot"
+                style={{ left: x, top: y, width: card, height: card }}
+              >
                 <div
-                  key={ing.name}
-                  className="ojja-card-slot"
-                  style={{ left: x, top: y, width: card, height: card }}
+                  className="ojja-card-counter"
+                  style={{ animationPlayState: spinPaused ? "paused" : "running" }}
                 >
                   <div
-                    className="ojja-card-counter"
-                    style={{ animationPlayState: spinPaused ? "paused" : "running" }}
+                    className="ojja-card"
+                    style={{ ["--accent" as string]: ing.accent }}
                   >
-                    <div className="ojja-card" style={{ ["--accent" as string]: ing.accent }}>
-                      <div className="ojja-card-icon">
-                        <img src={ing.icon} alt="" width={20} height={20} />
-                      </div>
-                      <div className="ojja-card-name">{orbitLabel(ing.name)}</div>
-                      <div className="ojja-card-qty">{ing.qty}</div>
-                      <div className="ojja-card-price" title={`Prix catalogue: ${ing.price} DT`}>
-                        {ing.portionPrice} DT
-                      </div>
+                    <div className="ojja-card-icon">
+                      <img src={ing.icon} alt="" width={20} height={20} />
+                    </div>
+                    <div className="ojja-card-name">{orbitLabel(ing.name)}</div>
+                    <div className="ojja-card-qty">{ing.qty}</div>
+                    <div
+                      className="ojja-card-price"
+                      title={`Prix catalogue : ${ing.price} DT`}
+                    >
+                      {ing.portionPrice} DT
                     </div>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -175,7 +181,7 @@ export function PlateOrbit({ plates }: Props) {
               type="button"
               aria-label={p.title}
               aria-current={i === index ? "true" : undefined}
-              onClick={() => transitionTo(i)}
+              onClick={() => switchTo(i)}
               className={`h-2 rounded-full transition-all duration-300 ${
                 i === index ? "w-6 bg-brand-gold" : "w-2 bg-slate-300 dark:bg-white/20"
               }`}
@@ -184,10 +190,13 @@ export function PlateOrbit({ plates }: Props) {
         </div>
       )}
 
-      <p className="mt-2 text-center text-[10px] text-slate-400 transition-opacity duration-300 dark:text-white/40">
+      <p className="mt-2 text-center text-[10px] text-slate-400 dark:text-white/40">
         <span className="font-medium text-slate-500 dark:text-white/55">{plate.title}</span>
         {" · "}
-        <Link href={`/qoffa/plats/${plate.slug}`} className="font-semibold text-brand-gold hover:underline">
+        <Link
+          href={`/qoffa/plats/${plate.slug}`}
+          className="font-semibold text-brand-gold hover:underline"
+        >
           Voir le détail
         </Link>
       </p>

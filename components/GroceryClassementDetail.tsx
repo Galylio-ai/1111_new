@@ -39,27 +39,27 @@ export function GroceryClassementDetail() {
 
   return (
     <div className="min-w-0 space-y-5 sm:space-y-6">
-      <div className="relative overflow-hidden rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950/90 via-slate-950/95 to-slate-950 p-5 sm:p-8">
-        <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-emerald-500/20 blur-3xl" />
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-400/80">
+      <div className="relative overflow-hidden rounded-2xl border border-emerald-200/90 bg-gradient-to-br from-emerald-50 via-white to-emerald-50/40 p-5 sm:p-8 dark:border-emerald-500/20 dark:from-emerald-950/90 dark:via-slate-950/95 dark:to-slate-950">
+        <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-emerald-300/20 blur-3xl dark:bg-emerald-500/20" />
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-700/90 dark:text-emerald-400/80">
           Classement courses · Grande distribution
         </p>
-        <h2 className="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl">
+        <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl dark:text-white">
           Quel supermarché est le moins cher ?
         </h2>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/65">
-          Analyse par <strong className="text-white/90">croisement d&apos;enseignes</strong> : nous
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-white/65">
+          Analyse par <strong className="text-slate-800 dark:text-white/90">croisement d&apos;enseignes</strong> : nous
           comparons le même produit lorsqu&apos;il est disponible chez plusieurs enseignes, puis
           comptons qui propose le prix le plus bas le plus souvent.
         </p>
         {leader && (
-          <p className="mt-3 text-sm font-semibold text-emerald-300">
+          <p className="mt-3 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
             {shopShortName(leader.shop_name)} en tête avec {leader.cheapest_rate_pct}% de victoires
             sur {leader.price_comparisons.toLocaleString("fr-FR")} confrontations de prix.
           </p>
         )}
         {updated && (
-          <p className="mt-2 text-[11px] text-white/40">Dernière analyse · {updated}</p>
+          <p className="mt-2 text-[11px] text-slate-500 dark:text-white/40">Dernière analyse · {updated}</p>
         )}
       </div>
 

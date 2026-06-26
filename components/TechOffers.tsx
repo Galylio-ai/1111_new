@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BarChart3 } from "lucide-react";
 import { PriceRankingCard } from "@/components/PriceRankingCard";
 import { PRICE_RANKING_CATALOG } from "@/lib/priceRankings";
 
@@ -54,16 +53,24 @@ export function TechOffers() {
 
   const totalProducts = scopes.reduce((a, s) => a + (s.matched_products ?? 0), 0);
 
+  function cardGridClass(index: number, total: number) {
+    const xlSpan = "xl:col-span-2";
+    const remainder = total % 3;
+    if (remainder === 0) return xlSpan;
+    const lastRowStart = total - remainder;
+    if (index < lastRowStart) return xlSpan;
+    if (remainder === 1) return `${xlSpan} xl:col-start-3`;
+    if (remainder === 2) {
+      return index === lastRowStart ? `${xlSpan} xl:col-start-2` : xlSpan;
+    }
+    return xlSpan;
+  }
+
   return (
     <section className="mx-auto mt-8 max-w-[1600px] px-3 sm:px-4">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/[0.04]">
-              <BarChart3 className="h-4 w-4 text-slate-700 dark:text-white/70" />
-            </div>
-            <h2 className="section-title">MEILLEURS PRIX PAR CATÉGORIE</h2>
-          </div>
+          <h2 className="section-title">MEILLEURS PRIX PAR CATÉGORIE</h2>
           <p className="mt-2 max-w-xl text-sm text-slate-500 dark:text-white/50">
             Classement des enseignes par comparaison produit à produit
             {totalProducts > 0 && (
@@ -74,9 +81,11 @@ export function TechOffers() {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {PRICE_RANKING_CATALOG.map((c) => (
-            <div key={c.slug}>{SKELETON}</div>
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-6">
+          {PRICE_RANKING_CATALOG.map((c, i) => (
+            <div key={c.slug} className={cardGridClass(i, PRICE_RANKING_CATALOG.length)}>
+              {SKELETON}
+            </div>
           ))}
         </div>
       ) : cards.length === 0 ? (
@@ -84,16 +93,17 @@ export function TechOffers() {
           Classements en cours de chargement. Vérifiez que les données sont importées dans la base retail.
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {cards.map(({ catalog, scope }) => (
-            <PriceRankingCard
-              key={catalog.slug}
-              catalog={catalog}
-              scopeName={scope.scope_name}
-              matchedProducts={scope.matched_products}
-              shopCount={scope.distinct_shops}
-              shops={scope.shops}
-            />
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-6 xl:justify-items-stretch">
+          {cards.map(({ catalog, scope }, i) => (
+            <div key={catalog.slug} className={cardGridClass(i, cards.length)}>
+              <PriceRankingCard
+                catalog={catalog}
+                scopeName={scope.scope_name}
+                matchedProducts={scope.matched_products}
+                shopCount={scope.distinct_shops}
+                shops={scope.shops}
+              />
+            </div>
           ))}
         </div>
       )}

@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import { ShopLogo } from "@/components/shop/ShopLogo";
+import { ArrowRight, Trophy } from "lucide-react";
 import {
   formatWinRate,
   shopDisplayName,
@@ -16,10 +15,10 @@ export type RankingShopPreview = {
 
 function rankBarHeight(rank: number, winRate: number, maxRate: number) {
   const ratio = maxRate > 0 ? winRate / maxRate : 0;
-  const h = Math.round(28 + ratio * 44);
-  if (rank === 1) return { h, tone: "bg-brand-gold" };
-  if (rank === 2) return { h, tone: "bg-slate-400 dark:bg-slate-500" };
-  return { h, tone: "bg-slate-500/70 dark:bg-slate-600" };
+  const h = Math.round(32 + ratio * 48);
+  if (rank === 1) return { h, tone: "bg-gradient-to-t from-amber-500 to-brand-gold" };
+  if (rank === 2) return { h, tone: "bg-gradient-to-t from-slate-500 to-slate-400 dark:from-slate-600 dark:to-slate-500" };
+  return { h, tone: "bg-gradient-to-t from-slate-600/90 to-slate-500/80 dark:from-slate-700 dark:to-slate-600" };
 }
 
 export function PriceRankingCard({
@@ -78,11 +77,12 @@ export function PriceRankingCard({
               return (
                 <div
                   key={shop.shop_key}
-                  className="flex min-w-0 flex-1 flex-col items-center gap-1.5"
+                  className={`flex min-w-0 flex-1 flex-col items-center gap-2 ${
+                    isFirst ? "-mt-1" : ""
+                  }`}
                 >
-                  <ShopLogo shopKey={shop.shop_key} size={isFirst ? 44 : 38} />
                   <span
-                    className={`w-full truncate text-center text-[10px] font-semibold leading-tight sm:text-[11px] ${
+                    className={`w-full truncate text-center text-[11px] font-bold leading-tight sm:text-xs ${
                       isFirst
                         ? "text-slate-900 dark:text-white"
                         : "text-slate-500 dark:text-white/55"
@@ -91,23 +91,36 @@ export function PriceRankingCard({
                     {shopDisplayName(shop.shop_key)}
                   </span>
                   <span
-                    className={`text-[11px] font-bold tabular-nums ${
-                      isFirst ? "text-brand-gold" : "text-slate-500 dark:text-white/50"
+                    className={`rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums ${
+                      isFirst
+                        ? "bg-brand-gold/15 text-brand-gold dark:bg-brand-gold/20"
+                        : "text-slate-500 dark:text-white/50"
                     }`}
                   >
                     {formatWinRate(shop.fair_win_rate)}
                   </span>
                   <div
-                    className={`flex w-full items-end justify-center rounded-t-md ${bar.tone}`}
+                    className={`relative flex w-full items-end justify-center overflow-hidden rounded-t-lg ${bar.tone} ${
+                      isFirst
+                        ? "shadow-[0_-4px_16px_rgba(246,196,83,0.35)] ring-1 ring-brand-gold/30"
+                        : "shadow-inner"
+                    }`}
                     style={{ height: bar.h }}
                   >
-                    <span
-                      className={`pb-1 font-black tabular-nums ${
-                        isFirst ? "text-base text-slate-900" : "text-sm text-white/90"
-                      }`}
-                    >
-                      {shop.rank}
-                    </span>
+                    <div className="flex items-center justify-center pb-1.5">
+                      {isFirst ? (
+                        <Trophy
+                          className="h-5 w-5 text-slate-900 drop-shadow-sm sm:h-6 sm:w-6"
+                          strokeWidth={2.25}
+                          fill="currentColor"
+                          fillOpacity={0.15}
+                        />
+                      ) : (
+                        <span className="text-sm font-black tabular-nums text-white/95 sm:text-base">
+                          {shop.rank}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               );

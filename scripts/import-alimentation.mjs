@@ -318,12 +318,13 @@ async function main() {
         if (!sid || seenShopIds.has(sid)) continue;
         seenShopIds.add(sid);
         const cur = Number.isFinite(p.price) ? p.price : null;
-        const reg = Number.isFinite(p.regular_price) ? p.regular_price : null;
+        const regRaw = p.old_price ?? p.regular_price ?? null;
+        const reg = Number.isFinite(regRaw) ? regRaw : null;
         if (!(cur && cur > 0)) continue; // skip rows with no usable price
         shopPrices.push({
           shopId: sid,
           current: cur,
-          regular: reg && reg > 0 ? reg : null,
+          regular: reg && reg > cur ? reg : null,
           url: String(p.url || fallbackUrl),
         });
       }

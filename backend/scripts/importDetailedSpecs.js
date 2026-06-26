@@ -50,15 +50,19 @@ const PREFIX = DOMAIN.toUpperCase();
 function env(name, fallback = '') {
   return process.env[`${PREFIX}_${name}`] ?? process.env[name] ?? fallback;
 }
+
+const connectionString = env('DB_URL');
 const db = knexFactory({
   client: 'pg',
-  connection: {
-    host: env('DB_HOST', 'localhost'),
-    port: parseInt(env('DB_PORT', '5432'), 10),
-    database: env('DB_NAME', `${DOMAIN}_db`),
-    user: env('DB_USER', `${DOMAIN}_user`),
-    password: env('DB_PASSWORD', ''),
-  },
+  connection: connectionString
+    ? connectionString
+    : {
+        host: env('DB_HOST', 'localhost'),
+        port: parseInt(env('DB_PORT', '5432'), 10),
+        database: env('DB_NAME', `${DOMAIN}_db`),
+        user: env('DB_USER', `${DOMAIN}_user`),
+        password: env('DB_PASSWORD', ''),
+      },
   pool: { min: 1, max: 5 },
 });
 

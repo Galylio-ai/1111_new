@@ -30,23 +30,29 @@ export function PopularPlateDetail({ plate }: { plate: StrictPlateReport }) {
 
   return (
     <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-2xl border border-brand-gold/25 bg-gradient-to-br from-brand-gold/10 via-slate-950/95 to-slate-950 p-5 sm:p-8">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-gold/80">
+      <div className="relative overflow-hidden rounded-2xl border border-brand-gold/35 bg-gradient-to-br from-amber-50/90 via-white to-brand-gold/10 p-5 sm:p-8 dark:border-brand-gold/25 dark:from-brand-gold/10 dark:via-slate-950/95 dark:to-slate-950">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-800/85 dark:text-brand-gold/80">
           Plat populaire · Produits identiques croisés
         </p>
-        <h2 className="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl">{plate.title}</h2>
-        <p className="font-arabic mt-1 text-base text-white/55" dir="rtl">{plate.arabicTitle}</p>
+        <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl dark:text-white">
+          {plate.title}
+        </h2>
+        <p className="font-arabic mt-1 text-base text-slate-500 dark:text-white/55" dir="rtl">
+          {plate.arabicTitle}
+        </p>
         <ul className="mt-3 flex flex-wrap gap-2">
           {plate.recipeAssumption.map((item) => (
             <li
               key={item}
-              className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-white/75"
+              className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-white/75"
             >
               {item}
             </li>
           ))}
         </ul>
-        {updated && <p className="mt-3 text-[11px] text-white/40">Analyse · {updated}</p>}
+        {updated && (
+          <p className="mt-3 text-[11px] text-slate-500 dark:text-white/40">Analyse · {updated}</p>
+        )}
       </div>
 
       <div className="rounded-2xl border border-amber-400/25 bg-amber-500/5 p-4 dark:bg-amber-500/[0.06]">

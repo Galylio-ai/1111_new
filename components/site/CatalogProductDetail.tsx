@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft, ChevronRight, ExternalLink, FileText,
-  ListChecks, Scale, ShieldCheck, Sparkles, Star, Store, Tag, TrendingUp, Truck,
+  Scale, ShieldCheck, Sparkles, Store, Tag, TrendingUp, Truck,
 } from "lucide-react";
 import {
   Area, AreaChart, CartesianGrid, ResponsiveContainer,
@@ -13,6 +13,8 @@ import { useTheme } from "@/components/ThemeProvider";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { FavoriteAlertButtons } from "@/components/site/FavoriteAlertButtons";
+import { PageContainer } from "@/components/site/PageContainer";
+import { ProductSpecsPanel } from "@/components/site/ProductSpecsPanel";
 import { resolveDetailPriceHistory } from "@/lib/productDetail";
 
 type RelatedProduct = {
@@ -165,15 +167,19 @@ function PriceBar({ min, max, current }: { min: number; max: number; current: nu
   const pct = max === min ? 100 : Math.round(((current - min) / (max - min)) * 100);
   const isMin = current === min;
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-xs tabular-nums text-emerald-600 dark:text-emerald-400 font-semibold">{min.toFixed(3)} DT</span>
-      <div className="relative flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-white/10 overflow-hidden">
+    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
+      <span className="shrink-0 text-xs font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+        {min.toFixed(3)} DT
+      </span>
+      <div className="relative h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-white/10">
         <div
           className={`absolute left-0 top-0 h-full rounded-full ${isMin ? "bg-emerald-500" : "bg-brand-gold"}`}
-          style={{ width: `${Math.max(6, pct)}%` }}
+          style={{ width: `${Math.max(8, pct)}%` }}
         />
       </div>
-      <span className="text-xs tabular-nums text-red-500 dark:text-red-400 font-semibold">{max.toFixed(3)} DT</span>
+      <span className="shrink-0 text-xs font-semibold tabular-nums text-red-500 dark:text-red-400">
+        {max.toFixed(3)} DT
+      </span>
     </div>
   );
 }
@@ -244,46 +250,65 @@ export function CatalogProductDetail({
   const savings = product.maxPrice - product.minPrice;
   const discountPct = product.discount;
 
+  const shopRows = [...product.shopNames]
+    .map((shop) => {
+      const keyExact = shop;
+      const keyLower = shop.toLowerCase();
+      const keyUnder = keyLower.replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+      const keyNoSep = keyLower.replace(/[^a-z0-9]/g, "");
+      const p = product.shopPrices;
+      const u = product.shopUrls;
+      const price = p?.[keyUnder] ?? p?.[keyExact] ?? p?.[keyLower] ?? p?.[keyNoSep] ?? product.minPrice;
+      const dbUrl = u?.[keyUnder] ?? u?.[keyExact] ?? u?.[keyLower] ?? u?.[keyNoSep];
+      const href = dbUrl ?? shopUrl(shop, product.name);
+      return { shop, price, href };
+    })
+    .sort((a, b) => a.price - b.price);
+
+  const baseSpecs: [string, string][] = [
+    ["Marque", product.brand],
+    ["Catégorie", product.category],
+    ...(product.reference ? [["Référence", product.reference] as [string, string]] : []),
+    ["Prix min", `${product.minPrice.toFixed(3)} DT`],
+    ...(discountPct ? [["Réduction", `−${discountPct}%`] as [string, string]] : []),
+  ];
+
   return (
-    <main className="min-h-screen bg-bg-900">
+    <main className="min-h-screen bg-bg-900 pb-28">
       <Header />
 
-      {/* Breadcrumb */}
-      <div className="mx-auto max-w-[1400px] px-4 pt-5">
-        <nav className="mb-4 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-white/40">
+      <PageContainer className="pt-5">
+        <nav className="mb-6 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-white/40">
           <Link href="/" className="transition hover:text-brand-gold">Accueil</Link>
-          <ChevronRight className="h-3 w-3 opacity-60" />
+          <ChevronRight className="h-3 w-3 shrink-0 opacity-60" />
           <Link href={backHref} className="transition hover:text-brand-gold">{backLabel}</Link>
-          <ChevronRight className="h-3 w-3 opacity-60" />
+          <ChevronRight className="h-3 w-3 shrink-0 opacity-60" />
           <span className="truncate text-brand-gold">{product.name}</span>
         </nav>
-      </div>
 
-      <section className="mx-auto mt-2 max-w-[1400px] px-4">
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[420px_1fr_380px]">
-
-          {/* LEFT — image (stretches to match right column height) */}
-          <div className="flex flex-col gap-3">
-            <div className="relative flex flex-1 min-h-[420px] items-center justify-center overflow-hidden rounded-2xl border border-bg-border bg-white p-6 dark:bg-gradient-to-br dark:from-white/[0.06] dark:via-white/[0.02] dark:to-transparent">
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[420px_1fr]">
+          {/* Galerie — sticky on desktop */}
+          <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+            <div className="relative flex aspect-square max-h-[min(480px,70vw)] w-full items-center justify-center overflow-hidden rounded-2xl border border-bg-border bg-white p-6 dark:bg-gradient-to-br dark:from-white/[0.06] dark:via-white/[0.02] dark:to-transparent">
               <img
                 src={gallery[activeImage] ?? product.img}
                 alt={product.name}
                 referrerPolicy="no-referrer"
-                className="max-h-full max-w-full object-contain transition duration-500 hover:scale-105"
+                className="max-h-full max-w-full object-contain transition duration-500 hover:scale-[1.02]"
               />
-              {discountPct && (
+              {discountPct ? (
                 <span className="absolute left-4 top-4 inline-flex items-center gap-1 rounded-full bg-brand-red px-3 py-1 text-[12px] font-bold text-white shadow">
                   <Tag className="h-3 w-3" />−{discountPct}%
                 </span>
-              )}
+              ) : null}
             </div>
 
-            {/* Thumbnail strip — only when multiple images */}
             {gallery.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-1">
+              <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
                 {gallery.map((src, i) => (
                   <button
                     key={src}
+                    type="button"
                     onClick={() => setActiveImage(i)}
                     className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-white p-1 transition dark:bg-white/[0.04] ${
                       i === activeImage
@@ -298,26 +323,29 @@ export function CatalogProductDetail({
               </div>
             )}
 
-            {/* Trust badges */}
             <div className="grid grid-cols-3 gap-2">
               {[
                 { icon: ShieldCheck, label: "Prix vérifié" },
-                { icon: Scale,       label: "Comparé sur 9+" },
-                { icon: Truck,       label: "Livraison dispo" },
+                { icon: Scale, label: "Comparé multi-boutiques" },
+                { icon: Truck, label: "Livraison dispo" },
               ].map((b) => (
-                <div key={b.label} className="flex flex-col items-center gap-1.5 rounded-xl border border-bg-border bg-bg-700 p-2.5 text-center">
+                <div
+                  key={b.label}
+                  className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-bg-border bg-bg-700 px-2 py-3 text-center"
+                >
                   <b.icon className="h-4 w-4 text-brand-gold" strokeWidth={2} />
-                  <span className="text-[10px] font-semibold text-slate-600 dark:text-white/60 leading-tight">{b.label}</span>
+                  <span className="text-[10px] font-semibold leading-tight text-slate-600 dark:text-white/60">
+                    {b.label}
+                  </span>
                 </div>
               ))}
             </div>
-          </div>
+          </aside>
 
-          {/* RIGHT — info */}
-          <div className="space-y-5">
-            {/* Header */}
-            <div>
-              <div className="mb-1.5 flex flex-wrap items-center gap-2">
+          {/* Contenu principal */}
+          <div className="flex min-w-0 flex-col gap-6">
+            <header className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="rounded-full border border-brand-gold/25 bg-brand-gold/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-brand-gold">
                   {product.brand}
                 </span>
@@ -326,38 +354,40 @@ export function CatalogProductDetail({
                 </span>
                 {product.shopNames.length > 0 && (
                   <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[11px] text-slate-500 dark:border-white/10 dark:bg-white/[0.05] dark:text-white/50">
-                    <Store className="h-3 w-3" /> {product.shopNames.length} boutique{product.shopNames.length > 1 ? "s" : ""}
+                    <Store className="h-3 w-3" />
+                    {product.shopNames.length} boutique{product.shopNames.length > 1 ? "s" : ""}
                   </span>
                 )}
               </div>
-              <h1 className="text-2xl font-black leading-tight tracking-tight text-slate-900 sm:text-3xl dark:text-white">
+              <h1 className="text-2xl font-black leading-snug tracking-tight text-slate-900 sm:text-3xl dark:text-white">
                 {product.name}
               </h1>
-              <div className="mt-2 flex items-center gap-2">
-                <div className="flex">
-                  {[1,2,3,4,5].map(s => (
-                    <Star key={s} className={`h-4 w-4 ${s <= 4 ? "fill-brand-gold text-brand-gold" : "text-slate-300 dark:text-white/20"}`} />
-                  ))}
-                </div>
-                <span className="text-sm text-slate-500 dark:text-white/50">(4.2 · {product.shopNames.length * 12} avis)</span>
-              </div>
-            </div>
+              {product.reference && (
+                <p className="text-xs text-slate-500 dark:text-white/45">
+                  Réf. <span className="font-semibold tabular-nums">{product.reference}</span>
+                </p>
+              )}
+            </header>
 
-            {/* Price block */}
-            <div className="rounded-2xl border border-bg-border bg-bg-card p-5 shadow-card">
-              <div className="flex items-end justify-between gap-3 flex-wrap">
+            {/* Prix + actions */}
+            <div className="rounded-2xl border border-bg-border bg-bg-card p-5 shadow-card sm:p-6">
+              <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-white/40">À partir de</div>
-                  <div className="mt-0.5 flex items-baseline gap-2">
-                    <span className="text-4xl font-black tabular-nums text-emerald-600 dark:text-emerald-400">
+                  <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-white/40">
+                    Meilleur prix
+                  </div>
+                  <div className="mt-1 flex items-baseline gap-2">
+                    <span className="text-4xl font-black tabular-nums leading-none text-emerald-600 dark:text-emerald-400">
                       {product.minPrice.toFixed(3)}
                     </span>
-                    <span className="text-lg font-semibold text-slate-500 dark:text-white/50">DT</span>
+                    <span className="pb-1 text-lg font-semibold text-slate-500 dark:text-white/50">DT</span>
                   </div>
                 </div>
                 {savings > 0.5 && (
                   <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-2.5 text-center">
-                    <div className="text-[10px] uppercase tracking-wider text-emerald-600 dark:text-emerald-300 font-semibold">Économie max</div>
+                    <div className="text-[10px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-300">
+                      Économie max
+                    </div>
                     <div className="text-xl font-black tabular-nums text-emerald-600 dark:text-emerald-300">
                       {savings.toFixed(3)} DT
                     </div>
@@ -365,239 +395,197 @@ export function CatalogProductDetail({
                 )}
               </div>
 
-              <div className="mt-4">
-                <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-white/40">
+              <div className="mt-5 space-y-2">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-white/40">
                   Fourchette de prix
                 </div>
                 <PriceBar min={product.minPrice} max={product.maxPrice} current={product.minPrice} />
               </div>
 
-              <div className="mt-4 flex">
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                 <Link
                   href={`/comparateur/${slug}?from=${comparatorBase.replace(/^\//, "")}`}
-                  className="group relative flex flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-br from-brand-gold via-brand-goldDark to-[#a77f24] px-5 py-3 text-sm font-bold text-bg-900 ring-1 ring-brand-gold/40 shadow-[0_4px_18px_-4px_rgba(246,196,83,0.45)] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-[0_6px_24px_-2px_rgba(246,196,83,0.65)] active:translate-y-0 active:shadow-[0_2px_10px_-2px_rgba(246,196,83,0.45)]"
+                  className="group relative flex flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-br from-brand-gold via-brand-goldDark to-[#a77f24] px-5 py-3 text-sm font-bold text-bg-900 ring-1 ring-brand-gold/40 shadow-[0_4px_18px_-4px_rgba(246,196,83,0.45)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_24px_-2px_rgba(246,196,83,0.65)] active:translate-y-0"
                 >
                   <Scale className="h-4 w-4 transition-transform duration-300 group-hover:rotate-[-8deg]" />
-                  <span className="relative z-10">Comparer les prix</span>
-                  <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/35 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-full" />
+                  Comparer les prix
                 </Link>
               </div>
 
-              {/* Real favorite + price-drop alert (persisted server-side) */}
               <FavoriteAlertButtons slug={slug} />
             </div>
 
-            {/* Shops list */}
-            <div className="rounded-2xl border border-bg-border bg-bg-card p-5 shadow-card">
-              <h2 className="section-title mb-3 flex items-center gap-2">
-                <Store className="h-4 w-4 text-brand-gold" />
-                Disponible dans {product.shopNames.length} boutique{product.shopNames.length > 1 ? "s" : ""}
-              </h2>
-              <ul className="space-y-2">
-                {[...product.shopNames]
-                  .map((shop) => {
-                    // Try multiple key formats to match what the DB stores
-                    const keyExact = shop;
-                    const keyLower = shop.toLowerCase();
-                    const keyUnder = keyLower.replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
-                    const keyNoSep = keyLower.replace(/[^a-z0-9]/g, "");
-                    const p = product.shopPrices;
-                    const u = product.shopUrls;
-                    const price = p?.[keyUnder] ?? p?.[keyExact] ?? p?.[keyLower] ?? p?.[keyNoSep] ?? product.minPrice;
-                    const dbUrl = u?.[keyUnder] ?? u?.[keyExact] ?? u?.[keyLower] ?? u?.[keyNoSep];
-                    const href = dbUrl ?? shopUrl(shop, product.name);
-                    return { shop, price, href };
-                  })
-                  .sort((a, b) => a.price - b.price)
-                  .map(({ shop, price, href }, i) => {
-                  const isFirst = i === 0;
-                  return (
-                    <li key={shop}>
-                      <a
-                        href={href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`relative flex items-center justify-between overflow-hidden rounded-xl px-3 py-2.5 transition-all duration-300 ease-out group/shop hover:-translate-y-0.5 active:translate-y-0 ${
-                          isFirst
-                            ? "border border-emerald-500/30 bg-emerald-500/10 hover:border-emerald-500/60 hover:bg-emerald-500/15 hover:shadow-[0_6px_20px_-6px_rgba(16,185,129,0.45)]"
-                            : "border border-slate-200 bg-slate-50 hover:border-brand-gold/40 hover:bg-brand-gold/5 hover:shadow-[0_6px_20px_-6px_rgba(246,196,83,0.35)] dark:border-white/5 dark:bg-bg-800 dark:hover:border-brand-gold/40 dark:hover:bg-brand-gold/[0.06]"
-                        }`}
-                      >
-                        <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 ease-out group-hover/shop:translate-x-full" />
-                        <div className="relative flex items-center gap-2.5">
-                          <span className={`flex h-7 w-7 items-center justify-center rounded-lg text-[11px] font-black transition-transform duration-300 group-hover/shop:scale-110 ${shopBadge(shop, isFirst)}`}>
-                            {shop.charAt(0).toUpperCase()}
-                          </span>
-                          <span className={`text-sm font-semibold capitalize transition-colors ${isFirst ? "text-emerald-700 dark:text-emerald-300" : "text-slate-800 dark:text-white/85 group-hover/shop:text-brand-gold"}`}>
-                            {shop}
-                          </span>
-                          {isFirst && (
-                            <span className="rounded-full bg-emerald-500 px-1.5 py-0.5 text-[9px] font-bold text-white shadow-[0_0_10px_rgba(16,185,129,0.5)]">Moins cher</span>
-                          )}
-                        </div>
-                        <div className="relative flex items-center gap-2">
-                          <span className={`text-sm font-extrabold tabular-nums ${isFirst ? "text-emerald-600 dark:text-emerald-400" : "text-slate-900 dark:text-white"}`}>
-                            {price.toFixed(3)} <span className="text-[10px] font-normal text-slate-400 dark:text-white/40">DT</span>
-                          </span>
-                          <ExternalLink className={`h-3.5 w-3.5 transition-all duration-300 group-hover/shop:translate-x-0.5 group-hover/shop:-translate-y-0.5 ${isFirst ? "text-emerald-500/60 group-hover/shop:text-emerald-400" : "text-slate-300 dark:text-white/20 group-hover/shop:text-brand-gold"}`} />
-                        </div>
-                      </a>
-                    </li>
-                  );
-                })}
-              </ul>
+            {/* Boutiques + historique */}
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+              <div className="flex flex-col rounded-2xl border border-bg-border bg-bg-card p-5 shadow-card sm:p-6">
+                <h2 className="section-title mb-4 flex items-center gap-2">
+                  <Store className="h-4 w-4 shrink-0 text-brand-gold" />
+                  {product.shopNames.length} boutique{product.shopNames.length > 1 ? "s" : ""}
+                </h2>
+                <ul className="flex-1 space-y-2">
+                  {shopRows.map(({ shop, price, href }, i) => {
+                    const isFirst = i === 0;
+                    return (
+                      <li key={shop}>
+                        <a
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`grid grid-cols-[1fr_auto] items-center gap-3 rounded-xl px-3 py-3 transition-all duration-200 ${
+                            isFirst
+                              ? "border border-emerald-500/30 bg-emerald-500/10 hover:border-emerald-500/50 hover:bg-emerald-500/15"
+                              : "border border-slate-200 bg-slate-50 hover:border-brand-gold/40 hover:bg-brand-gold/5 dark:border-white/5 dark:bg-bg-800 dark:hover:border-brand-gold/40"
+                          }`}
+                        >
+                          <div className="flex min-w-0 items-center gap-2.5">
+                            <span
+                              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[11px] font-black ${shopBadge(shop, isFirst)}`}
+                            >
+                              {shop.charAt(0).toUpperCase()}
+                            </span>
+                            <div className="min-w-0">
+                              <span
+                                className={`block truncate text-sm font-semibold capitalize ${
+                                  isFirst ? "text-emerald-700 dark:text-emerald-300" : "text-slate-800 dark:text-white/85"
+                                }`}
+                              >
+                                {shop}
+                              </span>
+                              {isFirst && (
+                                <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+                                  Moins cher
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <span
+                              className={`text-right text-sm font-extrabold tabular-nums ${
+                                isFirst ? "text-emerald-600 dark:text-emerald-400" : "text-slate-900 dark:text-white"
+                              }`}
+                            >
+                              {price.toFixed(3)}
+                              <span className="ml-0.5 text-[10px] font-normal text-slate-400 dark:text-white/40">DT</span>
+                            </span>
+                            <ExternalLink className="h-3.5 w-3.5 text-slate-300 dark:text-white/25" />
+                          </div>
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="mt-4 flex items-center gap-1.5 rounded-xl border border-brand-gold/20 bg-brand-gold/5 px-3 py-2.5 text-[11px] leading-snug text-slate-600 dark:text-white/60">
+                  <Sparkles className="h-3.5 w-3.5 shrink-0 text-brand-gold" />
+                  Prix mis à jour quotidiennement par 1111.tn.
+                </p>
+              </div>
 
-              <div className="mt-3 flex items-center gap-1.5 rounded-xl border border-brand-gold/20 bg-brand-gold/5 px-3 py-2.5 text-[11px] text-slate-600 dark:text-white/60">
-                <Sparkles className="h-3.5 w-3.5 text-brand-gold shrink-0" />
-                Les prix sont mis à jour quotidiennement par 1111.tn.
+              <div className="flex flex-col rounded-2xl border border-bg-border bg-bg-card p-5 shadow-card sm:p-6">
+                <h2 className="section-title mb-4 flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 shrink-0 text-brand-gold" />
+                  Historique (7 jours)
+                </h2>
+                <div className="flex flex-1 flex-col justify-center">
+                  {chartHistory.length > 1 ? (
+                    <>
+                      <PriceHistoryChart data={chartHistory} />
+                      {chartHistory.every((p) => p.prix === chartHistory[0]?.prix) && (
+                        <p className="mt-3 text-center text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                          Prix stable · {product.minPrice.toFixed(3)} DT
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <div className="flex min-h-[220px] flex-col items-center justify-center gap-2 text-center">
+                      <TrendingUp className="h-8 w-8 text-slate-300 dark:text-white/15" />
+                      <p className="max-w-[14rem] text-[12px] leading-relaxed text-slate-400 dark:text-white/35">
+                        L&apos;historique sera disponible après quelques jours de suivi.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
-          </div>
-
-          {/* COLONNE 3 — Historique des prix */}
-          <div className="rounded-2xl border border-bg-border bg-bg-card p-5 shadow-card">
-            <h2 className="section-title mb-4 flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-brand-gold" />
-              Historique des prix (7 jours)
-            </h2>
-            {chartHistory.length > 1 ? (
-              <>
-                <PriceHistoryChart data={chartHistory} />
-                {chartHistory.every((p) => p.prix === chartHistory[0]?.prix) && (
-                  <p className="mt-3 text-center text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                    Prix stable · {product.minPrice.toFixed(3)} DT sur 7 jours
+            {/* Description + caractéristiques */}
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <div className="rounded-2xl border border-bg-border bg-bg-card p-5 shadow-card sm:p-6">
+                <h2 className="section-title mb-4 flex items-center gap-2">
+                  <FileText className="h-4 w-4 shrink-0 text-brand-gold" />
+                  Description
+                </h2>
+                {product.description ? (
+                  <p className="whitespace-pre-line text-sm leading-relaxed text-slate-600 dark:text-white/70">
+                    {product.description}
                   </p>
-                )}
-              </>
-            ) : (
-              <div className="flex h-[220px] flex-col items-center justify-center gap-2 text-center">
-                <TrendingUp className="h-8 w-8 text-slate-300 dark:text-white/15" />
-                <p className="text-[12px] text-slate-400 dark:text-white/35">
-                  L'historique des prix sera disponible<br />après quelques jours de suivi.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Description & caractéristiques */}
-        <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1fr]">
-          {/* Description */}
-          <div className="rounded-2xl border border-bg-border bg-bg-card p-5 shadow-card">
-            <h2 className="section-title mb-3 flex items-center gap-2">
-              <FileText className="h-4 w-4 text-brand-gold" />
-              Description
-            </h2>
-            {product.description ? (
-              <p className="whitespace-pre-line text-sm leading-relaxed text-slate-600 dark:text-white/70">
-                {product.description}
-              </p>
-            ) : (
-              <div className="space-y-2">
-                <p className="text-sm leading-relaxed text-slate-600 dark:text-white/70">
-                  <span className="font-semibold text-slate-900 dark:text-white">{product.name}</span>
-                  {" "}de la marque{" "}
-                  <span className="font-semibold text-slate-900 dark:text-white">{product.brand}</span>
-                  {" "}fait partie de la catégorie{" "}
-                  <span className="font-semibold text-slate-900 dark:text-white">{product.category}</span>.
-                  {" "}Ce produit est suivi en temps réel par 1111.tn et comparé sur{" "}
-                  <span className="font-semibold text-brand-gold">{product.shopNames.length} boutique{product.shopNames.length > 1 ? "s" : ""}</span>
-                  {" "}afin de vous garantir le meilleur prix.
-                  {savings > 0.5 && (
-                    <> Vous pouvez économiser jusqu'à{" "}
-                      <span className="font-semibold text-emerald-600 dark:text-emerald-400">{savings.toFixed(3)} DT</span>
-                      {" "}en choisissant la boutique la moins chère.
-                    </>
-                  )}
-                </p>
-                <p className="text-sm leading-relaxed text-slate-600 dark:text-white/70">
-                  Le prix le plus bas observé est de{" "}
-                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">{product.minPrice.toFixed(3)} DT</span>.
-                  Activez une alerte prix pour être notifié dès qu'une nouvelle promotion est détectée.
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Caractéristiques */}
-          <div className="rounded-2xl border border-bg-border bg-bg-card p-5 shadow-card">
-            <h2 className="section-title mb-3 flex items-center gap-2">
-              <ListChecks className="h-4 w-4 text-brand-gold" />
-              Caractéristiques
-            </h2>
-            <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {/* Always-present base fields */}
-              {[
-                ["Marque", product.brand],
-                ["Catégorie", product.category],
-                ["Prix min", `${product.minPrice.toFixed(3)} DT`],
-                ["Prix max", `${product.maxPrice.toFixed(3)} DT`],
-                ["Boutiques", `${product.shopNames.length}`],
-                ["Disponibilité", "En stock"],
-                ...(discountPct ? [["Réduction", `−${discountPct}%`] as [string, string]] : []),
-                ["Mise à jour", "Aujourd'hui"],
-              ].map(([k, v]) => (
-                <div
-                  key={k}
-                  className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs dark:border-white/5 dark:bg-bg-800"
-                >
-                  <dt className="text-slate-500 dark:text-white/50">{k}</dt>
-                  <dd className="font-semibold text-slate-900 dark:text-white">{v}</dd>
-                </div>
-              ))}
-              {/* Dynamic specs from DB */}
-              {product.specs && Object.entries(product.specs).map(([k, v]) => (
-                <div
-                  key={k}
-                  className="flex items-center justify-between rounded-lg border border-brand-gold/20 bg-brand-gold/5 px-3 py-2 text-xs dark:border-brand-gold/15 dark:bg-brand-gold/[0.06]"
-                >
-                  <dt className="capitalize text-slate-500 dark:text-white/50">{k.replace(/_/g, " ")}</dt>
-                  <dd className="font-semibold text-slate-900 dark:text-white">{v}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        </div>
-
-        {/* Related products */}
-        {product.related.length > 0 && (
-          <section className="mt-10 pb-10">
-            <h2 className="section-title mb-4">Produits similaires</h2>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-              {product.related.map((r) => (
-                <Link
-                  key={r.slug}
-                  href={`${comparatorBase}/${r.slug}`}
-                  className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:-translate-y-1 hover:border-slate-300 hover:shadow-[0_8px_30px_-8px_rgba(0,0,0,0.12)] dark:border-white/[0.06] dark:bg-white/[0.025] dark:hover:border-white/[0.12]"
-                >
-                  <div className="relative overflow-hidden bg-slate-50 dark:bg-white/[0.04]" style={{ aspectRatio: "1/1" }}>
-                    <img
-                      src={r.img}
-                      alt={r.name}
-                      referrerPolicy="no-referrer"
-                      className="h-full w-full object-contain p-3 transition duration-500 group-hover:scale-105"
-                      loading="lazy"
-                    />
-                    {r.discount && (
-                      <span className="absolute left-2 top-2 rounded-full bg-brand-red px-2 py-0.5 text-[10px] font-black text-white">
-                        −{r.discount}%
-                      </span>
+                ) : (
+                  <div className="space-y-3 text-sm leading-relaxed text-slate-600 dark:text-white/70">
+                    <p>
+                      <span className="font-semibold text-slate-900 dark:text-white">{product.name}</span>
+                      {" "}({product.brand}) — catégorie{" "}
+                      <span className="font-semibold text-slate-900 dark:text-white">{product.category}</span>.
+                      Comparé sur{" "}
+                      <span className="font-semibold text-brand-gold">{product.shopNames.length}</span>
+                      {" "}boutique{product.shopNames.length > 1 ? "s" : ""}.
+                    </p>
+                    {savings > 0.5 && (
+                      <p>
+                        Économie possible jusqu&apos;à{" "}
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                          {savings.toFixed(3)} DT
+                        </span>.
+                      </p>
                     )}
                   </div>
-                  <div className="flex flex-1 flex-col p-3">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/35 mb-1">{r.brand}</div>
-                    <div className="flex-1 text-[12px] font-bold leading-snug text-slate-900 dark:text-white line-clamp-2">{r.name}</div>
-                    <div className="mt-2 text-sm font-black tabular-nums text-emerald-600 dark:text-emerald-400">
-                      {r.minPrice.toFixed(3)} DT
-                    </div>
-                  </div>
-                </Link>
-              ))}
+                )}
+              </div>
+
+              <ProductSpecsPanel baseSpecs={baseSpecs} techSpecs={product.specs} />
             </div>
-          </section>
-        )}
-      </section>
+
+            {product.related.length > 0 && (
+              <section className="pt-2">
+                <h2 className="section-title mb-4">Produits similaires</h2>
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                  {product.related.map((r) => (
+                    <Link
+                      key={r.slug}
+                      href={`${comparatorBase}/${r.slug}`}
+                      className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:border-brand-gold/30 hover:shadow-lg dark:border-white/[0.06] dark:bg-white/[0.025]"
+                    >
+                      <div className="relative aspect-square overflow-hidden bg-slate-50 dark:bg-white/[0.04]">
+                        <img
+                          src={r.img}
+                          alt={r.name}
+                          referrerPolicy="no-referrer"
+                          className="h-full w-full object-contain p-3 transition duration-500 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                        {r.discount ? (
+                          <span className="absolute left-2 top-2 rounded-full bg-brand-red px-2 py-0.5 text-[10px] font-black text-white">
+                            −{r.discount}%
+                          </span>
+                        ) : null}
+                      </div>
+                      <div className="flex flex-1 flex-col p-3">
+                        <div className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/35">
+                          {r.brand}
+                        </div>
+                        <div className="line-clamp-2 flex-1 text-[12px] font-bold leading-snug text-slate-900 dark:text-white">
+                          {r.name}
+                        </div>
+                        <div className="mt-2 text-sm font-black tabular-nums text-emerald-600 dark:text-emerald-400">
+                          {r.minPrice.toFixed(3)} DT
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+        </div>
+      </PageContainer>
 
       <Link
         href={backHref}

@@ -188,7 +188,7 @@ async function main() {
               `INSERT INTO shop_prices (product_id, shop_id, current_price, regular_price, shop_product_url)
                VALUES ($1,$2,$3,$4,$5) ON CONFLICT (product_id, shop_id) DO UPDATE
                SET current_price=EXCLUDED.current_price, regular_price=EXCLUDED.regular_price`,
-              [productId, sid, p.price ?? null, p.regular_price ?? null, p.url ?? ""]
+              [productId, sid, p.price ?? null, p.regular_price ?? p.old_price ?? null, p.url ?? ""]
             );
           }
         }

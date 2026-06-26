@@ -5,6 +5,7 @@ import {
   Info,
   ShieldCheck,
   Store,
+  Trophy,
 } from "lucide-react";
 import { ShopLogo } from "@/components/shop/ShopLogo";
 import {
@@ -99,23 +100,43 @@ export function PriceRankingDetail({
               const h = Math.round(36 + ratio * 56);
               const isFirst = shop.rank === 1;
               return (
-                <div key={shop.shop_key} className="flex flex-1 max-w-[140px] flex-col items-center gap-2">
-                  <ShopLogo shopKey={shop.shop_key} size={isFirst ? 52 : 44} />
+                <div key={shop.shop_key} className="group/shop flex max-w-[140px] flex-1 flex-col items-center gap-2">
+                  <ShopLogo
+                    shopKey={shop.shop_key}
+                    size={isFirst ? 58 : 48}
+                    interactive
+                    className={isFirst ? "ring-2 ring-brand-gold/40" : ""}
+                  />
                   <span className="w-full truncate text-center text-xs font-bold text-slate-800 dark:text-white">
                     {shopDisplayName(shop.shop_key)}
                   </span>
-                  <span className={`text-sm font-black tabular-nums ${isFirst ? "text-brand-gold" : "text-slate-500"}`}>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-sm font-black tabular-nums ${
+                      isFirst ? "bg-brand-gold/15 text-brand-gold" : "text-slate-500"
+                    }`}
+                  >
                     {formatWinRate(shop.fair_win_rate)}
                   </span>
                   <div
-                    className={`flex w-full items-end justify-center rounded-t-lg ${
-                      isFirst ? "bg-brand-gold" : "bg-slate-300 dark:bg-slate-600"
+                    className={`flex w-full items-end justify-center overflow-hidden rounded-t-lg ${
+                      isFirst
+                        ? "bg-gradient-to-t from-amber-500 to-brand-gold shadow-[0_-4px_16px_rgba(246,196,83,0.35)] ring-1 ring-brand-gold/30"
+                        : "bg-gradient-to-t from-slate-500 to-slate-400 shadow-inner dark:from-slate-600 dark:to-slate-500"
                     }`}
                     style={{ height: h }}
                   >
-                    <span className={`pb-1.5 font-black ${isFirst ? "text-slate-900" : "text-white"}`}>
-                      {shop.rank}
-                    </span>
+                    <div className="flex items-center justify-center pb-1.5">
+                      {isFirst ? (
+                        <Trophy
+                          className="h-5 w-5 text-slate-900 sm:h-6 sm:w-6"
+                          strokeWidth={2.25}
+                          fill="currentColor"
+                          fillOpacity={0.15}
+                        />
+                      ) : (
+                        <span className="pb-0 text-sm font-black text-white sm:text-base">{shop.rank}</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               );

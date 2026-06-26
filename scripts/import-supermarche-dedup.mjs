@@ -119,7 +119,7 @@ async function main() {
             const sid = shopIds[pp.shop_key];
             if (!sid) continue;
             const newPrice = pp.price ?? null;
-            const newRegular = pp.regular_price ?? null;
+            const newRegular = pp.regular_price ?? pp.old_price ?? null;
             const prev = await client.query(
               "SELECT current_price, regular_price FROM shop_prices WHERE product_id=$1 AND shop_id=$2",
               [productId, sid]
@@ -221,7 +221,7 @@ async function main() {
            ON CONFLICT (product_id, shop_id) DO UPDATE
            SET current_price=EXCLUDED.current_price, regular_price=EXCLUDED.regular_price,
                shop_product_url=EXCLUDED.shop_product_url`,
-          [productId, sid, pp.price ?? null, pp.regular_price ?? null, pp.url ?? ""]
+          [productId, sid, pp.price ?? null, pp.regular_price ?? pp.old_price ?? null, pp.url ?? ""]
         );
       }
       inserted++;

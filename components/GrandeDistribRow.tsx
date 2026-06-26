@@ -82,21 +82,21 @@ export function GrandeDistribRow() {
               compact
               showEconomy={false}
               footer={
-                <div className="mt-4 border-t border-slate-200/80 pt-4 dark:border-white/10">
-                  <div className="flex flex-col items-center gap-4 rounded-2xl bg-gradient-to-br from-slate-50/90 via-white to-emerald-50/40 p-4 ring-1 ring-slate-200/60 dark:from-white/[0.04] dark:via-white/[0.02] dark:to-emerald-500/[0.06] dark:ring-white/10 sm:flex-row sm:items-center sm:justify-center sm:gap-8 sm:p-5">
+                <div className="mt-4 border-t border-slate-200/80 pt-4 dark:border-emerald-500/20">
+                  <div className="flex flex-col items-center gap-4 rounded-2xl bg-gradient-to-br from-slate-50/90 via-white to-emerald-50/40 p-4 ring-1 ring-slate-200/60 dark:from-emerald-950/50 dark:via-emerald-900/35 dark:to-slate-900/80 dark:ring-emerald-500/35 sm:flex-row sm:items-center sm:justify-center sm:gap-8 sm:p-5">
                     <img
                       src="/kathya.png"
                       alt="Panier de courses"
                       className="h-24 w-24 shrink-0 object-contain drop-shadow-[0_8px_24px_rgba(0,0,0,0.35)] sm:h-28 sm:w-28"
                     />
-                    <div className="w-full max-w-[14rem] rounded-xl border border-emerald-500/20 bg-white/80 px-5 py-4 text-center shadow-sm backdrop-blur-sm dark:border-emerald-500/25 dark:bg-bg-800/90">
-                      <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-white/55">
+                    <div className="w-full max-w-[14rem] rounded-xl border border-emerald-500/25 bg-white/90 px-5 py-4 text-center shadow-sm backdrop-blur-sm dark:border-emerald-400/50 dark:bg-gradient-to-br dark:from-emerald-900/90 dark:via-emerald-950/95 dark:to-slate-950/90 dark:shadow-[0_0_0_1px_rgba(52,211,153,0.15)]">
+                      <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-700 dark:text-emerald-200">
                         Économie possible
                       </div>
-                      <div className="mt-1 text-3xl font-black tabular-nums leading-none text-emerald-600 dark:text-emerald-400">
+                      <div className="mt-1.5 text-3xl font-black tabular-nums leading-none text-emerald-600 dark:text-emerald-300">
                         {fmtDt(basket.maxSavings)} DT
                       </div>
-                      <div className="mt-1.5 text-[11px] text-slate-400 dark:text-white/45">
+                      <div className="mt-2 text-[11px] font-medium text-slate-500 dark:text-emerald-100/75">
                         vs l&apos;enseigne la plus chère
                       </div>
                     </div>

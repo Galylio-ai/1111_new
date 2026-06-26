@@ -74,7 +74,7 @@ export async function GET(
       discount: number | null;
     }[] = [];
     try {
-      const [pricesRes, imagesRes, refRes, histRes, headMetaRes, relatedRes] = await Promise.all([
+      const [pricesRes, imagesRes, refRes, histRes, headMetaRes, relatedRes, specsRes] = await Promise.all([
         client.query(
           `SELECT s.shop_key, s.name AS shop_name, sp.shop_product_url, sp.current_price
            FROM products p
@@ -148,7 +148,22 @@ export async function GET(
            LIMIT 18`,
           [params.slug]
         ),
+        client.query(
+          `SELECT ps.spec_key, ps.spec_value
+           FROM products p
+           JOIN product_specs ps ON ps.product_id = p.id
+           WHERE p.slug = $1
+             AND ps.spec_key NOT IN ('data_quality_score', 'shop_count')
+           ORDER BY ps.id ASC`,
+          [params.slug]
+        ),
       ]);
+
+      const specs: Record<string, string> = {};
+      for (const row of specsRes.rows) {
+        if (row.spec_key && row.spec_value) specs[row.spec_key] = row.spec_value;
+      }
+
       for (const row of pricesRes.rows) {
         const price = parseFloat(row.current_price);
         const url = row.shop_product_url;
@@ -217,6 +232,7 @@ export async function GET(
       shopPrices,
       priceHistory,
       related,
+      specs,
     });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });

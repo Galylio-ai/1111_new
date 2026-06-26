@@ -3,6 +3,7 @@ import { createInterface } from "readline";
 import pg from "pg";
 import { fileURLToPath } from "url";
 import path from "path";
+import { extractProductSpecs } from "./lib/extractProductSpecs.mjs";
 
 const { Pool } = pg;
 
@@ -36,6 +37,18 @@ function uniqueSlug(base, seen) {
   while (seen.has(s)) s = `${base}-${i++}`;
   seen.add(s);
   return s;
+}
+
+async function insertProductSpecs(client, productId, rec) {
+  const specs = extractProductSpecs(rec);
+  for (const s of specs) {
+    await client.query(
+      `INSERT INTO product_specs (product_id, spec_key, spec_value)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (product_id, spec_key, spec_value) DO NOTHING`,
+      [productId, s.spec_key, s.spec_value]
+    );
+  }
 }
 
 async function ensureCat(client, table, parentCol, parentId, name) {
@@ -140,6 +153,7 @@ async function main() {
               );
             }
           }
+          await insertProductSpecs(client, productId, p);
         }
         skippedDup++;
         continue;
@@ -244,13 +258,17 @@ async function main() {
           [productId, sid, off.price ?? null, off.old_price ?? null, off.source_url ?? ""]
         );
       }
+
+      await insertProductSpecs(client, productId, p);
       inserted++;
       if (inserted % 1000 === 0) console.log(`  inserted ${inserted}, skipped-dup ${skippedDup}`);
     }
 
     console.log(`\nDone. inserted=${inserted}  skipped-dup=${skippedDup}  skipped-bad=${skippedBad}`);
     const ct = await client.query("SELECT COUNT(*) FROM products");
+    const sp = await client.query("SELECT COUNT(*) FROM product_specs");
     console.log("Total products in retail_db:", ct.rows[0].count);
+    console.log("Total product_specs rows:", sp.rows[0].count);
   } finally {
     client.release();
     await pool.end();

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { alimentPool, paraPool, retailPool } from "@/lib/db";
+import { queryAlimentationSectorStats, querySectorStats } from "@/lib/marketPromoStats";
 
 export const revalidate = 600;
 
@@ -16,33 +17,22 @@ type CatalogStats = {
 async function queryStats(
   pool: ReturnType<typeof alimentPool>,
   catalog: CatalogStats["catalog"],
-  catalogPath: CatalogStats["catalogPath"]
+  catalogPath: CatalogStats["catalogPath"],
+  alimentation = false,
 ): Promise<CatalogStats | null> {
   try {
-    const r = await pool.query<{
-      products: string; shops: string; promos: string;
-      avg_pct: string; savings: string;
-    }>(
-      `SELECT
-         COUNT(DISTINCT p.id)::text AS products,
-         COUNT(DISTINCT sp.shop_id)::text AS shops,
-         COUNT(*) FILTER (WHERE sp.current_price < sp.regular_price AND sp.regular_price > 0 AND sp.current_price > 0)::text AS promos,
-         COALESCE(AVG(CASE WHEN sp.current_price < sp.regular_price AND sp.regular_price > 0 AND sp.current_price > 0
-                           THEN ((sp.regular_price - sp.current_price) / sp.regular_price) * 100 END), 0)::text AS avg_pct,
-         COALESCE(SUM(CASE WHEN sp.current_price < sp.regular_price AND sp.regular_price > 0 AND sp.current_price > 0
-                           THEN sp.regular_price - sp.current_price END), 0)::text AS savings
-       FROM products p
-       JOIN shop_prices sp ON sp.product_id = p.id`
-    );
-    const row = r.rows[0];
-    if (!row) return null;
+    const row = alimentation
+      ? await queryAlimentationSectorStats(pool)
+      : await querySectorStats(pool);
     return {
       catalog,
       catalogPath,
-      products: parseInt(row.products, 10) || 0,
-      shops: parseInt(row.shops, 10) || 0,
-      activePromos: parseInt(row.promos, 10) || 0,
-      avgDiscountPct: Math.round(parseFloat(row.avg_pct) || 0),
+      products: row.products,
+      shops: row.shops,
+      activePromos: row.promos,
+      avgDiscountPct: row.promos > 0
+        ? Math.round((parseFloat(row.savings) / parseFloat(row.promo_regular_sum)) * 100)
+        : 0,
       totalSavingsDT: Math.round(parseFloat(row.savings) || 0),
     };
   } catch {
@@ -52,7 +42,7 @@ async function queryStats(
 
 export async function GET() {
   const results = await Promise.all([
-    queryStats(alimentPool(), "Supermarché", "/supermarche"),
+    queryStats(alimentPool(), "Supermarché", "/supermarche", true),
     queryStats(paraPool(), "Parapharmacie", "/parapharmacie"),
     queryStats(retailPool(), "Retail", "/retail"),
   ]);

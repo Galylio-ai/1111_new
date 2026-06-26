@@ -33,7 +33,7 @@ export async function GET(_req: NextRequest, { params }: { params: { slug: strin
 
     const head = headRes.rows[0];
 
-    const [imagesRes, pricesRes, historyRes, relatedRes] = await Promise.all([
+    const [imagesRes, pricesRes, historyRes, relatedRes, specsRes] = await Promise.all([
       client.query(
         `SELECT pi.image_url FROM product_images pi WHERE pi.product_id = $1 ORDER BY pi.id ASC`,
         [head.id]
@@ -86,7 +86,20 @@ export async function GET(_req: NextRequest, { params }: { params: { slug: strin
          LIMIT 18`,
         [head.category, head.id, head.subcategory, head.low_category, head.brand]
       ),
+      client.query(
+        `SELECT ps.spec_key, ps.spec_value
+         FROM product_specs ps
+         WHERE ps.product_id = $1
+           AND ps.spec_key NOT IN ('data_quality_score', 'shop_count')
+         ORDER BY ps.id ASC`,
+        [head.id]
+      ),
     ]);
+
+    const specs: Record<string, string> = {};
+    for (const row of specsRes.rows) {
+      if (row.spec_key && row.spec_value) specs[row.spec_key] = row.spec_value;
+    }
 
     const images = imagesRes.rows.map((r) => r.image_url).filter(Boolean);
     const shopUrls: Record<string, string> = {};
@@ -160,7 +173,7 @@ export async function GET(_req: NextRequest, { params }: { params: { slug: strin
       reference: head.source_product_id ?? null,
       description: null,
       images,
-      specs: {},
+      specs,
       shopUrls,
       shopPrices,
       priceHistory,

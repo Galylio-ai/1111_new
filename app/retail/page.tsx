@@ -1,6 +1,6 @@
 "use client";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowRight, BadgeCheck, ChevronDown, ChevronRight, Loader2, Monitor, Search, Store, Tag, X,
@@ -99,6 +99,7 @@ function Dropdown({
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/site/Reveal";
+import { RETAIL_PAGE_CARDS, retailPageCardSlug } from "@/lib/retailCategories";
 
 type Product = {
   name: string;
@@ -112,37 +113,21 @@ type Product = {
 };
 
 /* ── Categories from retail catalog ─────────────────────────────────────── */
-// id = comma-separated DB slugs that map to this card
-const categories = [
-  {
-    id: "pc-portables,pc-de-bureau,ordinateurs-apple,tablettes,smartphones,telephones-classiques,pc-portables-gamer,pc-de-bureau-gamer",
-    fr: "Informatique",
-    ar: "المعلوماتية",
-    count: null,
-    img: "/informatique.png",
-  },
-  {
-    id: "gros-electromenager,petit-electromenager,climatisation-et-chauffage,froid-et-refrigeration,lavage,aspirateurs-et-nettoyage,cuisson",
-    fr: "Électroménager",
-    ar: "الأجهزة المنزلية",
-    count: null,
-    img: "/electromenager.png",
-  },
-  {
-    id: "composants,ecrans-et-moniteurs,accessoires-gamer,chaises-et-bureaux-gamer,consoles,jeux-video,manettes,videoprojecteurs",
-    fr: "Gaming & PC",
-    ar: "الألعاب والحاسوب",
-    count: null,
-    img: "/gaming.png",
-  },
-  {
-    id: "audio-casques-et-haut-parleurs,appareils-photo,accessoires-telephonie,accessoires-informatiques,batteries-et-chargeurs,stockage,televisions,home-cinema-et-streaming,montres-et-objets-connectes,reseaux-serveurs-et-securite,imprimantes-et-scanners,encre-et-toner",
-    fr: "Divers & Accessoires",
-    ar: "متنوعات وملحقات",
-    count: null,
-    img: "/divers.png",
-  },
-];
+function isCatFilterActive(cardSlug: string, currentCat: string): boolean {
+  if (!currentCat) return false;
+  if (currentCat === cardSlug) return true;
+  const cardSlugs = cardSlug.split(",");
+  if (cardSlugs.includes(currentCat)) return true;
+  return currentCat.split(",").every((s) => cardSlugs.includes(s));
+}
+
+const categories = RETAIL_PAGE_CARDS.map((card) => ({
+  id: retailPageCardSlug(card.topId),
+  fr: card.fr,
+  ar: card.ar,
+  count: null as number | null,
+  img: card.img,
+}));
 
 /* ── Shops from retail catalog ───────────────────────────────────────────── */
 const shops = [
@@ -188,20 +173,68 @@ export default function RetailPage() {
 
 function RetailPageInner() {
   const sp = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const catFromUrl = sp.get("cat") ?? "";
+  const shopFromUrl = sp.get("shop") ?? "";
+  const qFromUrl = sp.get("q") ?? "";
+
   const [products, setProducts]   = useState<Product[]>([]);
   const [total, setTotal]         = useState(0);
   const [totalAll, setTotalAll]   = useState(0);
   const [shopCount, setShopCount] = useState(0);
   const [page, setPage]           = useState(0);
   const [loading, setLoading]     = useState(false);
-  const [activeCat, setActiveCat]   = useState(sp?.get("cat") ?? "");
-  const [activeShop, setActiveShop] = useState(sp?.get("shop") ?? "");
-  const [search, setSearch]         = useState(sp?.get("q") ?? "");
-  const [query, setQuery]           = useState(sp?.get("q") ?? "");
+  const [search, setSearch] = useState(qFromUrl);
   // "all" | "matched" | "catalog"
-  const [viewMode, setViewMode]     = useState<"all" | "matched" | "catalog">("all");
+  const [viewMode, setViewMode] = useState<"all" | "matched" | "catalog">("all");
   const [dynShops, setDynShops]     = useState<{ key: string; name: string }[]>([]);
   const [dynCats, setDynCats]       = useState<{ id: number; name: string; slug: string }[]>([]);
+
+  const replaceParams = useCallback(
+    (patch: { cat?: string | null; shop?: string | null; q?: string | null }) => {
+      const params = new URLSearchParams(sp.toString());
+      for (const [key, val] of Object.entries(patch)) {
+        if (val === null || val === undefined || val === "") params.delete(key);
+        else params.set(key, val);
+      }
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [router, pathname, sp],
+  );
+
+  const setActiveCat = useCallback(
+    (cat: string) => {
+      setPage(0);
+      replaceParams({ cat: cat || null });
+    },
+    [replaceParams],
+  );
+
+  const setActiveShop = useCallback(
+    (shop: string) => {
+      setPage(0);
+      replaceParams({ shop: shop || null });
+    },
+    [replaceParams],
+  );
+
+  const resetFilters = useCallback(() => {
+    setPage(0);
+    replaceParams({ cat: null, shop: null });
+  }, [replaceParams]);
+
+  // Sync search input when URL changes (mega menu, back/forward, shared links)
+  useEffect(() => {
+    setSearch(qFromUrl);
+  }, [qFromUrl]);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setPage(0);
+  }, [catFromUrl, shopFromUrl, qFromUrl, viewMode]);
 
   useEffect(() => {
     fetch("/api/retail-products?limit=1")
@@ -233,19 +266,17 @@ function RetailPageInner() {
     }
   }, []);
 
-  useEffect(() => { fetchProducts(0, "", "", "", viewMode); }, [fetchProducts]); // eslint-disable-line
+  useEffect(() => {
+    fetchProducts(page, catFromUrl, qFromUrl, shopFromUrl, viewMode);
+  }, [page, catFromUrl, qFromUrl, shopFromUrl, viewMode, fetchProducts]);
 
   useEffect(() => {
-    setPage(0);
-    fetchProducts(0, activeCat, query, activeShop, viewMode);
-  }, [activeCat, activeShop, query, viewMode, fetchProducts]);
-
-  useEffect(() => { fetchProducts(page, activeCat, query, activeShop, viewMode); }, [page]); // eslint-disable-line
-
-  useEffect(() => {
-    const t = setTimeout(() => setQuery(search), 350);
+    const t = setTimeout(() => {
+      if (search.trim() === qFromUrl) return;
+      replaceParams({ q: search.trim() || null });
+    }, 350);
     return () => clearTimeout(t);
-  }, [search]);
+  }, [search, qFromUrl, replaceParams]);
 
   const totalPages = Math.ceil(total / LIMIT);
   const shopOptions = dynShops.length > 0
@@ -318,9 +349,10 @@ function RetailPageInner() {
           {categories.map((cat, i) => (
             <Reveal key={cat.id} delay={i * 0.05}>
               <button
-                onClick={() => setActiveCat(activeCat === cat.id ? "" : cat.id)}
+                type="button"
+                onClick={() => setActiveCat(isCatFilterActive(cat.id, catFromUrl) ? "" : cat.id)}
                 className={`group relative w-full overflow-hidden rounded-2xl border transition hover:-translate-y-0.5 ${
-                  activeCat === cat.id
+                  isCatFilterActive(cat.id, catFromUrl)
                     ? "border-brand-gold/60 shadow-[0_0_16px_-4px_rgba(246,196,83,0.5)]"
                     : "border-slate-200 dark:border-white/[0.06]"
                 }`}
@@ -328,7 +360,7 @@ function RetailPageInner() {
                 <div className="relative h-40 w-full overflow-hidden bg-slate-100 dark:bg-white/[0.04]">
                   <img src={cat.img} alt={cat.fr} className="h-full w-full object-cover transition duration-500 group-hover:scale-110" loading="lazy" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                  {activeCat === cat.id && <div className="absolute inset-0 ring-2 ring-inset ring-brand-gold/70 rounded-2xl" />}
+                  {isCatFilterActive(cat.id, catFromUrl) && <div className="absolute inset-0 ring-2 ring-inset ring-brand-gold/70 rounded-2xl" />}
                   <div className="absolute bottom-3 left-0 right-0 px-3">
                     <div className="text-sm font-black text-white leading-tight drop-shadow">{cat.fr}</div>
                     <div className="font-arabic text-[11px] text-white/60 mt-0.5" dir="rtl">{cat.ar}</div>
@@ -385,7 +417,7 @@ function RetailPageInner() {
 
           {/* category dropdown */}
           <Dropdown
-            value={activeCat}
+            value={catFromUrl}
             onChange={setActiveCat}
             placeholder="Toutes catégories"
             options={catOptions}
@@ -393,16 +425,17 @@ function RetailPageInner() {
 
           {/* shop dropdown */}
           <Dropdown
-            value={activeShop}
+            value={shopFromUrl}
             onChange={setActiveShop}
             placeholder="Tous les magasins"
             options={shopOptions}
           />
 
           {/* active filters pills */}
-          {(activeCat || activeShop) && (
+          {(catFromUrl || shopFromUrl) && (
             <button
-              onClick={() => { setActiveCat(""); setActiveShop(""); }}
+              type="button"
+              onClick={resetFilters}
               className="flex items-center gap-1.5 rounded-xl border border-slate-300 bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-200 dark:border-white/10 dark:bg-white/[0.06] dark:text-white/60 dark:hover:bg-white/[0.1]"
             >
               Réinitialiser <X className="h-3 w-3" />
@@ -584,7 +617,13 @@ function RetailPageInner() {
                     <div className={`h-full rounded-full ${shop.color} opacity-70`} style={{ width: `${Math.round((shop.count / 6697) * 100)}%` }} />
                   </div>
                   <button
-                    onClick={() => { setActiveCat(""); setActiveShop(shop.key); setSearch(""); window.scrollTo({ top: 600, behavior: "smooth" }); }}
+                    type="button"
+                    onClick={() => {
+                      setPage(0);
+                      replaceParams({ cat: null, shop: shop.key, q: null });
+                      setSearch("");
+                      window.scrollTo({ top: 600, behavior: "smooth" });
+                    }}
                     className="flex items-center gap-1 text-[11px] font-bold text-brand-gold hover:underline shrink-0"
                   >
                     Explorer <ArrowRight className="h-3 w-3" />

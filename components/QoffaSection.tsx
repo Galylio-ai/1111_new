@@ -78,85 +78,86 @@ function LatestProductThumb({ src, name }: { src: string | null; name: string })
   );
 }
 
-// Shows the cheapest-basket items 2 at a time, auto-advancing every few seconds
-// with manual prev/next arrows. Pauses auto-rotation while hovered.
+// Shows one basket item at a time, auto-advancing every few seconds.
 function PanierSlider({ items }: { items: QoffaBasketItem[] }) {
-  const perPage = 2;
-  const pages = Math.max(1, Math.ceil(items.length / perPage));
-  const [page, setPage] = useState(0);
+  const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const count = items.length;
 
-  const go = (next: number) => setPage(((next % pages) + pages) % pages);
+  const go = (next: number) => {
+    if (count <= 0) return;
+    setIndex(((next % count) + count) % count);
+  };
 
   useEffect(() => {
-    if (paused || pages <= 1) return;
-    const id = setInterval(() => setPage(p => (p + 1) % pages), 3500);
+    if (paused || count <= 1) return;
+    const id = setInterval(() => setIndex((i) => (i + 1) % count), 4000);
     return () => clearInterval(id);
-  }, [paused, pages]);
+  }, [paused, count]);
 
-  const current = items.slice(page * perPage, page * perPage + perPage);
+  const item = items[index];
+  if (!item) return null;
 
   return (
-    <div
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
+    <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
       <div className="flex items-stretch gap-1.5">
         <button
           type="button"
           aria-label="Précédent"
-          onClick={() => go(page - 1)}
+          onClick={() => go(index - 1)}
           className="flex w-6 shrink-0 items-center justify-center rounded-lg border border-slate-200/70 bg-white/60 text-slate-500 transition hover:border-brand-gold/40 hover:text-brand-gold dark:border-white/5 dark:bg-bg-900/55 dark:text-white/50"
         >
           <ChevronLeft className="h-3.5 w-3.5" />
         </button>
 
-        <div className="grid min-w-0 flex-1 grid-cols-1 gap-1.5 sm:grid-cols-2">
-          {current.map((item) => (
-            <div
-              key={`${item.name}-${item.shop}`}
-              className="min-w-0 rounded-lg border border-slate-200/70 bg-white/60 px-2 py-1.5 dark:border-white/5 dark:bg-bg-900/55"
-            >
-              <div className="flex min-w-0 items-center justify-between gap-2">
-                <span className="truncate text-[11px] font-extrabold text-slate-900 dark:text-white">
-                  {item.name}
-                </span>
-                <span className="shrink-0 rounded-md border border-emerald-500/35 bg-emerald-500/15 px-1.5 py-0.5 text-[11px] font-black tabular-nums text-emerald-700 dark:border-emerald-400/40 dark:bg-emerald-500/20 dark:text-emerald-200">
-                  {fmtPrice(item.price)} DT
-                </span>
-              </div>
-              <div className="mt-0.5 flex items-center justify-between gap-2 text-[10px] text-slate-500 dark:text-white/50">
-                <span className="truncate">{item.choice}</span>
-                <span className="truncate font-semibold">{item.shop}</span>
-              </div>
+        <div className="min-w-0 flex-1 overflow-hidden">
+          <div
+            key={`${item.productId}-${index}`}
+            className="panier-slide-card rounded-lg border border-slate-200/70 bg-white/80 px-3 py-2.5 dark:border-white/5 dark:bg-bg-900/55"
+          >
+            <div className="text-[10px] font-bold uppercase tracking-wide text-brand-gold">
+              {item.category}
             </div>
-          ))}
+            <div className="mt-1 flex min-w-0 items-start justify-between gap-2">
+              <span className="line-clamp-2 text-[11px] font-extrabold leading-snug text-slate-900 dark:text-white">
+                {item.name}
+              </span>
+              <span className="shrink-0 rounded-md border border-emerald-500/35 bg-emerald-500/15 px-1.5 py-0.5 text-[11px] font-black tabular-nums text-emerald-700 dark:border-emerald-400/40 dark:bg-emerald-500/20 dark:text-emerald-200">
+                {fmtDt(item.price)} DT
+              </span>
+            </div>
+            <p className="mt-1 truncate text-[10px] text-slate-500 dark:text-white/50">{item.choice}</p>
+            <p className="mt-0.5 line-clamp-2 text-[10px] font-semibold leading-snug text-slate-600 dark:text-white/55">
+              {item.shop}
+            </p>
+          </div>
         </div>
 
         <button
           type="button"
           aria-label="Suivant"
-          onClick={() => go(page + 1)}
+          onClick={() => go(index + 1)}
           className="flex w-6 shrink-0 items-center justify-center rounded-lg border border-slate-200/70 bg-white/60 text-slate-500 transition hover:border-brand-gold/40 hover:text-brand-gold dark:border-white/5 dark:bg-bg-900/55 dark:text-white/50"
         >
           <ChevronRight className="h-3.5 w-3.5" />
         </button>
       </div>
 
-      {/* Dots */}
-      <div className="mt-2 flex items-center justify-center gap-1.5">
-        {Array.from({ length: pages }).map((_, i) => (
-          <button
-            type="button"
-            key={i}
-            aria-label={`Aller à la page ${i + 1}`}
-            onClick={() => go(i)}
-            className={`h-1.5 rounded-full transition-all ${
-              i === page ? "w-4 bg-brand-gold" : "w-1.5 bg-slate-300 dark:bg-white/20"
-            }`}
-          />
-        ))}
-      </div>
+      {count > 1 && (
+        <div className="mt-2 flex items-center justify-center gap-1.5">
+          {items.map((it, i) => (
+            <button
+              type="button"
+              key={it.productId}
+              aria-label={`Produit ${i + 1}`}
+              onClick={() => go(i)}
+              className={`h-1.5 rounded-full transition-all ${
+                i === index ? "w-4 bg-brand-gold" : "w-1.5 bg-slate-300 dark:bg-white/20"
+              }`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -222,7 +223,7 @@ export function QoffaSection({ contained = true }: { contained?: boolean }) {
               <div className="mt-0.5 text-[10px] text-slate-500 dark:text-white/60">Produits comparés</div>
             </div>
           </div>
-          <div className="mt-3 rounded-xl border border-white/10 bg-slate-950/5 p-2.5 dark:bg-white/[0.03]">
+          <div className="mt-3 rounded-xl border border-slate-200/80 bg-slate-50/90 p-2.5 dark:border-white/10 dark:bg-white/[0.03]">
             <div className="mb-2 flex items-center justify-between gap-2">
               <span className="text-[10px] font-black uppercase tracking-wider text-brand-gold">
                 Meilleur prix par produit

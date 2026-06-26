@@ -9,20 +9,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-// Real per-category barometers from /api/category-barometers.
-type CatBarometer = {
-  name: string;
-  products: number;
-  avgDiscount: number;
-  promoShare: number;
-  topShops: { name: string; products: number }[];
-};
-
 // Real numbers pulled from /api/market-index. Instead of repeating the hero's
 // global totals (produits / promos / enseignes), we break the market down by
 // the three sectors we actually scrape — where the deals and savings are right
 // now — plus one golden "total savings" highlight.
-type Sector = { products: number; promos: number; savingsDT: number };
+type Sector = { products: number; priceEntries: number; promos: number; savingsDT: number };
 type MarketBreakdown = {
   totalSavingsDT: number;
   alimentation: Sector;
@@ -39,38 +30,8 @@ function fmtDT(n: number): string {
   return FR(n);
 }
 
-// Icon + gradient per real category name (returned by the API).
-const catIcons: Record<string, { img: string; grad: string }> = {
-  "Informatique": { img: "/InformatiqueBg.png", grad: "from-cyan-500 to-cyan-700" },
-  "Électroménager": { img: "/ElectroBg.png", grad: "from-amber-500 to-orange-600" },
-  "Supermarché": { img: "/couffin.png", grad: "from-emerald-500 to-emerald-700" },
-  "Beauté & Visage": { img: "/beauté.png", grad: "from-pink-500 to-purple-600" },
-  "Cheveux & Soins": { img: "/cheveux-category.png", grad: "from-sky-400 to-blue-600" },
-  "Bébé & Maman": { img: "/bébé.png", grad: "from-blue-500 to-blue-700" },
-};
-const FALLBACK_ICON = { img: "/metaBg.png", grad: "from-slate-500 to-slate-700" };
-
-// Definition shown in the hover/focus tooltip for each barometer card.
-const catDefinitions: Record<string, string> = {
-  "Informatique":
-    "Univers PC, ordinateurs portables, écrans, imprimantes, périphériques et composants. Suivi en continu chez les enseignes spécialisées tech tunisiennes.",
-  "Électroménager":
-    "Gros et petit électroménager : réfrigérateurs, lave-linge, fours, climatiseurs, robots de cuisine. Comparé chez les enseignes physiques et e-commerce.",
-  "Supermarché":
-    "Produits alimentaires, hygiène, entretien et grande distribution suivis dans les 4 plus grandes enseignes : Aziza, Carrefour, Géant et Monoprix.",
-  "Beauté & Visage":
-    "Soins du visage, maquillage et protection solaire issus des parapharmacies en ligne tunisiennes. Indicateur clé pour les achats réguliers de cosmétiques.",
-  "Cheveux & Soins":
-    "Soins capillaires, hygiène corporelle et produits de soins du corps. Inclut shampoings, masques, gels douche et soins quotidiens des principales parapharmacies.",
-  "Bébé & Maman":
-    "Couches, lait infantile, soins bébé, cosmétiques maternité et accessoires. Catégorie sensible — un suivi des prix précis aide les jeunes parents à économiser.",
-};
-
-const rankBadges = ["bg-amber-500 text-black", "bg-blue-500 text-white", "bg-blue-400 text-white"];
-
 export function MarketIndex() {
   const [bd, setBd] = useState<MarketBreakdown | null>(null);
-  const [barometers, setBarometers] = useState<CatBarometer[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -81,25 +42,31 @@ export function MarketIndex() {
         const b = d.stats.breakdown;
         setBd({
           totalSavingsDT: d.stats.totalSavingsDT ?? 0,
-          alimentation: b.alimentation ?? { products: 0, promos: 0, savingsDT: 0 },
-          para: b.para ?? { products: 0, promos: 0, savingsDT: 0 },
-          retail: b.retail ?? { products: 0, promos: 0, savingsDT: 0 },
+          alimentation: {
+            products: b.alimentation?.products ?? 0,
+            priceEntries: b.alimentation?.priceEntries ?? b.alimentation?.products ?? 0,
+            promos: b.alimentation?.promos ?? 0,
+            savingsDT: b.alimentation?.savingsDT ?? 0,
+          },
+          para: {
+            products: b.para?.products ?? 0,
+            priceEntries: b.para?.priceEntries ?? b.para?.products ?? 0,
+            promos: b.para?.promos ?? 0,
+            savingsDT: b.para?.savingsDT ?? 0,
+          },
+          retail: {
+            products: b.retail?.products ?? 0,
+            priceEntries: b.retail?.priceEntries ?? b.retail?.products ?? 0,
+            promos: b.retail?.promos ?? 0,
+            savingsDT: b.retail?.savingsDT ?? 0,
+          },
         });
       })
       .catch(() => {});
     return () => { cancelled = true; };
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/category-barometers")
-      .then((r) => r.json())
-      .then((d) => { if (!cancelled && Array.isArray(d?.categories)) setBarometers(d.categories); })
-      .catch(() => {});
-    return () => { cancelled = true; };
-  }, []);
-
-  // One card per sector we scrape — shows where the deals & savings actually are
+  // One card per sector we scrape
   // right now (promo rate = promos / products). These are distinct from the
   // hero's global totals.
   const sectors = bd
@@ -142,6 +109,9 @@ export function MarketIndex() {
       ]
     : [];
 
+  const sectorPromoRate = (data: Sector) =>
+    data.priceEntries > 0 ? Math.round((data.promos / data.priceEntries) * 100) : 0;
+
   // Golden card: the sector with the highest promo rate right now — i.e. where
   // it's most worth shopping today. Derived from the same real breakdown.
   const hottest =
@@ -149,10 +119,10 @@ export function MarketIndex() {
       ? sectors
           .map((s) => ({
             label: s.label,
-            rate: s.data.products > 0 ? (s.data.promos / s.data.products) * 100 : 0,
+            rate: sectorPromoRate(s.data),
             promos: s.data.promos,
           }))
-          .sort((a, b) => b.rate - a.rate)[0]
+          .sort((a, b) => b.rate - a.rate || b.promos - a.promos)[0]
       : null;
 
   return (
@@ -181,10 +151,7 @@ export function MarketIndex() {
         <div className="relative grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {(bd ? sectors : Array.from({ length: 3 })).map((s, i) => {
             const sec = s as (typeof sectors)[number] | undefined;
-            const promoRate =
-              sec && sec.data.products > 0
-                ? Math.round((sec.data.promos / sec.data.products) * 100)
-                : 0;
+            const promoRate = sec ? sectorPromoRate(sec.data) : 0;
             return (
               <div
                 key={sec?.label ?? i}
@@ -304,115 +271,6 @@ export function MarketIndex() {
               </p>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* BAROMÈTRES PAR CATÉGORIE */}
-      <div className="card card-pad relative mt-5 overflow-visible">
-        <div className="relative mb-4 flex items-center justify-between gap-3">
-          <div className="flex flex-wrap items-baseline gap-3">
-            <span className="text-lg font-black uppercase tracking-wide text-brand-gold">
-              Baromètres par catégorie
-            </span>
-            <span className="font-arabic text-base font-semibold text-brand-gold/80" dir="rtl">
-              بارومترات حسب القسم
-            </span>
-          </div>
-          <Link
-            href="/barometres"
-            className="shrink-0 rounded-full border border-brand-gold/40 bg-brand-gold/5 px-4 py-1.5 text-xs font-semibold text-brand-gold hover:bg-brand-gold/15 transition"
-          >
-            Voir tous les baromètres
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          {(barometers ?? Array.from({ length: 6 })).map((cc, ci) => {
-            const c = cc as CatBarometer | undefined;
-            const ic = (c && catIcons[c.name]) || FALLBACK_ICON;
-            return (
-              <div
-                key={c?.name ?? ci}
-                tabIndex={c ? 0 : -1}
-                className="group relative flex flex-col overflow-visible rounded-2xl border border-brand-gold/15 bg-slate-50 p-3.5 ring-1 ring-brand-gold/10 transition hover:border-brand-gold/30 focus:outline-none focus-visible:border-brand-gold/40 dark:bg-bg-800"
-              >
-                {/* Info indicator (top-right corner) */}
-                {c && (
-                  <Info className="absolute right-2.5 top-2.5 h-3.5 w-3.5 text-slate-300 transition group-hover:text-brand-gold/70 group-focus-visible:text-brand-gold/70 dark:text-white/25" />
-                )}
-
-                {/* Top: icon + name + headline (real avg discount) */}
-                <div className="flex items-start gap-3">
-                  <span
-                    className={`flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br ${ic.grad} p-1.5 shadow-lg`}
-                  >
-                    <img src={ic.img} alt={c?.name ?? ""} className="h-full w-full object-contain" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-xs text-slate-600 dark:text-white/80">{c?.name ?? "—"}</div>
-                    <div className="mt-1 flex items-baseline gap-2">
-                      <span className={`text-xl font-black tabular-nums ${c ? "text-slate-900 dark:text-white" : "text-slate-300 dark:text-white/20"}`}>
-                        {c ? `−${c.avgDiscount}%` : "—"}
-                      </span>
-                      {c && c.promoShare > 0 && (
-                        <span className="text-[10px] font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
-                          {c.promoShare}% en promo
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-[10px] text-slate-400 dark:text-white/40">
-                      {c ? `${FR(c.products)} produits suivis` : " "}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Ranked stores — top shops by real product count */}
-                <ul className="mt-3 flex-1 space-y-1.5 text-xs">
-                  {(c?.topShops ?? []).map((s, idx) => (
-                    <li key={s.name} className="flex items-center justify-between">
-                      <span className="flex min-w-0 items-center gap-2">
-                        <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] font-black ${rankBadges[idx]}`}>
-                          {idx + 1}
-                        </span>
-                        <span className="truncate text-slate-700 dark:text-white/85">{s.name}</span>
-                      </span>
-                      <span className="shrink-0 tabular-nums text-slate-500 dark:text-white/60">{FR(s.products)}</span>
-                    </li>
-                  ))}
-                  {c && c.topShops.length === 0 && (
-                    <li className="text-[11px] italic text-slate-400 dark:text-white/35">Aucune enseigne</li>
-                  )}
-                </ul>
-
-                {/* Voir le baromètre */}
-                <div className="mt-3 border-t border-slate-200 pt-2 text-center dark:border-white/10">
-                  <Link
-                    href="/barometres"
-                    className="text-xs font-medium text-brand-gold/90 hover:text-brand-gold"
-                  >
-                    Voir le baromètre
-                  </Link>
-                </div>
-
-                {/* Hover / focus tooltip — category definition */}
-                {c && (
-                  <div
-                    role="tooltip"
-                    className="pointer-events-none invisible absolute bottom-full left-1/2 z-30 mb-2 w-[min(18rem,calc(100vw-2rem))] -translate-x-1/2 translate-y-1 rounded-xl border border-brand-gold/30 bg-white p-3 text-left opacity-0 shadow-[0_8px_30px_rgba(0,0,0,0.15)] ring-1 ring-brand-gold/15 transition duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:visible group-focus-visible:translate-y-0 group-focus-visible:opacity-100 dark:border-brand-gold/25 dark:bg-bg-800 dark:shadow-[0_8px_30px_rgba(0,0,0,0.6)]"
-                  >
-                    <span className="absolute -bottom-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 border-b border-r border-brand-gold/30 bg-white dark:border-brand-gold/25 dark:bg-bg-800" />
-                    <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-brand-gold">
-                      <Info className="h-3 w-3" /> Définition
-                    </div>
-                    <div className="mt-1 text-[12px] font-semibold text-slate-900 dark:text-white">{c.name}</div>
-                    <p className="mt-1 text-[11px] leading-relaxed text-slate-600 dark:text-white/75">
-                      {catDefinitions[c.name] ?? "Catégorie suivie en continu — données issues du marché tunisien."}
-                    </p>
-                  </div>
-                )}
-              </div>
-            );
-          })}
         </div>
       </div>
     </section>

@@ -20,10 +20,13 @@ export function ShopLogo({
   shopKey,
   size = 48,
   className = "",
+  interactive = false,
 }: {
   shopKey: string;
   size?: number;
   className?: string;
+  /** Scale + lift on hover */
+  interactive?: boolean;
 }) {
   const fallbacks = [
     `/shop-logos/${shopKey}.svg`,
@@ -32,6 +35,20 @@ export function ShopLogo({
     `/shop-logos/${shopKey}.jpg`,
   ];
   const [idx, setIdx] = useState(0);
+
+  const shellClass = [
+    "flex shrink-0 items-center justify-center rounded-xl border border-slate-200/90 bg-white shadow-sm",
+    "dark:border-slate-200/20 dark:bg-white dark:shadow-md dark:shadow-black/20",
+    interactive
+      ? "cursor-pointer transition-all duration-300 ease-out hover:scale-[1.12] hover:-translate-y-1.5 hover:shadow-lg hover:shadow-black/30 hover:ring-2 hover:ring-brand-gold/45 active:scale-105"
+      : "",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const pad = Math.max(6, Math.round(size * 0.14));
+  const imgSize = size - pad * 2;
 
   if (idx >= fallbacks.length) {
     const initials = shopKey
@@ -42,26 +59,24 @@ export function ShopLogo({
       .map((w) => w[0]?.toUpperCase() ?? "")
       .join("");
     return (
-      <div
-        style={{ width: size, height: size }}
-        className={`flex shrink-0 items-center justify-center rounded-lg ${initialsColor(shopKey)} ${className}`}
-      >
-        <span className="text-[11px] font-bold tracking-wide text-white">{initials}</span>
+      <div style={{ width: size, height: size }} className={shellClass}>
+        <span
+          className={`flex h-full w-full items-center justify-center rounded-[10px] text-[11px] font-bold tracking-wide text-white ${initialsColor(shopKey)}`}
+        >
+          {initials}
+        </span>
       </div>
     );
   }
 
   return (
-    <div
-      style={{ width: size, height: size }}
-      className={`flex shrink-0 items-center justify-center rounded-lg border border-slate-200/80 bg-white p-1 dark:border-white/10 dark:bg-white/[0.04] ${className}`}
-    >
+    <div style={{ width: size, height: size, padding: pad }} className={shellClass}>
       <img
         src={fallbacks[idx]}
         alt=""
         onError={() => setIdx((i) => i + 1)}
         referrerPolicy="no-referrer"
-        style={{ width: size - 10, height: size - 10 }}
+        style={{ width: imgSize, height: imgSize }}
         className="object-contain"
       />
     </div>

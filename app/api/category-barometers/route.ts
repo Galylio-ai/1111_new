@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { readFileSync } from "fs";
 import path from "path";
 import { Pool } from "pg";
+import { PROMO_REFERENCE_PRICE_SQL } from "@/lib/marketPromoStats";
 
 // Real per-category barometers for the homepage "Baromètres par catégorie".
 // Every number is computed from real data — no hardcoded values:
@@ -74,17 +75,24 @@ const aliPool = new Pool({ connectionString: process.env.ALIMENTATION_DB_URL, ma
 async function supermarcheStat(): Promise<CatStat> {
   const client = await aliPool.connect();
   try {
-    const agg = await client.query<{ products: string; promos: string; avg_disc: string }>(`
+    const agg = await client.query<{ products: string; promos: string; avg_disc: string; price_entries: string }>(`
+      WITH priced AS (
+        SELECT
+          p.id AS product_id,
+          sp.current_price,
+          (${PROMO_REFERENCE_PRICE_SQL}) AS ref_price
+        FROM products p
+        JOIN shop_prices sp ON sp.product_id = p.id
+        WHERE sp.current_price IS NOT NULL AND sp.current_price > 0
+      )
       SELECT
-        COUNT(DISTINCT p.id)::int AS products,
-        COUNT(CASE WHEN sp.current_price < sp.regular_price AND sp.regular_price > 0
-                    AND sp.current_price > 0 THEN 1 END)::int AS promos,
-        COALESCE(AVG(CASE WHEN sp.current_price < sp.regular_price AND sp.regular_price > 0
-                           AND sp.current_price > 0
-                          THEN (sp.regular_price - sp.current_price) / sp.regular_price * 100 END), 0)
+        COUNT(DISTINCT product_id)::int AS products,
+        COUNT(*)::int AS price_entries,
+        COUNT(CASE WHEN ref_price IS NOT NULL AND ref_price > current_price THEN 1 END)::int AS promos,
+        COALESCE(AVG(CASE WHEN ref_price IS NOT NULL AND ref_price > current_price
+                           THEN (ref_price - current_price) / ref_price * 100 END), 0)
           ::numeric(10,1) AS avg_disc
-      FROM products p
-      JOIN shop_prices sp ON sp.product_id = p.id
+      FROM priced
     `);
     const shops = await client.query<{ name: string; products: string }>(`
       SELECT s.name, COUNT(DISTINCT sp.product_id)::int AS products
@@ -98,11 +106,12 @@ async function supermarcheStat(): Promise<CatStat> {
     const a = agg.rows[0];
     const products = parseInt(a.products, 10) || 0;
     const promos = parseInt(a.promos, 10) || 0;
+    const priceEntries = parseInt(a.price_entries, 10) || 0;
     return {
       name: "Supermarché",
       products,
       avgDiscount: Math.round(parseFloat(a.avg_disc) || 0),
-      promoShare: products ? Math.round((promos / products) * 100) : 0,
+      promoShare: priceEntries ? Math.round((promos / priceEntries) * 100) : 0,
       topShops: shops.rows.map((r) => ({ name: r.name.trim(), products: parseInt(r.products, 10) || 0 })),
     };
   } finally {
