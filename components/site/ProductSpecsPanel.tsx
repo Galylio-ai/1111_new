@@ -108,9 +108,12 @@ export function ProductSpecsPanel({
     const categoryRow = baseSpecs.find(([k]) => k === "Catégorie");
     const otherBase = baseSpecs.filter(([k]) => k !== "Marque" && k !== "Catégorie");
 
-    const baseLabels = new Set(
-      [brandRow, categoryRow, ...otherBase].filter(Boolean).map(([k]) => k.toLowerCase()),
-    );
+    const baseRows: [string, string][] = [
+      ...(brandRow ? [brandRow] : []),
+      ...(categoryRow ? [categoryRow] : []),
+      ...otherBase,
+    ];
+    const baseLabels = new Set(baseRows.map(([k]) => k.toLowerCase()));
     const dedupedTech = tech.filter(([label]) => !baseLabels.has(label.toLowerCase()));
 
     const rows: [string, string][] = [];
