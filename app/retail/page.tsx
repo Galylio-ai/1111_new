@@ -332,7 +332,7 @@ function RetailPageInner() {
                   <div className="absolute bottom-3 left-0 right-0 px-3">
                     <div className="text-sm font-black text-white leading-tight drop-shadow">{cat.fr}</div>
                     <div className="font-arabic text-[11px] text-white/60 mt-0.5" dir="rtl">{cat.ar}</div>
-                    {cat.count !== null && <div className="mt-1 text-[10px] text-white/50 tabular-nums">{cat.count.toLocaleString("fr-FR")} produits</div>}
+                    {cat.count != null && <div className="mt-1 text-[10px] text-white/50 tabular-nums">{(cat.count as number).toLocaleString("fr-FR")} produits</div>}
                   </div>
                 </div>
               </button>
