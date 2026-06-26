@@ -6,6 +6,10 @@ out/
 .env*
 data/
 data_matching/
+# Static retail nav hierarchy (not large data dumps)
+!lib/data/
+!lib/data/retailCategoryHierarchy.fr.json
+!lib/data/retailSubSlugMap.json
 supermarché/
 *.tsbuildinfo
 

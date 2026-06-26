@@ -1,0 +1,101 @@
+[
+  {
+    "id": "computing_it",
+    "nom": "Informatique",
+    "sous_categories": [
+      { "id": "laptops", "nom": "PC portables" },
+      { "id": "gaming_laptops", "nom": "PC portables gamer" },
+      { "id": "desktop_pcs", "nom": "PC de bureau" },
+      { "id": "gaming_desktops", "nom": "PC de bureau gamer" },
+      { "id": "apple_computers", "nom": "Ordinateurs Apple" },
+      { "id": "monitors", "nom": "Écrans et moniteurs" },
+      { "id": "components", "nom": "Composants" },
+      { "id": "storage", "nom": "Stockage" },
+      { "id": "networking_servers_security", "nom": "Réseaux, serveurs et sécurité" },
+      { "id": "computer_accessories", "nom": "Accessoires informatiques" },
+      { "id": "software", "nom": "Logiciels" }
+    ]
+  },
+  {
+    "id": "phones_tablets_wearables",
+    "nom": "Téléphonie, tablettes et objets connectés",
+    "sous_categories": [
+      { "id": "smartphones", "nom": "Smartphones" },
+      { "id": "feature_phones", "nom": "Téléphones classiques" },
+      { "id": "tablets", "nom": "Tablettes" },
+      { "id": "smartwatches_wearables", "nom": "Montres et objets connectés" },
+      { "id": "phone_accessories", "nom": "Accessoires téléphonie" }
+    ]
+  },
+  {
+    "id": "gaming_consoles",
+    "nom": "Gaming et consoles",
+    "sous_categories": [
+      { "id": "consoles", "nom": "Consoles" },
+      { "id": "games", "nom": "Jeux vidéo" },
+      { "id": "gaming_accessories", "nom": "Accessoires gamer" },
+      { "id": "controllers", "nom": "Manettes" },
+      { "id": "gaming_chairs_desks", "nom": "Chaises et bureaux gamer" }
+    ]
+  },
+  {
+    "id": "home_appliances",
+    "nom": "Électroménager",
+    "sous_categories": [
+      { "id": "small_appliances", "nom": "Petit électroménager" },
+      { "id": "large_appliances", "nom": "Gros électroménager" },
+      { "id": "ac_climate", "nom": "Climatisation et chauffage" },
+      { "id": "refrigeration", "nom": "Froid et réfrigération" },
+      { "id": "laundry", "nom": "Lavage" },
+      { "id": "cooking_appliances", "nom": "Cuisson" },
+      { "id": "vacuum_cleaning", "nom": "Aspirateurs et nettoyage" }
+    ]
+  },
+  {
+    "id": "tv_audio_photo",
+    "nom": "TV, son et photo",
+    "sous_categories": [
+      { "id": "televisions", "nom": "Télévisions" },
+      { "id": "audio_headphones_speakers", "nom": "Audio, casques et haut-parleurs" },
+      { "id": "home_cinema_streaming", "nom": "Home cinéma et streaming" },
+      { "id": "cameras_photo", "nom": "Appareils photo" },
+      { "id": "projectors", "nom": "Vidéoprojecteurs" }
+    ]
+  },
+  {
+    "id": "office_printing_school",
+    "nom": "Bureau, impression et scolaire",
+    "sous_categories": [
+      { "id": "printers_scanners", "nom": "Imprimantes et scanners" },
+      { "id": "ink_toner", "nom": "Encre et toner" },
+      { "id": "office_supplies", "nom": "Fournitures de bureau" },
+      { "id": "office_furniture", "nom": "Meubles de bureau" },
+      { "id": "pos_retail_equipment", "nom": "Matériel point de vente" },
+      { "id": "paper_stationery", "nom": "Papier et papeterie" },
+      { "id": "school_supplies", "nom": "Fournitures scolaires" }
+    ]
+  },
+  {
+    "id": "home_garden_diy",
+    "nom": "Maison, jardin et bricolage",
+    "sous_categories": [
+      { "id": "house_accessories_decor", "nom": "Accessoires maison et décoration" },
+      { "id": "kitchen_dining", "nom": "Cuisine et vaisselle" },
+      { "id": "furniture", "nom": "Meubles" },
+      { "id": "garden_outdoor", "nom": "Jardin et extérieur" },
+      { "id": "tools_hardware", "nom": "Outils et quincaillerie" },
+      { "id": "bathroom_plumbing", "nom": "Salle de bain et plomberie" },
+      { "id": "lighting_electrical", "nom": "Éclairage et électricité" },
+      { "id": "pools", "nom": "Piscines" }
+    ]
+  },
+  {
+    "id": "energy_power",
+    "nom": "Énergie et alimentation",
+    "sous_categories": [
+      { "id": "solar_energy", "nom": "Énergie solaire" },
+      { "id": "ups_power_backup", "nom": "Onduleurs et alimentation" },
+      { "id": "batteries_chargers", "nom": "Batteries et chargeurs" }
+    ]
+  }
+]
