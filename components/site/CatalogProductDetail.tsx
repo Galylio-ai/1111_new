@@ -262,6 +262,7 @@ export function CatalogProductDetail({
               <img
                 src={gallery[activeImage] ?? product.img}
                 alt={product.name}
+                referrerPolicy="no-referrer"
                 className="max-h-full max-w-full object-contain transition duration-500 hover:scale-105"
               />
               {discountPct && (
@@ -285,7 +286,7 @@ export function CatalogProductDetail({
                     }`}
                     aria-label={`Image ${i + 1}`}
                   >
-                    <img src={src} alt="" className="h-full w-full object-contain" />
+                    <img src={src} alt="" referrerPolicy="no-referrer" className="h-full w-full object-contain" />
                   </button>
                 ))}
               </div>
@@ -561,6 +562,7 @@ export function CatalogProductDetail({
                     <img
                       src={r.img}
                       alt={r.name}
+                      referrerPolicy="no-referrer"
                       className="h-full w-full object-contain p-3 transition duration-500 group-hover:scale-105"
                       loading="lazy"
                     />

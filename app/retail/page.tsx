@@ -450,7 +450,8 @@ function RetailPageInner() {
                     <img
                       src={p.img}
                       alt={p.name}
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+                      referrerPolicy="no-referrer"
+                      className="h-full w-full object-contain p-2 transition duration-500 group-hover:scale-110"
                       loading="lazy"
                     />
                     <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-bold text-slate-700 shadow-sm backdrop-blur dark:bg-black/50 dark:text-white/80">
@@ -574,7 +575,7 @@ function RetailPageInner() {
                 <div className="grid grid-cols-4 gap-0.5 bg-slate-100 dark:bg-white/[0.04]">
                   {shop.imgs.map((img, j) => (
                     <div key={j} className="relative aspect-square overflow-hidden bg-white dark:bg-[#0f1422]">
-                      <img src={img} alt="" className="h-full w-full object-contain p-1.5" loading="lazy" />
+                      <img src={img} alt="" referrerPolicy="no-referrer" className="h-full w-full object-contain p-1.5" loading="lazy" />
                     </div>
                   ))}
                 </div>
