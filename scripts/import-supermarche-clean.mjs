@@ -39,9 +39,11 @@ if (!DB_URL) {
 
 const args = process.argv.slice(2);
 const DRY_RUN = args.includes("--dry-run");
+const IS_MATCHED = args.includes("--is-matched");
+const NO_TRUNCATE = args.includes("--no-truncate");
 const FILE = args.find((a) => !a.startsWith("--"));
 if (!FILE) {
-  console.error("Usage: node scripts/import-supermarche-clean.mjs <path-to-jsonl> [--dry-run]");
+  console.error("Usage: node scripts/import-supermarche-clean.mjs <path-to-jsonl> [--dry-run] [--is-matched] [--no-truncate]");
   process.exit(1);
 }
 
@@ -194,15 +196,15 @@ async function insertProductBatch(client, batch) {
   const productValues = [];
   const productParams = [];
   batch.forEach((p, i) => {
-    const base = i * 5;
+    const base = i * 6;
     productValues.push(
-      `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5})`
+      `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6})`
     );
-    productParams.push(p.brandId, p.sourceId, p.name, p.slug, p.sourceUrl);
+    productParams.push(p.brandId, p.sourceId, p.name, p.slug, p.sourceUrl, p.isMatched);
   });
 
   const insertedRes = await client.query(
-    `INSERT INTO products (brand_id, source_product_id, name, slug, source_url)
+    `INSERT INTO products (brand_id, source_product_id, name, slug, source_url, is_matched)
      VALUES ${productValues.join(", ")}
      RETURNING id`,
     productParams
@@ -334,7 +336,7 @@ async function main() {
   console.log(`Target DB: ${DB_URL.replace(/:[^:@]+@/, ":***@")}`);
   if (DRY_RUN) console.log("** DRY RUN — no writes, no truncate **");
 
-  if (!DRY_RUN) {
+  if (!DRY_RUN && !NO_TRUNCATE) {
     await withClient(async (client) => {
       console.log("→ Truncating existing alimentation data…");
       await client.query(`
@@ -424,6 +426,7 @@ async function main() {
         images: rec.images,
         prices: resolvedPrices,
         subCategoryId,
+        isMatched: IS_MATCHED,
       });
 
       if (batch.length >= BATCH_SIZE) {
