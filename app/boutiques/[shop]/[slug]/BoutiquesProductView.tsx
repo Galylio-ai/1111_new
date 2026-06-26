@@ -110,9 +110,9 @@ export default function BoutiquesProductView() {
         <div className="grid gap-8 lg:grid-cols-2">
           {/* ── Gallery ──────────────────────────────────────────────────── */}
           <div>
-            <div className="relative flex h-[420px] items-center justify-center overflow-hidden rounded-3xl border border-slate-200 bg-white dark:border-white/[0.07] dark:bg-white/[0.02]">
+            <div className="relative flex h-[560px] items-center justify-center overflow-hidden rounded-3xl border border-slate-200 bg-white dark:border-white/[0.07] dark:bg-white/[0.02]">
               {images.length ? (
-                <img src={images[activeImg]} alt={data.name} referrerPolicy="no-referrer" className="max-h-[90%] max-w-[90%] object-contain" />
+                <img src={images[activeImg]} alt={data.name} referrerPolicy="no-referrer" className="h-full w-full object-contain p-6" />
               ) : (
                 <Package className="h-20 w-20 text-slate-200 dark:text-white/10" />
               )}
@@ -124,8 +124,8 @@ export default function BoutiquesProductView() {
               <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {images.slice(0, 8).map((im, i) => (
                   <button key={i} onClick={() => setActiveImg(i)}
-                    className={`flex h-16 w-16 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl border bg-white transition dark:bg-white/[0.03] ${activeImg === i ? "border-brand-gold ring-2 ring-brand-gold/30" : "border-slate-200 hover:border-brand-gold/40 dark:border-white/10"}`}>
-                    <img src={im} alt="" referrerPolicy="no-referrer" className="max-h-full max-w-full object-contain" loading="lazy" />
+                    className={`flex h-20 w-20 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl border bg-white transition dark:bg-white/[0.03] ${activeImg === i ? "border-brand-gold ring-2 ring-brand-gold/30" : "border-slate-200 hover:border-brand-gold/40 dark:border-white/10"}`}>
+                    <img src={im} alt="" referrerPolicy="no-referrer" className="h-full w-full object-contain p-1" loading="lazy" />
                   </button>
                 ))}
               </div>
