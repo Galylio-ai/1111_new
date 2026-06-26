@@ -65,7 +65,7 @@ export function PageShell({
 }) {
   const Icon = iconMap[icon];
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen bg-bg-900">
       <Header />
 
       <PageContainer className="pt-5">
