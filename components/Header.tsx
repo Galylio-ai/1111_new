@@ -1,5 +1,5 @@
 "use client";
-import { ChevronDown, Flame, LogOut, Menu, ShieldCheck, Sparkles, TrendingUp, User, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Flame, LogOut, Menu, ShieldCheck, Sparkles, TrendingUp, User, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
@@ -10,8 +10,13 @@ import { NotificationBell } from "./site/NotificationBell";
 
 type RetailCategory = { id: number; name: string; slug: string; subcategories: { name: string; slug: string }[] };
 
+const COLS = 3; // categories per page
+
 function MagasinsMegaMenu({ onClose }: { onClose: () => void }) {
-  const [cats, setCats] = useState<RetailCategory[]>([]);
+  const [cats, setCats]   = useState<RetailCategory[]>([]);
+  const [page, setPage]   = useState(0);
+  const menuRef           = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     fetch("/api/retail-categories")
       .then(r => r.json())
@@ -19,56 +24,111 @@ function MagasinsMegaMenu({ onClose }: { onClose: () => void }) {
       .catch(() => {});
   }, []);
 
+  // close on outside click
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) onClose();
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [onClose]);
+
+  const totalPages = Math.ceil(cats.length / COLS);
+  const pageCats   = cats.slice(page * COLS, page * COLS + COLS);
+
   return (
     <div
-      className="absolute left-1/2 top-full z-50 mt-2 w-[720px] -translate-x-1/2 rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-white/10 dark:bg-[#0f1422]"
-      onMouseLeave={onClose}
+      ref={menuRef}
+      className="absolute left-1/2 top-full z-50 mt-2 w-[680px] -translate-x-1/2 rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-white/10 dark:bg-[#0f1422]"
     >
       <div className="p-5">
-        <div className="mb-3 flex items-center justify-between">
+        {/* header */}
+        <div className="mb-4 flex items-center justify-between">
           <span className="text-xs font-bold uppercase tracking-widest text-brand-gold">Catégories Magasins</span>
-          <Link href="/retail" onClick={onClose} className="text-xs text-slate-400 hover:text-brand-gold transition">Voir tout →</Link>
+          <Link href="/retail" onClick={onClose} className="text-xs text-slate-400 hover:text-brand-gold transition">
+            Voir tout →
+          </Link>
         </div>
+
         {cats.length === 0 ? (
           <div className="py-8 text-center text-sm text-slate-400">Chargement…</div>
         ) : (
-          <div className="grid grid-cols-3 gap-4">
-            {cats.map(cat => (
-              <div key={cat.id}>
-                <Link
-                  href={`/retail?cat=${encodeURIComponent(cat.slug)}`}
-                  onClick={onClose}
-                  className="mb-1.5 block text-sm font-bold text-slate-900 hover:text-brand-gold dark:text-white dark:hover:text-brand-gold transition"
+          <>
+            {/* 3-column grid */}
+            <div className="grid grid-cols-3 gap-6 min-h-[180px]">
+              {pageCats.map(cat => (
+                <div key={cat.id}>
+                  <Link
+                    href={`/retail?cat=${encodeURIComponent(cat.slug)}`}
+                    onClick={onClose}
+                    className="mb-2 block text-sm font-bold text-slate-900 hover:text-brand-gold dark:text-white dark:hover:text-brand-gold transition"
+                  >
+                    {cat.name}
+                  </Link>
+                  <ul className="space-y-1">
+                    {cat.subcategories.slice(0, 7).map(sub => (
+                      <li key={sub.slug}>
+                        <Link
+                          href={`/retail?cat=${encodeURIComponent(sub.slug)}`}
+                          onClick={onClose}
+                          className="block text-xs text-slate-500 hover:text-brand-gold dark:text-white/50 dark:hover:text-brand-gold transition leading-snug"
+                        >
+                          {sub.name}
+                        </Link>
+                      </li>
+                    ))}
+                    {cat.subcategories.length > 7 && (
+                      <li>
+                        <Link
+                          href={`/retail?cat=${encodeURIComponent(cat.slug)}`}
+                          onClick={onClose}
+                          className="block text-xs text-brand-gold/60 hover:text-brand-gold transition"
+                        >
+                          +{cat.subcategories.length - 7} autres
+                        </Link>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              ))}
+            </div>
+
+            {/* pagination */}
+            {totalPages > 1 && (
+              <div className="mt-4 flex items-center justify-center gap-1 border-t border-slate-100 pt-4 dark:border-white/[0.06]">
+                <button
+                  onClick={() => setPage(p => Math.max(0, p - 1))}
+                  disabled={page === 0}
+                  className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 disabled:opacity-30 dark:hover:bg-white/[0.06]"
                 >
-                  {cat.name}
-                </Link>
-                <ul className="space-y-0.5">
-                  {cat.subcategories.slice(0, 6).map(sub => (
-                    <li key={sub.slug}>
-                      <Link
-                        href={`/retail?cat=${encodeURIComponent(sub.slug)}`}
-                        onClick={onClose}
-                        className="block text-xs text-slate-500 hover:text-brand-gold dark:text-white/50 dark:hover:text-brand-gold transition"
-                      >
-                        {sub.name}
-                      </Link>
-                    </li>
-                  ))}
-                  {cat.subcategories.length > 6 && (
-                    <li>
-                      <Link
-                        href={`/retail?cat=${encodeURIComponent(cat.slug)}`}
-                        onClick={onClose}
-                        className="block text-xs text-brand-gold/60 hover:text-brand-gold transition"
-                      >
-                        +{cat.subcategories.length - 6} autres
-                      </Link>
-                    </li>
-                  )}
-                </ul>
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setPage(i)}
+                    className={`h-7 min-w-[28px] rounded-lg px-2 text-xs font-semibold transition ${
+                      i === page
+                        ? "bg-brand-gold text-white"
+                        : "text-slate-500 hover:bg-slate-100 dark:text-white/50 dark:hover:bg-white/[0.06]"
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                  disabled={page === totalPages - 1}
+                  className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 disabled:opacity-30 dark:hover:bg-white/[0.06]"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+                <span className="ml-2 text-[11px] text-slate-400 dark:text-white/30">
+                  {page * COLS + 1}–{Math.min(page * COLS + COLS, cats.length)} / {cats.length}
+                </span>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -177,7 +237,6 @@ export function Header() {
                     ref={megaRef}
                     className="relative"
                     onMouseEnter={() => setMegaOpen(true)}
-                    onMouseLeave={() => setMegaOpen(false)}
                   >
                     <Link
                       href={n.href}
