@@ -28,17 +28,36 @@ export default function ProductPage({ params }: Params) {
   const discountPct = Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100);
   const similar = topOffers.filter((x) => x.id !== p.id).slice(0, 4);
 
-  const today = p.price;
-  const history = Array.from({ length: 30 }, (_, i) => {
+  // Static 30-day price history — anchors to real oldPrice and drops to current price
+  const staticSeeds: Record<string, number[]> = {
+    "57734": [5999,5950,5950,5899,5899,5849,5849,5799,5799,5750,5700,5700,5650,5600,5600,5550,5500,5499,5450,5400,5350,5299,5250,5199,5149,5099,5050,4999,4899,4799],
+    "57966": [3899,3850,3850,3799,3799,3750,3699,3699,3650,3599,3550,3499,3450,3399,3350,3299,3249,3199,3149,3099,3050,2999,2950,2899,2799,2749,2699,2599,2549,2499],
+    "52821": [3999,3950,3950,3899,3850,3799,3750,3699,3650,3599,3550,3499,3450,3399,3350,3299,3249,3199,3149,3099,3050,2999,2950,2899,2849,2849,2799,2799,2799,2799],
+    "67225": [8999,8950,8899,8850,8799,8750,8699,8649,8599,8550,8499,8449,8399,8349,8299,8249,8199,8099,8049,7999,7899,7849,7799,7749,7199,7099,6999,6899,6799,6699],
+    "58353": [7299,7250,7199,7150,7099,7050,6999,6950,6899,6850,6799,6750,6699,6699,6650,6649,6649,6649,6599,6599,6549,6549,6499,6499,6499,6449,6449,6449,6449,6449],
+    "57821": [5799,5750,5699,5650,5599,5550,5499,5449,5399,5350,5299,5249,5199,5149,5099,5050,4999,4999,4999,4950,4950,4950,4950,4950,4949,4949,4949,4899,4899,4899],
+    "58112": [2299,2279,2249,2249,2199,2199,2149,2149,2099,2099,2049,2049,1999,1999,1999,1999,1999,1949,1949,1949,1949,1949,1949,1949,1899,1899,1899,1899,1899,1899],
+    "59210": [3499,3449,3399,3349,3299,3249,3199,3149,3099,3049,2999,2999,2999,2950,2950,2950,2950,2899,2899,2899,2899,2849,2849,2849,2849,2849,2849,2849,2799,2799],
+    "60110": [2799,2749,2699,2699,2649,2649,2599,2549,2549,2499,2499,2449,2449,2449,2399,2399,2349,2349,2299,2299,2299,2249,2249,2249,2249,2249,2249,2199,2199,2199],
+    "60345": [1599,1579,1549,1549,1499,1499,1499,1449,1449,1449,1399,1399,1399,1399,1399,1349,1349,1349,1349,1349,1349,1349,1299,1299,1299,1299,1299,1299,1299,1299],
+    "60567": [4299,4249,4199,4199,4149,4149,4099,4049,3999,3999,3949,3899,3849,3799,3799,3749,3749,3749,3699,3699,3699,3699,3649,3649,3649,3649,3649,3599,3599,3599],
+    "60789": [2199,2149,2099,2099,2049,2049,1999,1999,1949,1949,1899,1899,1849,1849,1799,1799,1799,1749,1749,1699,1699,1699,1649,1649,1649,1649,1649,1599,1599,1599],
+    "60912": [1899,1879,1849,1849,1799,1799,1749,1749,1699,1699,1649,1649,1649,1599,1599,1599,1599,1599,1549,1549,1549,1549,1549,1549,1499,1499,1499,1499,1499,1499],
+    "61023": [2299,2249,2249,2199,2199,2149,2099,2099,2049,2049,2049,1999,1999,1999,1949,1949,1899,1899,1899,1849,1849,1849,1849,1849,1799,1799,1799,1799,1799,1799],
+  };
+
+  const baseDate = new Date("2026-05-27");
+  const prices = staticSeeds[p.id] ?? Array.from({ length: 30 }, (_, i) => {
     const t = i / 29;
-    const noise = Math.sin(i / 2.2) * 35 + Math.cos(i / 1.4) * 18;
-    const base = p.oldPrice + (today - p.oldPrice) * t;
-    return {
-      day: `J-${29 - i}`,
-      prix: Math.round(base + noise),
-    };
+    return Math.round(p.oldPrice + (p.price - p.oldPrice) * t);
   });
-  history[history.length - 1].prix = today;
+
+  const history = prices.map((prix, i) => {
+    const d = new Date(baseDate);
+    d.setDate(d.getDate() + i);
+    const day = `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}`;
+    return { day, prix };
+  });
 
   return (
     <main className="min-h-screen">
@@ -137,7 +156,7 @@ export default function ProductPage({ params }: Params) {
                   </span>
                 </div>
                 <div className="mt-1 text-[11px] text-slate-500 dark:text-white/55">
-                  Prix le plus bas observé chez {p.store} sur les 90 derniers jours.
+                  Prix le plus bas observé chez {p.store} sur les 30 derniers jours.
                 </div>
               </div>
 
@@ -191,7 +210,7 @@ export default function ProductPage({ params }: Params) {
                   <div className="mt-1 text-sm text-slate-800 dark:text-white">
                     <span className="font-bold text-emerald-600 dark:text-emerald-400">Acheter maintenant.</span>{" "}
                     Le prix actuel est <span className="font-semibold">{discountPct}%</span> sous
-                    la moyenne 90 jours. Probabilité de hausse dans 15 j :{" "}
+                    la moyenne 30 jours. Probabilité de hausse dans 15 j :{" "}
                     <span className="font-semibold text-red-500 dark:text-red-400">+3.8%</span>.
                   </div>
                 </div>

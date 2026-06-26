@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { AlertTriangle, BarChart3, Coins, Flame, TrendingUp } from "lucide-react";
+import { AlertTriangle, BarChart3, Flame, TrendingUp } from "lucide-react";
 import { SparkArea } from "../charts/SparkArea";
 
 const initial = [
@@ -48,7 +48,7 @@ export function LiveIndexCard() {
           <span className="section-title">Indice du marché ✦</span>
         </div>
         <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-300">
-          <span className="live-dot" /> En temps réel
+          En temps réel
         </span>
       </div>
 
