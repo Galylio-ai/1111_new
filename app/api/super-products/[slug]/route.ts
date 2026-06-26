@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Pool } from "pg";
 import { productCoverImageFilterSql, productCoverImageOrderSql, productCoverImageSql } from "@/lib/productImages";
+import { nameSimilarityScore, resolveDetailPriceHistory } from "@/lib/productDetail";
 
 const pool = new Pool({
   connectionString: process.env.ALIMENTATION_DB_URL,
@@ -63,8 +64,17 @@ export async function GET(
     let shopPrices: Record<string, number> = {};
     let images: string[] = [];
     let reference: string | null = null;
+    let priceHistory: { date: string; prix: number }[] = [];
+    let related: {
+      name: string;
+      brand: string;
+      img: string;
+      minPrice: number;
+      slug: string;
+      discount: number | null;
+    }[] = [];
     try {
-      const [pricesRes, imagesRes, refRes] = await Promise.all([
+      const [pricesRes, imagesRes, refRes, histRes, headMetaRes, relatedRes] = await Promise.all([
         client.query(
           `SELECT s.shop_key, s.name AS shop_name, sp.shop_product_url, sp.current_price
            FROM products p
@@ -87,6 +97,57 @@ export async function GET(
           `SELECT source_product_id FROM products WHERE slug = $1 LIMIT 1`,
           [params.slug]
         ),
+        client.query(
+          `SELECT DATE(ph.recorded_at) AS date, MIN(ph.price) AS prix
+           FROM price_history ph
+           JOIN products p ON p.id = ph.product_id
+           WHERE p.slug = $1 AND ph.recorded_at >= NOW() - INTERVAL '14 days'
+           GROUP BY DATE(ph.recorded_at)
+           ORDER BY DATE(ph.recorded_at) ASC`,
+          [params.slug]
+        ),
+        client.query(
+          `SELECT p.id, p.name, sc.name AS subcategory, lc.name AS low_category, tc.name AS top_category, b.name AS brand
+           FROM products p
+           LEFT JOIN brands b ON b.id = p.brand_id
+           LEFT JOIN product_subcategories psc ON psc.product_id = p.id
+           LEFT JOIN subcategories sc ON sc.id = psc.subcategory_id
+           LEFT JOIN low_categories lc ON lc.id = sc.low_category_id
+           LEFT JOIN top_categories tc ON tc.id = lc.top_category_id
+           WHERE p.slug = $1
+           LIMIT 1`,
+          [params.slug]
+        ),
+        client.query(
+          `SELECT p2.name, p2.slug, COALESCE(b2.name, '') AS brand,
+             MIN(sp2.current_price) AS min_price, MAX(sp2.current_price) AS max_price,
+             ${productCoverImageSql("p2.id")} AS img
+           FROM products p2
+           LEFT JOIN brands b2 ON b2.id = p2.brand_id
+           LEFT JOIN product_subcategories psc2 ON psc2.product_id = p2.id
+           LEFT JOIN subcategories sc2 ON sc2.id = psc2.subcategory_id
+           LEFT JOIN low_categories lc2 ON lc2.id = sc2.low_category_id
+           LEFT JOIN top_categories tc2 ON tc2.id = lc2.top_category_id
+           JOIN shop_prices sp2 ON sp2.product_id = p2.id
+           JOIN products p ON p.slug = $1
+           LEFT JOIN product_subcategories psc ON psc.product_id = p.id
+           LEFT JOIN subcategories sc ON sc.id = psc.subcategory_id
+           LEFT JOIN low_categories lc ON lc.id = sc.low_category_id
+           LEFT JOIN top_categories tc ON tc.id = lc.top_category_id
+           WHERE p2.id <> p.id
+             AND (
+               sc2.name IS NOT DISTINCT FROM sc.name
+               OR lc2.name IS NOT DISTINCT FROM lc.name
+               OR tc2.name IS NOT DISTINCT FROM tc.name
+             )
+           GROUP BY p2.id, p2.name, p2.slug, b2.name
+           ORDER BY
+             MAX(CASE WHEN sc2.name IS NOT DISTINCT FROM sc.name THEN 1 ELSE 0 END) DESC,
+             MAX(CASE WHEN lc2.name IS NOT DISTINCT FROM lc.name THEN 1 ELSE 0 END) DESC,
+             MIN(sp2.current_price) ASC
+           LIMIT 18`,
+          [params.slug]
+        ),
       ]);
       for (const row of pricesRes.rows) {
         const price = parseFloat(row.current_price);
@@ -98,28 +159,47 @@ export async function GET(
       }
       images = imagesRes.rows.map(r => r.image_url).filter(Boolean);
       reference = refRes.rows[0]?.source_product_id ?? null;
-    } finally {
-      client.release();
-    }
 
-    // Related: same first-word of name (rough category match), different product
-    const firstWord = product.name.split(" ")[0].toLowerCase();
-    const related = rows
-      .filter(
-        r => r.name.toLowerCase().startsWith(firstWord) && r.name !== product.name
-      )
-      .slice(0, 6)
-      .map(r => ({
+      const rawHistory = histRes.rows.map((r) => ({
+        date: new Date(r.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }),
+        prix: parseFloat(r.prix),
+      }));
+      priceHistory = resolveDetailPriceHistory(rawHistory, minPrice);
+
+      const headName = headMetaRes.rows[0]?.name ?? product.name;
+      const scored = relatedRes.rows
+        .map((r) => ({
+          name: r.name,
+          brand: r.brand,
+          img: r.img ?? "",
+          minPrice: parseFloat(r.min_price) || 0,
+          slug: r.slug,
+          discount:
+            parseFloat(r.max_price) > parseFloat(r.min_price)
+              ? Math.round((1 - parseFloat(r.min_price) / parseFloat(r.max_price)) * 100)
+              : null,
+          _score: nameSimilarityScore(headName, r.name),
+        }))
+        .filter((r) => r._score > 0)
+        .sort((a, b) => b._score - a._score);
+
+      related = (scored.length >= 3 ? scored : relatedRes.rows.map((r) => ({
         name: r.name,
         brand: r.brand,
         img: r.img ?? "",
         minPrice: parseFloat(r.min_price) || 0,
-        slug: toSlug(r.name),
+        slug: r.slug,
         discount:
           parseFloat(r.max_price) > parseFloat(r.min_price)
             ? Math.round((1 - parseFloat(r.min_price) / parseFloat(r.max_price)) * 100)
             : null,
-      }));
+        _score: 0,
+      })))
+        .slice(0, 6)
+        .map(({ _score: _, ...rest }) => rest);
+    } finally {
+      client.release();
+    }
 
     return NextResponse.json({
       name: product.name,
@@ -135,6 +215,7 @@ export async function GET(
       slug: params.slug,
       shopUrls,
       shopPrices,
+      priceHistory,
       related,
     });
   } catch (err) {

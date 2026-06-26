@@ -6,6 +6,7 @@ import { ArrowLeftRight, ChevronRight, ExternalLink, Loader2, Package, Store, Ta
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { FavoriteAlertButtons } from "@/components/site/FavoriteAlertButtons";
+import { resolveCatalogPriceHistory } from "@/lib/productDetail";
 
 type Detail = {
   name: string;
@@ -87,9 +88,9 @@ export default function BoutiquesProductView() {
   }
 
   const images = data.images.length ? data.images : (data.img ? [data.img] : []);
-  const ph = data.priceHistory;
-  const phMin = ph.length ? Math.min(...ph.map(p => p.price)) : 0;
-  const phMax = ph.length ? Math.max(...ph.map(p => p.price)) : 0;
+  const displayHistory = resolveCatalogPriceHistory(data.priceHistory, data.price);
+  const phMin = displayHistory.length ? Math.min(...displayHistory.map(p => p.price)) : 0;
+  const phMax = displayHistory.length ? Math.max(...displayHistory.map(p => p.price)) : 0;
 
   return (
     <main className="min-h-screen bg-white dark:bg-[#0a0e1a]">
@@ -202,15 +203,15 @@ export default function BoutiquesProductView() {
         </div>
 
         {/* ── Price history ──────────────────────────────────────────────── */}
-        {ph.length > 1 && (
+        {displayHistory.length > 0 && data.price != null && (
           <section className="mt-12">
             <h2 className="mb-4 flex items-center gap-2 text-lg font-black text-slate-900 dark:text-white">
-              <Tag className="h-5 w-5 text-brand-gold" /> Historique des prix
+              <Tag className="h-5 w-5 text-brand-gold" /> Historique des prix (7 jours)
             </h2>
             <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/[0.07] dark:bg-white/[0.02]">
               <div className="flex h-32 items-end gap-1">
-                {ph.map((pt, i) => {
-                  const h = phMax > phMin ? 8 + ((pt.price - phMin) / (phMax - phMin)) * 92 : 50;
+                {displayHistory.map((pt, i) => {
+                  const h = phMax > phMin ? 8 + ((pt.price - phMin) / (phMax - phMin)) * 92 : 88;
                   return (
                     <div key={i} className="group/bar relative flex-1" style={{ height: "100%" }}>
                       <div className="absolute bottom-0 w-full rounded-t bg-gradient-to-t from-brand-gold/40 to-brand-gold transition-all group-hover/bar:from-brand-gold group-hover/bar:to-brand-goldDark"
@@ -223,9 +224,11 @@ export default function BoutiquesProductView() {
                 })}
               </div>
               <div className="mt-3 flex justify-between text-[11px] text-slate-400 dark:text-white/40">
-                <span>{new Date(ph[0].date).toLocaleDateString("fr-FR")}</span>
-                <span className="font-semibold">Min {fmt(phMin)} DT · Max {fmt(phMax)} DT</span>
-                <span>{new Date(ph[ph.length - 1].date).toLocaleDateString("fr-FR")}</span>
+                <span>{new Date(displayHistory[0].date).toLocaleDateString("fr-FR")}</span>
+                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                  Prix stable · {fmt(data.price)} DT
+                </span>
+                <span>{new Date(displayHistory[displayHistory.length - 1].date).toLocaleDateString("fr-FR")}</span>
               </div>
             </div>
           </section>

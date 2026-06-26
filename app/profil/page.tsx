@@ -9,6 +9,7 @@ import {
 import { useAuth, avatarSrc } from "@/lib/auth";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { PageContainer } from "@/components/site/PageContainer";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
@@ -98,6 +99,12 @@ export default function ProfilPage() {
   const [pwdMsg, setPwdMsg] = useState("");
   const [pwdErr, setPwdErr] = useState("");
   const [pwdLoading, setPwdLoading] = useState(false);
+
+  // Delete account state
+  const [deletePwd, setDeletePwd] = useState("");
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteErr, setDeleteErr] = useState("");
 
   // Engagement data
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
@@ -232,6 +239,35 @@ export default function ProfilPage() {
     router.push("/");
   }
 
+  async function handleDeleteAccount() {
+    setDeleteErr("");
+    if (!deleteConfirm) {
+      setDeleteConfirm(true);
+      return;
+    }
+    setDeleteLoading(true);
+    try {
+      const token = localStorage.getItem("access_token");
+      const r = await fetch(`${API}/api/users/me`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(deletePwd ? { password: deletePwd } : {}),
+      });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.message ?? "Impossible de supprimer le compte");
+      await logout();
+      router.push("/");
+    } catch (err: unknown) {
+      setDeleteErr(err instanceof Error ? err.message : "Erreur");
+      setDeleteConfirm(false);
+    } finally {
+      setDeleteLoading(false);
+    }
+  }
+
   if (loading || !user) {
     return (
       <main className="min-h-screen bg-bg-900">
@@ -247,9 +283,9 @@ export default function ProfilPage() {
     <main className="min-h-screen bg-bg-900">
       <Header />
 
-      <div className="mx-auto max-w-[1000px] px-4 py-10">
+      <PageContainer className="py-8 sm:py-10">
         {/* Profile header card */}
-        <div className="relative mb-6 overflow-hidden rounded-2xl border border-bg-border bg-bg-card p-6 shadow-card">
+        <div className="relative mb-5 overflow-hidden rounded-2xl border border-bg-border bg-bg-card p-5 shadow-card sm:mb-6 sm:p-6">
           <div className="pointer-events-none absolute -left-10 -top-10 h-48 w-48 rounded-full bg-brand-red/10 blur-3xl" />
           <div className="pointer-events-none absolute right-0 top-0 h-44 w-44 rounded-full bg-brand-gold/8 blur-3xl" />
 
@@ -304,25 +340,25 @@ export default function ProfilPage() {
         </div>
 
         {/* Tabs */}
-        <div className="mb-5 flex gap-1 overflow-x-auto rounded-2xl border border-bg-border bg-bg-card p-1.5 shadow-card">
+        <div className="mb-5 flex gap-1 overflow-x-auto rounded-2xl border border-bg-border bg-bg-card p-1.5 shadow-card [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {tabs.map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 py-2 text-sm font-semibold transition ${
+              className={`flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 text-xs font-semibold transition sm:gap-2 sm:px-4 sm:text-sm ${
                 tab === t.id
                   ? "bg-gradient-to-b from-slate-200 to-slate-100 text-slate-900 shadow-inner ring-1 ring-slate-300 dark:from-white/10 dark:to-white/[0.04] dark:text-white dark:ring-white/10"
                   : "text-slate-500 hover:text-slate-800 dark:text-white/50 dark:hover:text-white/80"
               }`}
             >
-              <t.icon className="h-4 w-4" />
+              <t.icon className="h-4 w-4 shrink-0" />
               {t.label}
             </button>
           ))}
         </div>
 
         {/* Tab panels */}
-        <div className="rounded-2xl border border-bg-border bg-bg-card p-6 shadow-card">
+        <div className="rounded-2xl border border-bg-border bg-bg-card p-5 shadow-card sm:p-6">
 
           {/* INFO TAB */}
           {tab === "info" && (
@@ -519,6 +555,7 @@ export default function ProfilPage() {
 
           {/* SECURITE TAB */}
           {tab === "securite" && (
+            <div className="space-y-8">
             <form onSubmit={handleChangePassword} className="space-y-5">
               <h2 className="section-title mb-4">Changer le mot de passe</h2>
 
@@ -561,9 +598,70 @@ export default function ProfilPage() {
                 <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
               </button>
             </form>
+
+            <div className="rounded-2xl border border-red-300/60 bg-red-50/80 p-5 dark:border-red-800/50 dark:bg-red-950/25">
+              <div className="flex items-start gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-500/15 text-red-600 dark:text-red-400">
+                  <Trash2 className="h-5 w-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-base font-bold text-red-700 dark:text-red-300">Supprimer mon compte</h3>
+                  <p className="mt-1 text-sm text-red-600/80 dark:text-red-300/70">
+                    Votre compte sera désactivé (suppression douce). Vous ne pourrez plus vous connecter, mais vos données peuvent être conservées conformément à la réglementation.
+                  </p>
+
+                  {deleteConfirm && (
+                    <div className="mt-4 space-y-3">
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-red-700/80 dark:text-red-300/80">
+                        Confirmez avec votre mot de passe (si vous en avez un)
+                      </label>
+                      <input
+                        type="password"
+                        value={deletePwd}
+                        onChange={(e) => setDeletePwd(e.target.value)}
+                        placeholder="Mot de passe actuel"
+                        className="w-full rounded-xl border border-red-200 bg-white py-2.5 px-4 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-red-400 focus:ring-2 focus:ring-red-400/20 dark:border-red-800/50 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/30"
+                      />
+                    </div>
+                  )}
+
+                  {deleteErr && (
+                    <div className="mt-3 rounded-xl border border-red-300 bg-white/70 px-4 py-2.5 text-sm font-medium text-red-600 dark:border-red-800/50 dark:bg-red-950/40 dark:text-red-300">
+                      {deleteErr}
+                    </div>
+                  )}
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={handleDeleteAccount}
+                      disabled={deleteLoading}
+                      className="inline-flex items-center gap-2 rounded-xl border border-red-500/40 bg-red-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-red-700 dark:hover:bg-red-600"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      {deleteLoading
+                        ? "Suppression…"
+                        : deleteConfirm
+                        ? "Confirmer la suppression"
+                        : "Supprimer mon compte"}
+                    </button>
+                    {deleteConfirm && (
+                      <button
+                        type="button"
+                        onClick={() => { setDeleteConfirm(false); setDeletePwd(""); setDeleteErr(""); }}
+                        className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-white dark:border-white/15 dark:text-white/70 dark:hover:bg-white/5"
+                      >
+                        Annuler
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            </div>
           )}
         </div>
-      </div>
+      </PageContainer>
 
       <Footer />
     </main>

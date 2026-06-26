@@ -38,6 +38,9 @@ const STATIC_ROUTES: Entry[] = [
   { path: "/ia-predictive",          changeFrequency: "weekly", priority: 0.7 },
   { path: "/couffin",                changeFrequency: "weekly", priority: 0.75 },
   { path: "/qoffa",                  changeFrequency: "weekly", priority: 0.6 },
+  { path: "/qoffa/plats",            changeFrequency: "weekly", priority: 0.65 },
+  { path: "/qoffa/plats/ojja-simple", changeFrequency: "weekly", priority: 0.6 },
+  { path: "/qoffa/plats/makrouna-thon", changeFrequency: "weekly", priority: 0.6 },
   { path: "/veille",                 changeFrequency: "weekly", priority: 0.6 },
 
   // Legal / corporate

@@ -2,8 +2,10 @@
 import { ChevronRight, ShieldAlert, Store, TrendingDown, TrendingUp, Trophy } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { distributionEnseignes, getStoreLogo } from "@/lib/data";
+import { EssentialBasketRanking } from "@/components/EssentialBasketRanking";
+import { fmtDt, getEssentialBasketData } from "@/lib/essentialBasket";
 import { topRetailSites, retailSitesMonth } from "@/lib/topRetailSites";
+import { RetailSitesSourceAttribution } from "@/components/site/RetailSitesSourceAttribution";
 
 // favicon for a domain (Google's service, themed-neutral, cached by browser)
 function faviconFor(domain: string): string {
@@ -15,7 +17,6 @@ function siteName(domain: string): string {
   return base.charAt(0).toUpperCase() + base.slice(1);
 }
 
-type EnseigneRow = { name: string; price: string; diff: string; best?: boolean };
 type IllogicalPromo = {
   productId: number;
   name: string;
@@ -43,30 +44,8 @@ type RetailShopRow = {
   cheapestCount: number;
 };
 
-type AlertData = {
-  type: "warning" | "info" | "danger";
-  message: string;
-  productName?: string;
-  slug?: string;
-};
-
-function enseigneLogo(name: string) {
-  const key = name.trim().toLowerCase();
-  if (key.includes("aziza")) return { bg: "bg-green-600", text: "✓", textColor: "text-white" };
-  if (key.includes("mg")) return { bg: "bg-red-700", text: "MG", textColor: "text-white" };
-  if (key.includes("monoprix")) return { bg: "bg-red-800", text: "M", textColor: "text-white" };
-  if (key.includes("géant") || key.includes("geant")) return { bg: "bg-red-600", text: "G", textColor: "text-white" };
-  if (key.includes("carrefour")) return { bg: "bg-red-600", text: "C", textColor: "text-white" };
-  return { bg: "bg-slate-500", text: name.slice(0, 1).toUpperCase(), textColor: "text-white" };
-}
-
 export function GrandeDistribRow() {
-  const [enseignes] = useState<EnseigneRow[]>(
-    distributionEnseignes.map((e) => ({ name: e.name, price: e.price, diff: e.diff, best: e.best }))
-  );
-  const basketSize = 12;
-  const economy = "8 370";
-  // const alert: AlertData | null = null;
+  const basket = getEssentialBasketData().fiveShop;
   const illogicalPromo = null as IllogicalPromo | null;
   const [topRetailShops, setTopRetailShops] = useState<RetailShopRow[]>([]);
 
@@ -97,88 +76,34 @@ export function GrandeDistribRow() {
             </div>
           </div>
 
-          {/* Two-column body */}
-          <div className="mt-3 flex flex-col gap-3 min-[420px]:flex-row min-[420px]:gap-4">
-            {/* LEFT — table */}
-            <div className="min-w-0 flex-1">
-              {/* Sub-header */}
-              <div className="mb-2 text-sm font-semibold text-slate-900 dark:text-white">
-                Panier essentiel{" "}
-                <span className="font-normal text-slate-400 dark:text-white/50">({basketSize} produits : tomate, huile, lait, thon, sucre, fromage, œufs (plateau 30), jambon, poulet, olives, harissa, café)</span>
-              </div>
-
-              {/* Table header */}
-              <div className="grid grid-cols-[1fr_5rem_5rem] gap-x-3 px-1 text-xs font-medium text-slate-400 dark:text-white/40">
-                <div>Enseigne</div>
-                <div className="text-right">Prix total</div>
-                <div className="text-right">bénéfice</div>
-              </div>
-
-              {/* Rows */}
-              <ul className="mt-1 divide-y divide-slate-100 dark:divide-white/5">
-                {enseignes.map((e, idx) => {
-                  const logo = enseigneLogo(e.name);
-                  const rank = idx + 1;
-                  const rankCls =
-                    rank === 1 ? "bg-gradient-to-br from-emerald-400 to-emerald-600 text-white ring-1 ring-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" :
-                    rank === 2 ? "bg-gradient-to-br from-lime-400 to-lime-600 text-white ring-1 ring-lime-400" :
-                    rank === 3 ? "bg-gradient-to-br from-yellow-400 to-amber-500 text-white ring-1 ring-yellow-400" :
-                    rank === 4 ? "bg-gradient-to-br from-orange-400 to-orange-600 text-white ring-1 ring-orange-400" :
-                                 "bg-gradient-to-br from-red-500 to-red-700 text-white ring-1 ring-red-500";
-                  return (
-                  <li
-                    key={e.name}
-                    className={`grid grid-cols-[1fr_5rem_5rem] items-center gap-x-3 px-1 py-2 text-sm transition ${
-                      e.best ? "rounded-lg bg-emerald-500/10" : "hover:bg-slate-50 dark:hover:bg-white/[0.03]"
-                    }`}
-                  >
-                    {/* Rank + Logo + name */}
-                    <div className="flex items-center gap-4 min-w-0">
-                      <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[13px] font-black tabular-nums ${rankCls}`}>
-                        {rank === 1 ? "🏆" : rank}
-                      </span>
-                      {getStoreLogo(e.name) ? (
-                        <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white p-1 ring-1 ring-slate-200 shadow-sm dark:ring-white/10">
-                          <img src={getStoreLogo(e.name)} alt={e.name} className="h-full w-full object-contain" />
-                        </span>
-                      ) : (
-                        <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl text-sm font-black ${logo.bg} ${logo.textColor}`}>
-                          {logo.text}
-                        </span>
-                      )}
+          {/* Ranking + savings visual below */}
+          <div className="mt-3">
+            <EssentialBasketRanking
+              compact
+              showEconomy={false}
+              footer={
+                <div className="mt-4 border-t border-slate-200/80 pt-4 dark:border-white/10">
+                  <div className="flex flex-col items-center gap-4 rounded-2xl bg-gradient-to-br from-slate-50/90 via-white to-emerald-50/40 p-4 ring-1 ring-slate-200/60 dark:from-white/[0.04] dark:via-white/[0.02] dark:to-emerald-500/[0.06] dark:ring-white/10 sm:flex-row sm:items-center sm:justify-center sm:gap-8 sm:p-5">
+                    <img
+                      src="/kathya.png"
+                      alt="Panier de courses"
+                      className="h-24 w-24 shrink-0 object-contain drop-shadow-[0_8px_24px_rgba(0,0,0,0.35)] sm:h-28 sm:w-28"
+                    />
+                    <div className="w-full max-w-[14rem] rounded-xl border border-emerald-500/20 bg-white/80 px-5 py-4 text-center shadow-sm backdrop-blur-sm dark:border-emerald-500/25 dark:bg-bg-800/90">
+                      <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-white/55">
+                        Économie possible
+                      </div>
+                      <div className="mt-1 text-3xl font-black tabular-nums leading-none text-emerald-600 dark:text-emerald-400">
+                        {fmtDt(basket.maxSavings)} DT
+                      </div>
+                      <div className="mt-1.5 text-[11px] text-slate-400 dark:text-white/45">
+                        vs l&apos;enseigne la plus chère
+                      </div>
                     </div>
-                    {/* Price */}
-                    <div className={`whitespace-nowrap text-right font-bold tabular-nums ${e.best ? "text-emerald-600 dark:text-emerald-300" : "text-slate-900 dark:text-white"}`}>
-                      {e.price} DT
-                    </div>
-                    {/* Delta */}
-                    <div className={`whitespace-nowrap text-right text-sm font-semibold tabular-nums ${e.best ? "text-emerald-600 dark:text-emerald-300" : "text-red-500 dark:text-red-400"}`}>
-                      {e.diff}
-                    </div>
-                  </li>
-                  );
-                })}
-              </ul>
-
-              {/* Button */}
-              <Link href="/couffin" className="mt-4 block w-full rounded-xl bg-brand-gold py-2.5 text-center text-sm font-black text-black hover:bg-brand-gold/90 transition">
-                Comparer Mon Panier
-              </Link>
-            </div>
-
-            {/* RIGHT — basket image + economy box */}
-            <div className="flex w-full shrink-0 flex-row items-center justify-center gap-3 min-[420px]:w-36 min-[420px]:flex-col">
-              <img
-                src="/kathya.png"
-                alt="Panier de courses"
-                className="h-[clamp(5.75rem,28vw,9rem)] w-[clamp(5.75rem,28vw,9rem)] object-contain drop-shadow-[0_8px_24px_rgba(0,0,0,0.5)] lg:h-24 lg:w-24 xl:h-36 xl:w-36"
-              />
-              <div className="w-full max-w-[11rem] rounded-xl bg-bg-700 p-3 text-center ring-1 ring-slate-200 dark:bg-bg-800 dark:ring-white/10 min-[420px]:max-w-none">
-                <div className="text-[11px] text-slate-500 dark:text-white/60">Économie possible</div>
-                <div className="mt-0.5 text-2xl font-black tabular-nums text-emerald-600 dark:text-emerald-400">{economy} DT</div>
-                <div className="text-[10px] text-slate-400 dark:text-white/50">vs l'enseigne la plus chère</div>
-              </div>
-            </div>
+                  </div>
+                </div>
+              }
+            />
           </div>
         </div>
 
@@ -243,6 +168,8 @@ export function GrandeDistribRow() {
               );
             })}
           </ul>
+
+          <RetailSitesSourceAttribution variant="footer" className="mt-3" />
 
           <Link href="/sites-les-plus-visites" className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 py-2 text-center text-xs font-semibold text-amber-700 transition hover:bg-amber-100 dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-300 dark:hover:bg-amber-500/20">
             Voir le classement complet

@@ -3,17 +3,17 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
+import { PhoneInput } from "@/components/ui/PhoneInput";
+import {
+  isValidTunisianPhone,
+  phoneValidationMessage,
+} from "@/lib/phone";
 
 /* ── SVG micro-icons ───────────────────────────────────────────────── */
 const IconEnvelope = () => (
   <svg viewBox="0 0 20 20" fill="none" className="h-[18px] w-[18px]" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
     <rect x="2" y="4" width="16" height="12" rx="2.5" />
     <path d="M2 7l8 5 8-5" />
-  </svg>
-);
-const IconPhone = () => (
-  <svg viewBox="0 0 20 20" fill="none" className="h-[18px] w-[18px]" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M5 2h3l1.5 3.5L8 7a11 11 0 0 0 5 5l1.5-1.5L18 12v3a2 2 0 0 1-2 2A15 15 0 0 1 3 4a2 2 0 0 1 2-2z" />
   </svg>
 );
 const IconLock = () => (
@@ -42,6 +42,7 @@ export default function LoginPage() {
   const [mode, setMode] = useState<"email" | "phone">("email");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [phoneCountry, setPhoneCountry] = useState("TN");
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [error, setError] = useState("");
@@ -50,6 +51,15 @@ export default function LoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    if (mode === "phone") {
+      if (!phone) { setError("Veuillez entrer votre numéro de téléphone"); return; }
+      const countryMsg = phoneValidationMessage(phoneCountry);
+      if (countryMsg) { setError(countryMsg); return; }
+      if (!isValidTunisianPhone(phone)) {
+        setError("Numéro tunisien invalide (8 chiffres, ex. 20 123 456)");
+        return;
+      }
+    }
     setLoading(true);
     try {
       await login({ ...(mode === "email" ? { email } : { phone }), password });
@@ -68,10 +78,11 @@ export default function LoginPage() {
   }
 
   const inputBase =
-    "w-full rounded-2xl border border-slate-200 bg-slate-50 py-3.5 pl-12 pr-4 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-all duration-200 focus:border-brand-gold/60 focus:bg-white focus:ring-4 focus:ring-brand-gold/10 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/30 dark:focus:bg-white/[0.07]";
+    "w-full rounded-2xl border border-slate-200 bg-slate-50 py-3.5 pl-14 pr-4 text-base text-slate-900 placeholder:text-slate-400 outline-none transition-all duration-200 focus:border-brand-gold/60 focus:bg-white focus:ring-4 focus:ring-brand-gold/10 sm:py-4 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/30 dark:focus:bg-white/[0.07]";
+  const iconLeft = "pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 transition group-focus-within:text-brand-gold dark:text-white/30 sm:left-5";
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50 px-4 py-10 dark:bg-[#070a14]">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50 px-3 py-8 sm:px-4 sm:py-10 dark:bg-[#070a14]">
       {/* Background: ambient glows + grid + mascot watermark */}
       <div className="pointer-events-none absolute -top-40 left-1/4 h-[36rem] w-[36rem] -translate-x-1/2 rounded-full bg-brand-red/10 blur-[140px] dark:bg-brand-red/15" />
       <div className="pointer-events-none absolute -bottom-40 right-1/4 h-[34rem] w-[34rem] translate-x-1/2 rounded-full bg-brand-gold/10 blur-[130px]" />
@@ -90,7 +101,7 @@ export default function LoginPage() {
       />
 
       {/* Card */}
-      <div className="relative z-10 w-full max-w-md">
+      <div className="relative z-10 mx-auto w-full max-w-lg">
         {/* Brand pill on top */}
         <div className="mb-6 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-slate-900 dark:text-white">
@@ -116,23 +127,23 @@ export default function LoginPage() {
           {/* gold hairline */}
           <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-brand-gold/70 to-transparent" />
 
-          <div className="p-7 sm:p-9">
+          <div className="p-6 sm:p-10 lg:p-12">
             {/* Header */}
-            <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl dark:text-white">
+            <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl lg:text-4xl dark:text-white">
               Bon retour 👋
             </h1>
-            <p className="mt-1.5 text-sm text-slate-500 dark:text-white/45">
+            <p className="mt-2 text-sm text-slate-500 sm:text-base dark:text-white/45">
               Connectez-vous pour suivre vos prix et alertes.
             </p>
 
             {/* Toggle */}
-            <div className="mt-7 grid grid-cols-2 gap-1 rounded-2xl border border-slate-200 bg-slate-50 p-1 dark:border-white/10 dark:bg-white/[0.03]">
+            <div className="mt-8 grid grid-cols-2 gap-1.5 rounded-2xl border border-slate-200 bg-slate-50 p-1.5 dark:border-white/10 dark:bg-white/[0.03]">
               {(["email", "phone"] as const).map((m) => (
                 <button
                   key={m}
                   type="button"
                   onClick={() => setMode(m)}
-                  className={`rounded-xl py-2.5 text-sm font-semibold transition-all duration-200 ${
+                  className={`rounded-xl py-3 text-sm font-semibold transition-all duration-200 sm:py-3.5 sm:text-base ${
                     mode === m
                       ? "bg-gradient-to-br from-brand-gold/20 to-brand-gold/5 text-brand-goldDark ring-1 ring-brand-gold/30 dark:text-brand-gold"
                       : "text-slate-400 hover:text-slate-600 dark:text-white/40 dark:hover:text-white/70"
@@ -143,26 +154,34 @@ export default function LoginPage() {
               ))}
             </div>
 
-            <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-              {/* Identifier */}
-              <div className="group relative">
-                <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 transition group-focus-within:text-brand-gold dark:text-white/30">
-                  {mode === "email" ? <IconEnvelope /> : <IconPhone />}
-                </span>
-                <input
-                  type={mode === "email" ? "email" : "tel"}
-                  required
-                  value={mode === "email" ? email : phone}
-                  onChange={(e) => mode === "email" ? setEmail(e.target.value) : setPhone(e.target.value)}
-                  placeholder={mode === "email" ? "vous@exemple.com" : "+21620123456"}
-                  className={inputBase}
+            <form onSubmit={handleSubmit} className="mt-6 space-y-5 sm:space-y-6">
+              {mode === "email" ? (
+                <div className="group relative">
+                  <span className={iconLeft}>
+                    <IconEnvelope />
+                  </span>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="vous@exemple.com"
+                    className={inputBase}
+                  />
+                </div>
+              ) : (
+                <PhoneInput
+                  value={phone}
+                  onChange={setPhone}
+                  onCountryChange={setPhoneCountry}
+                  invalid={Boolean(phone) && !isValidTunisianPhone(phone)}
                 />
-              </div>
+              )}
 
               {/* Password */}
               <div>
                 <div className="group relative">
-                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 transition group-focus-within:text-brand-gold dark:text-white/30">
+                  <span className={iconLeft}>
                     <IconLock />
                   </span>
                   <input
@@ -204,7 +223,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-brand-red to-brand-redDark py-3.5 text-sm font-bold text-white shadow-[0_8px_24px_-6px_rgba(225,29,45,0.6)] ring-1 ring-white/10 transition-all duration-200 hover:scale-[1.01] hover:shadow-[0_10px_30px_-4px_rgba(225,29,45,0.7)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+                className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-brand-red to-brand-redDark py-4 text-base font-bold text-white shadow-[0_8px_24px_-6px_rgba(225,29,45,0.6)] ring-1 ring-white/10 transition-all duration-200 hover:scale-[1.01] hover:shadow-[0_10px_30px_-4px_rgba(225,29,45,0.7)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 sm:py-4.5"
               >
                 <span className="relative z-10 flex items-center justify-center gap-2">
                   {loading ? (

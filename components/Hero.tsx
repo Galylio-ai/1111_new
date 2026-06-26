@@ -2,7 +2,9 @@
 import { useEffect, useState } from "react";
 import { BarChart3, Flame, Package, Search, TrendingUp } from "lucide-react";
 import Link from "next/link";
+import { GrocerySupermarketBars } from "./GrocerySupermarketBars";
 import { SearchModal } from "./SearchModal";
+import type { GroceryShopHealth } from "@/lib/groceryCrossing";
 
 const tags = ["climatiseur", "iphone 15", "samsung", "machine à laver", "parfum", "laptop"];
 
@@ -25,6 +27,16 @@ type MarketData = {
   };
 };
 
+type GroceryCrossingPayload = {
+  summary: { crossed_products: number; shops: number; products: number };
+  featured_shops: GroceryShopHealth[];
+};
+
+const FALLBACK_GROCERY: GroceryCrossingPayload = {
+  summary: { crossed_products: 7940, shops: 7, products: 59907 },
+  featured_shops: [],
+};
+
 const FALLBACK: MarketData = {
   index: 100,
   yesterdayIndex: 99,
@@ -43,7 +55,7 @@ const FALLBACK: MarketData = {
 
 export function Hero() {
   const [data, setData]             = useState<MarketData>(FALLBACK);
-  const [similarCount, setSimilarCount] = useState<number | null>(null);
+  const [grocery, setGrocery]       = useState<GroceryCrossingPayload>(FALLBACK_GROCERY);
   const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
@@ -54,9 +66,13 @@ export function Hero() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/similar-count")
+    fetch("/api/stats/grocery-crossing")
       .then(r => r.ok ? r.json() : null)
-      .then(j => { if (j?.total) setSimilarCount(j.total); })
+      .then(j => {
+        if (j?.summary && j?.featured_shops?.length) {
+          setGrocery({ summary: j.summary, featured_shops: j.featured_shops });
+        }
+      })
       .catch(() => {});
   }, []);
 
@@ -162,51 +178,28 @@ export function Hero() {
 
           <div className="mt-3 flex items-center gap-3">
             <div className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-slate-900 tabular-nums transition-all duration-500 dark:text-white">
-              {similarCount != null ? similarCount.toLocaleString("fr-TN") : "—"}
+              {grocery.summary.crossed_products.toLocaleString("fr-TN")}
             </div>
             <div className="flex flex-col justify-center">
-              <span className="text-sm font-bold text-slate-700 dark:text-white/80">produits similaires</span>
-              <span className="text-xs text-slate-500 dark:text-white/50">comparables sur <span className="font-semibold text-slate-700 dark:text-white/70">6 enseignes</span></span>
+              <span className="text-sm font-bold text-slate-700 dark:text-white/80">produits croisés</span>
+              <span className="text-xs text-slate-500 dark:text-white/50">
+                comparables sur{" "}
+                <span className="font-semibold text-slate-700 dark:text-white/70">
+                  {grocery.summary.shops} enseignes
+                </span>
+              </span>
             </div>
           </div>
 
           <div className="mt-1">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/50">
-                Cheapest Supermarket
-              </span>
-              <span className="text-[10px] text-slate-400 dark:text-white/40">Indice de prix</span>
-            </div>
-            <div className="flex items-end justify-between gap-1">
-              {/* Aziza — gauche */}
-              <div className="flex flex-col items-center gap-0.5 w-[14%] min-w-0 shrink-0">
-                <span className="text-[7px] font-black text-emerald-500 uppercase tracking-wide text-center leading-tight">MOINS CHER</span>
-                <img src="/aziza-logo.jpg" alt="Aziza" className="h-14 w-14 rounded-lg object-contain bg-white p-0.5 shadow-md ring-2 ring-brand-gold" />
-                <span className="text-[9px] font-bold text-center leading-tight truncate w-full px-0.5 text-emerald-600 dark:text-emerald-300">Aziza</span>
-                <div className="w-full rounded-t-lg bg-gradient-to-b from-brand-gold to-amber-500 flex items-center justify-center shadow-md" style={{ height: 72 }}>
-                  <span className="font-black drop-shadow text-xl text-white">1</span>
-                </div>
-              </div>
-              {/* Autres enseignes — droite */}
-              <div className="flex items-end gap-1 flex-1 min-w-0">
-                {[
-                  { rank: 2, name: "Carrefour",  logo: "/Carrefour-Logo.png",    blockH: 44, blockColor: "from-slate-400 to-slate-500 dark:from-slate-500 dark:to-slate-600", numColor: "text-brand-gold", ring: "ring-1 ring-slate-300 dark:ring-white/20", logoSize: "h-12 w-12" },
-                  { rank: 3, name: "Monoprix",   logo: "/monoprix.png",          blockH: 32, blockColor: "from-amber-600 to-amber-700",          numColor: "text-white",     ring: "ring-1 ring-amber-400/50",             logoSize: "h-12 w-12" },
-                  { rank: 4, name: "C. Market",  logo: "/carrefour-market.png",  blockH: 22, blockColor: "from-slate-500 to-slate-600",          numColor: "text-white/80",  ring: "ring-1 ring-slate-200 dark:ring-white/10", logoSize: "h-10 w-10" },
-                  { rank: 5, name: "C. Express", logo: "/Carrefour_Express.png", blockH: 14, blockColor: "from-slate-600 to-slate-700",          numColor: "text-white/70",  ring: "ring-1 ring-slate-200 dark:ring-white/10", logoSize: "h-10 w-10" },
-                  { rank: 6, name: "Géant",      logo: "/geant-logo.png",        blockH: 8,  blockColor: "from-slate-700 to-slate-800",          numColor: "text-white/60",  ring: "ring-1 ring-slate-200 dark:ring-white/10", logoSize: "h-10 w-10" },
-                ].map((s) => (
-                  <div key={s.name} className="flex flex-col items-center gap-0.5 flex-1 min-w-0">
-                    <span className="text-[7px] leading-tight">&nbsp;</span>
-                    <img src={s.logo} alt={s.name} className={`${s.logoSize} rounded-lg object-contain bg-white p-0.5 shadow-md ${s.ring}`} />
-                    <span className={`text-[9px] font-bold text-center leading-tight truncate w-full px-0.5 ${s.rank === 2 ? "text-brand-gold" : "text-slate-400 dark:text-white/45"}`}>{s.name}</span>
-                    <div className={`w-full rounded-t-lg bg-gradient-to-b ${s.blockColor} flex items-center justify-center shadow-md`} style={{ height: s.blockH }}>
-                      <span className={`font-black drop-shadow ${s.rank <= 3 ? "text-base" : "text-xs"} ${s.numColor}`}>{s.rank}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            {grocery.featured_shops.length > 0 ? (
+              <GrocerySupermarketBars
+                shops={grocery.featured_shops}
+                detailHref="/supermarche/classement"
+              />
+            ) : (
+              <div className="h-24 animate-pulse rounded-xl bg-slate-100 dark:bg-white/5" />
+            )}
           </div>
 
           <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
@@ -226,8 +219,8 @@ export function Hero() {
             ))}
           </div>
 
-          <Link href="/indice" className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-brand-gold transition hover:gap-2 hover:underline">
-            Voir l'indice détaillé →
+          <Link href="/supermarche/classement" className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-brand-gold transition hover:gap-2 hover:underline">
+            Voir le classement courses →
           </Link>
         </div>
       </div>

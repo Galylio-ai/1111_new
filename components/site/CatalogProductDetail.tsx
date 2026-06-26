@@ -13,6 +13,7 @@ import { useTheme } from "@/components/ThemeProvider";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { FavoriteAlertButtons } from "@/components/site/FavoriteAlertButtons";
+import { resolveDetailPriceHistory } from "@/lib/productDetail";
 
 type RelatedProduct = {
   name: string;
@@ -211,6 +212,11 @@ export function CatalogProductDetail({
     ].filter(u => typeof u === "string" && u.startsWith("http"));
     return Array.from(new Set(all));
   }, [product]);
+
+  const chartHistory = useMemo(
+    () => (product ? resolveDetailPriceHistory(product.priceHistory, product.minPrice) : []),
+    [product],
+  );
 
   if (loading) return (
     <main className="min-h-screen bg-bg-900">
@@ -453,10 +459,17 @@ export function CatalogProductDetail({
           <div className="rounded-2xl border border-bg-border bg-bg-card p-5 shadow-card">
             <h2 className="section-title mb-4 flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-brand-gold" />
-              Historique des prix (90 jours)
+              Historique des prix (7 jours)
             </h2>
-            {product.priceHistory && product.priceHistory.length > 1 ? (
-              <PriceHistoryChart data={product.priceHistory} />
+            {chartHistory.length > 1 ? (
+              <>
+                <PriceHistoryChart data={chartHistory} />
+                {chartHistory.every((p) => p.prix === chartHistory[0]?.prix) && (
+                  <p className="mt-3 text-center text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                    Prix stable · {product.minPrice.toFixed(3)} DT sur 7 jours
+                  </p>
+                )}
+              </>
             ) : (
               <div className="flex h-[220px] flex-col items-center justify-center gap-2 text-center">
                 <TrendingUp className="h-8 w-8 text-slate-300 dark:text-white/15" />

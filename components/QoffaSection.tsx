@@ -2,7 +2,16 @@
 import { ChefHat, ChevronLeft, ChevronRight, Sparkles, Store } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { OjjaOrbit } from "./OjjaOrbit";
+import {
+  fmtDt,
+  getEssentialBasketData,
+  getQoffaBasketItems,
+  shopDisplayName,
+  type QoffaBasketItem,
+} from "@/lib/essentialBasket";
+import { PlateOrbit } from "./PlateOrbit";
+import { getPopularPlatesData } from "@/lib/popularPlates";
+import { PAGE_CONTAINER } from "@/components/site/PageContainer";
 
 type LatestProduct = {
   id: number;
@@ -23,16 +32,9 @@ const CATALOG_META: Record<LatestProduct["catalog"], { label: string; href: stri
   retail:       { label: "Retail",        href: "/retail",         chip: "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-300" },
 };
 
-const qoffaBestItems = [
-  { name: "Semoule fine", qty: "5 kg", price: 12.5, shop: "Aziza" },
-  { name: "Huile végétale", qty: "1 bidon 5L", price: 34.9, shop: "Géant" },
-  { name: "Boeuf haché", qty: "1 kg", price: 38.5, shop: "Monoprix" },
-  { name: "Tomates", qty: "1 kg", price: 1.8, shop: "Aziza" },
-  { name: "Lait demi-écrémé", qty: "6 × 1L", price: 11.4, shop: "Carrefour" },
-  { name: "Oeufs frais", qty: "plateau 30", price: 18.9, shop: "Aziza" },
-  { name: "Café moulu", qty: "250 g", price: 8.95, shop: "Géant" },
-  { name: "Sucre blanc", qty: "2 kg", price: 4.6, shop: "Carrefour" },
-];
+const qoffaBasketItems = getQoffaBasketItems();
+const qoffaBasketMeta = getEssentialBasketData().fiveShop;
+const popularPlates = getPopularPlatesData().strict;
 
 function fmtRelative(iso: string): string {
   const t = new Date(iso).getTime();
@@ -78,7 +80,7 @@ function LatestProductThumb({ src, name }: { src: string | null; name: string })
 
 // Shows the cheapest-basket items 2 at a time, auto-advancing every few seconds
 // with manual prev/next arrows. Pauses auto-rotation while hovered.
-function PanierSlider({ items }: { items: typeof qoffaBestItems }) {
+function PanierSlider({ items }: { items: QoffaBasketItem[] }) {
   const perPage = 2;
   const pages = Math.max(1, Math.ceil(items.length / perPage));
   const [page, setPage] = useState(0);
@@ -124,7 +126,7 @@ function PanierSlider({ items }: { items: typeof qoffaBestItems }) {
                 </span>
               </div>
               <div className="mt-0.5 flex items-center justify-between gap-2 text-[10px] text-slate-500 dark:text-white/50">
-                <span>{item.qty}</span>
+                <span className="truncate">{item.choice}</span>
                 <span className="truncate font-semibold">{item.shop}</span>
               </div>
             </div>
@@ -159,7 +161,7 @@ function PanierSlider({ items }: { items: typeof qoffaBestItems }) {
   );
 }
 
-export function QoffaSection() {
+export function QoffaSection({ contained = true }: { contained?: boolean }) {
   const [items, setItems] = useState<LatestProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"all" | LatestProduct["catalog"]>("all");
@@ -182,8 +184,9 @@ export function QoffaSection() {
   }), [items]);
 
   const filtered = tab === "all" ? items : items.filter(i => i.catalog === tab);
+  const outerClass = contained ? `${PAGE_CONTAINER} mt-5` : "min-w-0";
   return (
-    <section className="mx-auto mt-5 max-w-[1600px] px-3 sm:px-4">
+    <section className={outerClass}>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1.5fr_1.2fr]">
         {/* QOFFA TOUNSI */}
         <div className="card card-pad relative overflow-hidden">
@@ -200,29 +203,35 @@ export function QoffaSection() {
               className="h-40 w-40 md:h-48 md:w-48 animate-couffin-swing object-contain drop-shadow-[0_8px_20px_rgba(212,175,55,0.35)]"
             />
           </div>
-          <Link href="/couffin" className="btn-primary mt-3 w-full">Voir toutes les recettes</Link>
+          <Link href="/qoffa" className="btn-primary mt-3 w-full">Voir le panier Qoffa</Link>
 
           {/* Stat cards */}
           <div className="mt-3 grid grid-cols-2 gap-2">
             <div className="flex flex-col justify-center rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-center">
-              <div className="text-base font-extrabold tabular-nums text-emerald-600 dark:text-emerald-300">150,630 DT</div>
-              <div className="mt-0.5 text-[10px] text-slate-500 dark:text-white/60">Coût total · meilleur prix</div>
+              <div className="text-base font-extrabold tabular-nums text-emerald-600 dark:text-emerald-300">
+                {fmtDt(qoffaBasketMeta.ranking[0]?.total ?? 0)} DT
+              </div>
+              <div className="mt-0.5 text-[10px] text-slate-500 dark:text-white/60">
+                Panier · {shopDisplayName(qoffaBasketMeta.ranking[0]?.shop ?? "")}
+              </div>
             </div>
             <div className="flex flex-col justify-center rounded-lg border border-brand-gold/30 bg-brand-gold/10 p-3.5 text-center">
-              <div className="text-base font-extrabold tabular-nums text-brand-gold">8</div>
-              <div className="mt-0.5 text-[10px] text-slate-500 dark:text-white/60">Ingrédients comparés</div>
+              <div className="text-base font-extrabold tabular-nums text-brand-gold">
+                {qoffaBasketMeta.productCount}
+              </div>
+              <div className="mt-0.5 text-[10px] text-slate-500 dark:text-white/60">Produits comparés</div>
             </div>
           </div>
           <div className="mt-3 rounded-xl border border-white/10 bg-slate-950/5 p-2.5 dark:bg-white/[0.03]">
             <div className="mb-2 flex items-center justify-between gap-2">
               <span className="text-[10px] font-black uppercase tracking-wider text-brand-gold">
-                Panier le moins cher
+                Meilleur prix par produit
               </span>
-              <span className="text-[10px] font-semibold text-slate-500 dark:text-white/50">
-                par enseigne
-              </span>
+              <Link href="/grande-distribution" className="text-[10px] font-semibold text-slate-500 transition hover:text-brand-gold dark:text-white/50">
+                Détail →
+              </Link>
             </div>
-            <PanierSlider items={qoffaBestItems} />
+            <PanierSlider items={qoffaBasketItems} />
           </div>
         </div>
 
@@ -242,31 +251,34 @@ export function QoffaSection() {
                 <ChefHat className="h-4 w-4 text-brand-gold" strokeWidth={2.2} />
               </span>
               <div className="leading-tight">
-                <div className="section-title">Plat des riches</div>
-                <div className="font-arabic text-[11px] text-slate-400 dark:text-white/40" dir="rtl">عجة التونسي</div>
+                <div className="section-title">Plats populaires</div>
+                <div className="font-arabic text-[11px] text-slate-400 dark:text-white/40" dir="rtl">
+                  أطباق شعبية
+                </div>
               </div>
             </div>
             <span className="rounded-full border border-brand-gold/25 bg-brand-gold/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-brand-gold">
-              8 ingrédients
+              Produits identiques
             </span>
           </div>
 
-          {/* Ojja ingredients board */}
           <div className="relative mt-4">
             <div className="mb-3 flex items-center justify-between text-[10px]">
               <span className="font-bold uppercase tracking-wider text-brand-gold">
-                Décortiquez l'ojja
+                Décortiquez le plat
               </span>
-              <span className="text-slate-400 dark:text-white/45">8 ingrédients · 4 135 DT</span>
+              <span className="text-slate-400 dark:text-white/45">
+                Ojja & makrouna · données croisées
+              </span>
             </div>
-            <OjjaOrbit />
+            <PlateOrbit plates={popularPlates} />
           </div>
 
           <Link
             className="relative mt-3 inline-flex items-center gap-1 text-xs font-semibold text-brand-gold transition hover:gap-2 hover:underline"
-            href="/qoffa"
+            href="/qoffa/plats"
           >
-            Voir toutes les recettes →
+            Voir tous les plats →
           </Link>
         </div>
 

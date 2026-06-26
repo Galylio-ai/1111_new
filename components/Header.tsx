@@ -8,7 +8,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { useAuth, avatarSrc } from "@/lib/auth";
 import { NotificationBell } from "./site/NotificationBell";
 import { MagasinsMegaMenu } from "./MagasinsMegaMenu";
-
+import { useEffect } from "react";
 const tickerItems = [
   { icon: TrendingUp, label: "Indice marché", value: "108.7", trend: "+1.2%", trendUp: true },
   { icon: Flame, label: "Promos actives", value: "152" },

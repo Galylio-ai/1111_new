@@ -1,0 +1,172 @@
+{
+  "generated_at": "2026-06-26T14:58:58.034Z",
+  "source_file": "C:/Users/haydar/Documents/baraka/data/exports/products-all-shops-clean-v2.jsonl",
+  "reports": [
+    {
+      "plate": "ojja-simple",
+      "totals": [
+        {
+          "plate": "ojja-simple",
+          "cluster_id": "carrefour-family",
+          "shop_name": "Carrefour",
+          "ingredient_count": 5,
+          "complete": true,
+          "basket_total": 32.28,
+          "estimated_consumed_total": 6.28
+        },
+        {
+          "plate": "ojja-simple",
+          "cluster_id": "carrefour-family",
+          "shop_name": "Carrefour Market",
+          "ingredient_count": 5,
+          "complete": true,
+          "basket_total": 32.54,
+          "estimated_consumed_total": 6.298
+        },
+        {
+          "plate": "ojja-simple",
+          "cluster_id": "carrefour-family",
+          "shop_name": "Carrefour Express",
+          "ingredient_count": 5,
+          "complete": true,
+          "basket_total": 32.78,
+          "estimated_consumed_total": 6.369
+        },
+        {
+          "plate": "ojja-simple",
+          "cluster_id": "carrefour-market-glovo",
+          "shop_name": "Carrefour",
+          "ingredient_count": 5,
+          "complete": true,
+          "basket_total": 31.78,
+          "estimated_consumed_total": 6.23
+        },
+        {
+          "plate": "ojja-simple",
+          "cluster_id": "carrefour-market-glovo",
+          "shop_name": "Carrefour Market",
+          "ingredient_count": 5,
+          "complete": true,
+          "basket_total": 32.03,
+          "estimated_consumed_total": 6.247
+        },
+        {
+          "plate": "ojja-simple",
+          "cluster_id": "carrefour-market-glovo",
+          "shop_name": "Monoprix Glovo",
+          "ingredient_count": 5,
+          "complete": true,
+          "basket_total": 33.53,
+          "estimated_consumed_total": 6.365
+        },
+        {
+          "plate": "ojja-simple",
+          "cluster_id": "geant-monoprix",
+          "shop_name": "Geant",
+          "ingredient_count": 5,
+          "complete": true,
+          "basket_total": 34.71,
+          "estimated_consumed_total": 5.118
+        },
+        {
+          "plate": "ojja-simple",
+          "cluster_id": "geant-monoprix",
+          "shop_name": "Monoprix",
+          "ingredient_count": 5,
+          "complete": true,
+          "basket_total": 35.58,
+          "estimated_consumed_total": 5.155
+        }
+      ],
+      "issues": 0
+    },
+    {
+      "plate": "makrouna-thon",
+      "totals": [
+        {
+          "plate": "makrouna-thon",
+          "cluster_id": "carrefour-family",
+          "shop_name": "Carrefour",
+          "ingredient_count": 6,
+          "complete": true,
+          "basket_total": 31.59,
+          "estimated_consumed_total": 7.053
+        },
+        {
+          "plate": "makrouna-thon",
+          "cluster_id": "carrefour-family",
+          "shop_name": "Carrefour Market",
+          "ingredient_count": 6,
+          "complete": true,
+          "basket_total": 31.85,
+          "estimated_consumed_total": 7.071
+        },
+        {
+          "plate": "makrouna-thon",
+          "cluster_id": "carrefour-family",
+          "shop_name": "Carrefour Express",
+          "ingredient_count": 6,
+          "complete": true,
+          "basket_total": 32,
+          "estimated_consumed_total": 7.082
+        },
+        {
+          "plate": "makrouna-thon",
+          "cluster_id": "carrefour-market-glovo",
+          "shop_name": "Carrefour",
+          "ingredient_count": 6,
+          "complete": true,
+          "basket_total": 31.09,
+          "estimated_consumed_total": 7.003
+        },
+        {
+          "plate": "makrouna-thon",
+          "cluster_id": "carrefour-market-glovo",
+          "shop_name": "Carrefour Market",
+          "ingredient_count": 6,
+          "complete": true,
+          "basket_total": 31.34,
+          "estimated_consumed_total": 7.02
+        },
+        {
+          "plate": "makrouna-thon",
+          "cluster_id": "carrefour-market-glovo",
+          "shop_name": "Monoprix Glovo",
+          "ingredient_count": 6,
+          "complete": true,
+          "basket_total": 33.07,
+          "estimated_consumed_total": 7.368
+        },
+        {
+          "plate": "makrouna-thon",
+          "cluster_id": "geant-monoprix",
+          "shop_name": "Geant",
+          "ingredient_count": 6,
+          "complete": true,
+          "basket_total": 38.87,
+          "estimated_consumed_total": 14.177
+        },
+        {
+          "plate": "makrouna-thon",
+          "cluster_id": "geant-monoprix",
+          "shop_name": "Monoprix",
+          "ingredient_count": 6,
+          "complete": true,
+          "basket_total": 39.88,
+          "estimated_consumed_total": 14.178
+        }
+      ],
+      "issues": 0
+    }
+  ],
+  "files": [
+    "C:\\Users\\haydar\\Documents\\baraka\\data\\exports\\qoffa\\plat-populaire-ojja-simple-same-products-v2.json",
+    "C:\\Users\\haydar\\Documents\\baraka\\data\\exports\\qoffa\\plat-populaire-ojja-simple-same-products-v2-totals.csv",
+    "C:\\Users\\haydar\\Documents\\baraka\\data\\exports\\qoffa\\plat-populaire-ojja-simple-same-products-v2-products.csv",
+    "C:\\Users\\haydar\\Documents\\baraka\\data\\exports\\qoffa\\plat-populaire-ojja-simple-same-products-v2.md",
+    "C:\\Users\\haydar\\Documents\\baraka\\data\\exports\\qoffa\\plat-populaire-makrouna-thon-same-products-v2.json",
+    "C:\\Users\\haydar\\Documents\\baraka\\data\\exports\\qoffa\\plat-populaire-makrouna-thon-same-products-v2-totals.csv",
+    "C:\\Users\\haydar\\Documents\\baraka\\data\\exports\\qoffa\\plat-populaire-makrouna-thon-same-products-v2-products.csv",
+    "C:\\Users\\haydar\\Documents\\baraka\\data\\exports\\qoffa\\plat-populaire-makrouna-thon-same-products-v2.md"
+  ]
+}

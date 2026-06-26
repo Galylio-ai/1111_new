@@ -1,0 +1,281 @@
+{
+  "generated_at": "2026-06-26T14:37:49.209Z",
+  "source_file": "C:/Users/haydar/Documents/baraka/data/exports/products-matched-prices-clean-v2.jsonl",
+  "shops": [
+    "Carrefour",
+    "Carrefour Market",
+    "Carrefour Express",
+    "Monoprix",
+    "Geant"
+  ],
+  "strict_all_5_basket": {
+    "rows": [
+      {
+        "category": "Eau",
+        "choice": "Eau minerale 0.5L",
+        "product_id": "p_42e16fbf1bf42ea03790",
+        "name": "Eau Minerale 0.5L Safia",
+        "brand": "SAFIA",
+        "size": "",
+        "source_category": "Eaux Minérales",
+        "Carrefour": 0.41,
+        "Carrefour url": "https://www.carrefour.tn/eau-minerale-safia-6194001800555.html",
+        "Carrefour Market": 0.42,
+        "Carrefour Market url": "",
+        "Carrefour Express": 0.42,
+        "Carrefour Express url": "",
+        "Monoprix": 0.42,
+        "Monoprix url": "https://courses.monoprix.tn/ennasr/eaux-plates/19129-eau-min%C3%A9rale.html",
+        "Geant": 0.41,
+        "Geant url": "https://www.geantdrive.tn/tunis-city/eaux-plates/24484-eau-minerale.html",
+        "cheapest": "Carrefour + Geant"
+      },
+      {
+        "category": "Lait",
+        "choice": "Lait entier 1L",
+        "product_id": "p_4a45e0c51edc8709a14d",
+        "name": "Lait Entier Delice 1L",
+        "brand": "DELICE",
+        "size": "",
+        "source_category": "Laits🥛",
+        "Carrefour": 2.57,
+        "Carrefour url": "https://www.carrefour.tn/lait-entier-u-h-t-6194043001255.html",
+        "Carrefour Market": 2.62,
+        "Carrefour Market url": "",
+        "Carrefour Express": 2.62,
+        "Carrefour Express url": "",
+        "Monoprix": 2.76,
+        "Monoprix url": "https://courses.monoprix.tn/ennasr/lait/19276-lait-entier.html",
+        "Geant": 2.57,
+        "Geant url": "https://www.geantdrive.tn/tunis-city/laits-entiers/24744-lait-uht-entier.html",
+        "cheapest": "Carrefour + Geant"
+      },
+      {
+        "category": "Pates",
+        "choice": "Pates vermicelle 500g",
+        "product_id": "p_edd1a609ba354af828d8",
+        "name": "Pâte vermicelle N°1 L'EPI D'OR 500GR  - 075",
+        "brand": "L'EPI D'OR",
+        "size": "",
+        "source_category": "Pâtes Normales",
+        "Carrefour": 0.41,
+        "Carrefour url": "https://www.carrefour.tn/vermicelle-6194003320075.html",
+        "Carrefour Market": 0.41,
+        "Carrefour Market url": "",
+        "Carrefour Express": 0.41,
+        "Carrefour Express url": "",
+        "Monoprix": 0.41,
+        "Monoprix url": "https://courses.monoprix.tn/ennasr/pates/24400-p%C3%A2te-vermicelle.html",
+        "Geant": 0.41,
+        "Geant url": "https://www.geantdrive.tn/tunis-city/pates-et-chorba/40641-pate-vermicelle.html",
+        "cheapest": "Carrefour + Carrefour Market + Carrefour Express + Monoprix + Geant"
+      },
+      {
+        "category": "Tomate",
+        "choice": "Double concentre tomate 400g",
+        "product_id": "p_91866636e08946ca9374",
+        "name": "Double concentré de tomate SICAM 400GR  - 128",
+        "brand": "SICAM",
+        "size": "",
+        "source_category": "Double Concentré De Tomates",
+        "Carrefour": 2.6,
+        "Carrefour url": "https://www.carrefour.tn/double-concentre-de-tomates-6194055500128.html",
+        "Carrefour Market": 2.6,
+        "Carrefour Market url": "",
+        "Carrefour Express": 2.6,
+        "Carrefour Express url": "",
+        "Monoprix": 2.6,
+        "Monoprix url": "https://courses.monoprix.tn/ennasr/tomates/19119-concentr%C3%A9-de-tomate.html",
+        "Geant": 2.6,
+        "Geant url": "https://www.geantdrive.tn/tunis-city/doubles-concentres-de-tomates/26426-concentre-de-tomate.html",
+        "cheapest": "Carrefour + Carrefour Market + Carrefour Express + Monoprix + Geant"
+      },
+      {
+        "category": "Cafe",
+        "choice": "Cafe soluble 100g",
+        "product_id": "p_9086dc182913ccfb4c8d",
+        "name": "Café soluble BONDIN 100GR  - 143",
+        "brand": "BONDIN",
+        "size": "100G",
+        "source_category": "Cafés Solubles, Chicorées",
+        "Carrefour": 14.91,
+        "Carrefour url": "https://www.carrefour.tn/cafe-soluble-6194003643143.html",
+        "Carrefour Market": 14.91,
+        "Carrefour Market url": "",
+        "Carrefour Express": 14.91,
+        "Carrefour Express url": "",
+        "Monoprix": 12.75,
+        "Monoprix url": "https://courses.monoprix.tn/ennasr/caf%C3%A9s-solubleschicor%C3%A9es/18838-caf%C3%A9.html",
+        "Geant": 12.75,
+        "Geant url": "https://www.geantdrive.tn/tunis-city/cafes-solubles/28956-cafe-soluble.html",
+        "cheapest": "Monoprix + Geant"
+      },
+      {
+        "category": "Fromage",
+        "choice": "Fromage tranche 10 tranches",
+        "product_id": "p_7a39c1ef0106c35c925d",
+        "name": "Fromage slice edam KAISER 10 tranches  - 434",
+        "brand": "KAISER",
+        "size": "",
+        "source_category": "Fromage En Tranches",
+        "Carrefour": 9.15,
+        "Carrefour url": "https://www.carrefour.tn/fromage-edam-6191513502434.html",
+        "Carrefour Market": 9.37,
+        "Carrefour Market url": "",
+        "Carrefour Express": 9.37,
+        "Carrefour Express url": "",
+        "Monoprix": 9.82,
+        "Monoprix url": "https://courses.monoprix.tn/ennasr/fromages-r%C3%A2p%C3%A9s-et-de-cuisson/16693-fromage-slice-gouda.html",
+        "Geant": 9.35,
+        "Geant url": "https://www.geantdrive.tn/tunis-city/slices/25818-fromage-slice-edam.html",
+        "cheapest": "Carrefour"
+      },
+      {
+        "category": "Jambon",
+        "choice": "Mini jambon dinde 100g",
+        "product_id": "p_bb92d7ab29908e8ff4b5",
+        "name": "Mini Jambon De Dinde El Mazraa 100Gr",
+        "brand": "EL MAZRAA",
+        "size": "",
+        "source_category": "Jambon",
+        "Carrefour": 2.19,
+        "Carrefour url": "https://www.carrefour.tn/mini-jambon-de-dinde-6191505101140.html",
+        "Carrefour Market": 2.335,
+        "Carrefour Market url": "",
+        "Carrefour Express": 2.38,
+        "Carrefour Express url": "",
+        "Monoprix": 2.3,
+        "Monoprix url": "https://courses.monoprix.tn/ennasr/volaille/19290-mini-jambon.html",
+        "Geant": 2.04,
+        "Geant url": "https://www.geantdrive.tn/tunis-city/volaille/25019-mini-jambon-de-dinde.html",
+        "cheapest": "Geant"
+      },
+      {
+        "category": "Volaille",
+        "choice": "Boulettes de dinde 400g",
+        "product_id": "p_9638c50edb7e61b54f0f",
+        "name": "Boulettes de dinde EL MAZRAA 400GR  - 907",
+        "brand": "EL MAZRAA",
+        "size": "",
+        "source_category": "Volailles",
+        "Carrefour": 8.28,
+        "Carrefour url": "https://www.carrefour.tn/boulette-de-dinde-6191505100907.html",
+        "Carrefour Market": 8.28,
+        "Carrefour Market url": "",
+        "Carrefour Express": 8.53,
+        "Carrefour Express url": "",
+        "Monoprix": 7.59,
+        "Monoprix url": "https://courses.monoprix.tn/ennasr/viande-volaille/25069-boulettes-de-dinde.html",
+        "Geant": 5.79,
+        "Geant url": "https://www.geantdrive.tn/tunis-city/hachees-et-en-morceau/32969-boulettes-de-dinde.html",
+        "cheapest": "Geant"
+      },
+      {
+        "category": "Huile",
+        "choice": "Huile de colza 3L",
+        "product_id": "p_02a044d69c01ae7c842b",
+        "name": "Huile de colza OLEO NOUR 3L - 020",
+        "brand": "OLEO NOUR",
+        "size": "",
+        "source_category": "Huiles Végétales",
+        "Carrefour": 17.88,
+        "Carrefour url": "https://www.carrefour.tn/huile-de-colza-oleo-6191341900020.html",
+        "Carrefour Market": 17.88,
+        "Carrefour Market url": "",
+        "Carrefour Express": 17.88,
+        "Carrefour Express url": "",
+        "Monoprix": 17.88,
+        "Monoprix url": "https://courses.monoprix.tn/ennasr/huiles-v%C3%A9g%C3%A9tales/35342-huile-de-colza.html",
+        "Geant": 17.88,
+        "Geant url": "https://www.geantdrive.tn/tunis-city/huiles-vegetales/112728-huile-de-colza.html",
+        "cheapest": "Carrefour + Carrefour Market + Carrefour Express + Monoprix + Geant"
+      },
+      {
+        "category": "Harissa",
+        "choice": "Harissa 380g",
+        "product_id": "p_395c024b61ae5a65a178",
+        "name": "Harissa STICAP 380GR  - 616",
+        "brand": "STICAP",
+        "size": "",
+        "source_category": "Harissa",
+        "Carrefour": 3.52,
+        "Carrefour url": "https://www.carrefour.tn/harissa-du-cap-bon-6194006230616.html",
+        "Carrefour Market": 3.7,
+        "Carrefour Market url": "",
+        "Carrefour Express": 3.77,
+        "Carrefour Express url": "",
+        "Monoprix": 4.37,
+        "Monoprix url": "https://courses.monoprix.tn/ennasr/harissa/21752-harissa.html",
+        "Geant": 4.16,
+        "Geant url": "https://www.geantdrive.tn/tunis-city/harissa/28731-harissa.html",
+        "cheapest": "Carrefour"
+      }
+    ],
+    "totals": {
+      "Carrefour": 61.92,
+      "Carrefour Market": 62.525,
+      "Carrefour Express": 62.89,
+      "Monoprix": 60.9,
+      "Geant": 57.96
+    },
+    "ranking": [
+      {
+        "rank": 1,
+        "shop": "Geant",
+        "total": 57.96,
+        "delta_vs_cheapest": 0
+      },
+      {
+        "rank": 2,
+        "shop": "Monoprix",
+        "total": 60.9,
+        "delta_vs_cheapest": 2.94
+      },
+      {
+        "rank": 3,
+        "shop": "Carrefour",
+        "total": 61.92,
+        "delta_vs_cheapest": 3.96
+      },
+      {
+        "rank": 4,
+        "shop": "Carrefour Market",
+        "total": 62.525,
+        "delta_vs_cheapest": 4.565
+      },
+      {
+        "rank": 5,
+        "shop": "Carrefour Express",
+        "total": 62.89,
+        "delta_vs_cheapest": 4.93
+      }
+    ]
+  },
+  "more_search": [
+    {
+      "category": "Oeufs",
+      "status": "not_strict_all_5",
+      "note": "Exact same product not matched across all 5. Carrefour/Market/Express have EL MAZRAA Omega 3 15 eggs; Monoprix/Geant expose OVOLINA eggs with different matched ids/prices."
+    },
+    {
+      "category": "Sucre 1kg",
+      "status": "not_strict_all_5",
+      "note": "Powder sugar 1kg appears in Carrefour/Express/Geant/Monoprix-like rows, but Market exposes mostly sugar cubes in the matched data; no clean same product across all 5."
+    },
+    {
+      "category": "Thon",
+      "status": "monoprix_missing",
+      "note": "Many Carrefour-family and Geant thon rows exist, but no Monoprix thon row is present in the current flat export."
+    },
+    {
+      "category": "Olives",
+      "status": "not_strict_all_5",
+      "note": "Carrefour-family has El Khabia olives vertes; Monoprix/Geant have other olive brands/products. No clean same product across all 5."
+    },
+    {
+      "category": "Poulet frais",
+      "status": "not_strict_all_5",
+      "note": "Fresh chicken is not cleanly matched across all 5. Strict basket uses EL MAZRAA boulettes de dinde 400g as a comparable volaille product."
+    }
+  ]
+}

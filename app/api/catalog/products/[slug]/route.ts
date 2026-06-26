@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { catalogPool } from "@/lib/db";
+import { resolveCatalogPriceHistory, nameSimilarityScore } from "@/lib/productDetail";
 
 function sanitizeImage(raw: string | null | undefined): string {
   if (!raw) return "";
@@ -51,16 +52,49 @@ export async function GET(
         [p.id]
       ),
       pool.query(
-        `SELECT slug, name, image, price, old_price FROM products
-         WHERE shop_id = $1 AND top_category IS NOT DISTINCT FROM $2 AND id <> $3
-         ORDER BY (image IS NOT NULL) DESC, random() LIMIT 8`,
-        [p.shop_id, p.top_category, p.id]
+        `SELECT slug, name, image, price, old_price, brand, subcategory, low_category, top_category
+         FROM products
+         WHERE shop_id = $1 AND id <> $2
+           AND (
+             (subcategory IS NOT NULL AND subcategory = $3)
+             OR (low_category IS NOT NULL AND low_category = $4)
+             OR (top_category IS NOT NULL AND top_category = $5)
+           )
+         ORDER BY
+           CASE WHEN subcategory IS NOT DISTINCT FROM $3 THEN 0 ELSE 1 END,
+           CASE WHEN low_category IS NOT DISTINCT FROM $4 THEN 0 ELSE 1 END,
+           CASE WHEN lower(COALESCE(brand, '')) = lower(COALESCE($6, '')) AND $6 <> '' THEN 0 ELSE 1 END,
+           (image IS NOT NULL) DESC,
+           name ASC
+         LIMIT 24`,
+        [p.shop_id, p.id, p.subcategory, p.low_category, p.top_category, p.brand ?? ""]
       ),
     ]);
 
     const d = detRes.rows[0] ?? {};
     const price = p.price != null ? parseFloat(p.price) : null;
     const old   = p.old_price != null ? parseFloat(p.old_price) : null;
+
+    const rawHistory = histRes.rows.map(h => ({ price: parseFloat(h.price), date: h.recorded_at }));
+    const priceHistory = resolveCatalogPriceHistory(rawHistory, price);
+
+    const relatedCandidates = relRes.rows.map(r => ({
+      slug: r.slug,
+      name: sanitizeText(r.name),
+      img: sanitizeImage(r.image),
+      price: r.price != null ? parseFloat(r.price) : null,
+      _name: sanitizeText(r.name),
+    }));
+
+    // Re-rank by name overlap so "iPhone 15" doesn't show random TVs in same category.
+    const ranked = [...relatedCandidates]
+      .map((r) => ({ ...r, _score: nameSimilarityScore(sanitizeText(p.name), r._name) }))
+      .filter((r) => r._score > 0)
+      .sort((a, b) => b._score - a._score)
+      .slice(0, 8);
+    const related = (ranked.length >= 4 ? ranked : relatedCandidates.slice(0, 8)).map(({ slug, name, img, price }) => ({
+      slug, name, img, price,
+    }));
 
     const cleanImg = sanitizeImage(p.image);
     const cleanImages = Array.isArray(d.images) && d.images.length
@@ -91,13 +125,8 @@ export async function GET(
       description: d.description ?? null,
       specifications: d.specifications ?? null,
       storeAvailability: d.store_availability ?? null,
-      priceHistory: histRes.rows.map(h => ({ price: parseFloat(h.price), date: h.recorded_at })),
-      related: relRes.rows.map(r => ({
-        slug: r.slug,
-        name: sanitizeText(r.name),
-        img: sanitizeImage(r.image),
-        price: r.price != null ? parseFloat(r.price) : null,
-      })),
+      priceHistory,
+      related,
     });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });

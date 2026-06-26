@@ -1,39 +1,29 @@
-import { NextResponse } from "next/server";
-import { Pool } from "pg";
-
-const pool = new Pool({ connectionString: process.env.RETAIL_DB_URL, max: 2 });
+import { NextRequest, NextResponse } from "next/server";
+import { FEATURED_SCOPE_IDS } from "@/lib/priceRankings";
+import { attachCatalog, getFeaturedRankings, getRankingBySlug } from "@/lib/priceRankingsServer";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const client = await pool.connect();
+export async function GET(req: NextRequest) {
+  const slug = req.nextUrl.searchParams.get("slug");
+  const featured = req.nextUrl.searchParams.get("featured") === "1";
+
   try {
-    const scopesRes = await client.query(`
-      SELECT scope_id, scope_name, level1_id, level2_id, matched_products, distinct_shops
-      FROM price_ranking_scopes
-      ORDER BY scope_id
-    `);
-
-    const shopsRes = await client.query(`
-      SELECT scope_id, rank, shop_key, products_compared, fair_win_rate,
-             cheapest_score, median_price_index, avg_extra_cost_vs_cheapest, confidence
-      FROM price_ranking_shops
-      ORDER BY scope_id, rank
-    `);
-
-    const shopsByScope = new Map<string, typeof shopsRes.rows>();
-    for (const row of shopsRes.rows) {
-      if (!shopsByScope.has(row.scope_id)) shopsByScope.set(row.scope_id, []);
-      shopsByScope.get(row.scope_id)!.push(row);
+    if (slug) {
+      const data = await getRankingBySlug(slug, 50);
+      if (!data) {
+        return NextResponse.json({ error: "Catégorie introuvable" }, { status: 404 });
+      }
+      return NextResponse.json(data);
     }
 
-    const scopes = scopesRes.rows.map(s => ({
-      ...s,
-      shops: shopsByScope.get(s.scope_id) ?? [],
-    }));
+    const scopes = await getFeaturedRankings(featured ? 3 : 50);
+    const filtered = featured
+      ? attachCatalog(scopes.filter((s) => FEATURED_SCOPE_IDS.has(s.scope_id)))
+      : scopes;
 
-    return NextResponse.json({ scopes });
-  } finally {
-    client.release();
+    return NextResponse.json({ scopes: filtered });
+  } catch (err) {
+    return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }

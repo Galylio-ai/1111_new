@@ -3,6 +3,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
+import { PhoneInput } from "@/components/ui/PhoneInput";
+import {
+  isValidTunisianPhone,
+  phoneValidationMessage,
+  TUNISIAN_PHONE_RE,
+} from "@/lib/phone";
 
 /* ── SVG micro-icons ───────────────────────────────────────────────── */
 const IconPerson = () => (
@@ -15,11 +21,6 @@ const IconEnvelope = () => (
   <svg viewBox="0 0 20 20" fill="none" className="h-[18px] w-[18px]" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
     <rect x="2" y="4" width="16" height="12" rx="2.5" />
     <path d="M2 7l8 5 8-5" />
-  </svg>
-);
-const IconPhone = () => (
-  <svg viewBox="0 0 20 20" fill="none" className="h-[18px] w-[18px]" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M5 2h3l1.5 3.5L8 7a11 11 0 0 0 5 5l1.5-1.5L18 12v3a2 2 0 0 1-2 2A15 15 0 0 1 3 4a2 2 0 0 1 2-2z" />
   </svg>
 );
 const IconPin = () => (
@@ -92,9 +93,9 @@ function PasswordStrength({ password }: { password: string }) {
 function Field({ label, badge, children }: { label: string; badge?: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-white/35">
+      <label className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-slate-500 sm:text-[13px] dark:text-white/35">
         {label}
-        {badge && <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-semibold normal-case tracking-normal text-slate-400 dark:bg-white/8 dark:text-white/30">{badge}</span>}
+        {badge && <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold normal-case tracking-normal text-slate-400 dark:bg-white/8 dark:text-white/30">{badge}</span>}
       </label>
       {children}
     </div>
@@ -108,6 +109,7 @@ export default function RegisterPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [phoneCountry, setPhoneCountry] = useState("TN");
   const [password, setPassword] = useState("");
   const [confirmPwd, setConfirmPwd] = useState("");
   const [state, setState] = useState("");
@@ -116,20 +118,29 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const PHONE_RE = /^\+216[24579][0-9]{7}$/;
+  const phoneInvalid =
+    Boolean(phone) &&
+    (phoneCountry !== "TN" || !TUNISIAN_PHONE_RE.test(phone));
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     if (password !== confirmPwd) { setError("Les mots de passe ne correspondent pas"); return; }
     if (!email && !phone) { setError("Veuillez renseigner un e-mail ou un téléphone"); return; }
-    if (phone && !PHONE_RE.test(phone)) { setError("Numéro de téléphone invalide (ex: +21620123456)"); return; }
+    if (phone) {
+      const countryMsg = phoneValidationMessage(phoneCountry);
+      if (countryMsg) { setError(countryMsg); return; }
+      if (!isValidTunisianPhone(phone)) {
+        setError("Numéro tunisien invalide (8 chiffres, ex. 20 123 456)");
+        return;
+      }
+    }
     setLoading(true);
     try {
       await register({
         full_name: fullName,
         ...(email ? { email } : {}),
-        ...(phone && PHONE_RE.test(phone) ? { phone } : {}),
+        ...(phone && isValidTunisianPhone(phone) ? { phone } : {}),
         password,
         state,
       });
@@ -142,8 +153,9 @@ export default function RegisterPage() {
   }
 
   const inputBase =
-    "w-full rounded-2xl border bg-slate-50 py-3 pl-12 pr-4 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-all duration-200 focus:bg-white focus:ring-4 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/30 dark:focus:bg-white/[0.07]";
+    "w-full rounded-2xl border bg-slate-50 py-3.5 pl-14 pr-4 text-base text-slate-900 placeholder:text-slate-400 outline-none transition-all duration-200 focus:bg-white focus:ring-4 sm:py-4 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/30 dark:focus:bg-white/[0.07]";
   const inputDefault = `${inputBase} border-slate-200 focus:border-brand-gold/60 focus:ring-brand-gold/10 dark:border-white/10`;
+  const iconLeft = "pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 transition group-focus-within:text-brand-gold dark:text-white/30 sm:left-5";
 
   const pwdMatchClass =
     confirmPwd && confirmPwd !== password
@@ -153,7 +165,7 @@ export default function RegisterPage() {
       : `${inputDefault} pr-12`;
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50 px-4 py-10 dark:bg-[#070a14]">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50 px-3 py-8 sm:px-4 sm:py-10 dark:bg-[#070a14]">
       {/* Background: ambient glows + grid + mascot watermark */}
       <div className="pointer-events-none absolute -top-40 right-1/4 h-[36rem] w-[36rem] translate-x-1/2 rounded-full bg-brand-gold/10 blur-[140px] dark:bg-brand-gold/12" />
       <div className="pointer-events-none absolute -bottom-40 left-1/4 h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-brand-red/10 blur-[130px] dark:bg-brand-red/15" />
@@ -172,7 +184,7 @@ export default function RegisterPage() {
       />
 
       {/* Card */}
-      <div className="relative z-10 w-full max-w-md">
+      <div className="relative z-10 mx-auto w-full max-w-xl lg:max-w-2xl">
         {/* Brand pill on top */}
         <div className="mb-6 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-slate-900 dark:text-white">
@@ -198,20 +210,20 @@ export default function RegisterPage() {
           {/* gold hairline */}
           <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-brand-gold/70 to-transparent" />
 
-          <div className="p-7 sm:p-9">
+          <div className="p-6 sm:p-10 lg:p-12">
             {/* Header */}
-            <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl dark:text-white">
+            <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl lg:text-4xl dark:text-white">
               Créez votre compte ✨
             </h1>
-            <p className="mt-1.5 text-sm text-slate-500 dark:text-white/45">
+            <p className="mt-2 text-sm text-slate-500 sm:text-base dark:text-white/45">
               Rejoignez 1111.tn et économisez sur tous vos achats.
             </p>
 
-            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            <form onSubmit={handleSubmit} className="mt-8 space-y-5 sm:space-y-6">
               {/* Full name */}
               <Field label="Nom complet">
                 <div className="group relative">
-                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 transition group-focus-within:text-brand-gold dark:text-white/30">
+                  <span className={iconLeft}>
                     <IconPerson />
                   </span>
                   <input
@@ -224,11 +236,10 @@ export default function RegisterPage() {
                 </div>
               </Field>
 
-              {/* Email + Phone in a row on wider cards */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
                 <Field label="E-mail" badge="ou tél.">
                   <div className="group relative">
-                    <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 transition group-focus-within:text-brand-gold dark:text-white/30">
+                    <span className={iconLeft}>
                       <IconEnvelope />
                     </span>
                     <input
@@ -236,42 +247,32 @@ export default function RegisterPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="vous@exemple.com"
-                      className={`${inputDefault} pl-12 pr-3`}
+                      className={inputDefault}
                     />
                   </div>
                 </Field>
 
                 <Field label="Téléphone" badge="opt.">
-                  <div className="group relative">
-                    <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 transition group-focus-within:text-brand-gold dark:text-white/30">
-                      <IconPhone />
-                    </span>
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+216…"
-                      className={`${inputBase} pl-12 pr-3 ${
-                        phone && !PHONE_RE.test(phone)
-                          ? "border-red-500/50 focus:border-red-400 focus:ring-red-400/15"
-                          : "border-white/10 focus:border-brand-gold/60 focus:ring-brand-gold/10"
-                      }`}
-                    />
-                  </div>
+                  <PhoneInput
+                    value={phone}
+                    onChange={setPhone}
+                    onCountryChange={setPhoneCountry}
+                    invalid={phoneInvalid}
+                  />
                 </Field>
               </div>
 
               {/* Gouvernorat */}
               <Field label="Gouvernorat">
                 <div className="group relative">
-                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 transition group-focus-within:text-brand-gold dark:text-white/30">
+                  <span className={iconLeft}>
                     <IconPin />
                   </span>
                   <select
                     required
                     value={state}
                     onChange={(e) => setState(e.target.value)}
-                    className="w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-12 pr-10 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-brand-gold/60 focus:bg-white focus:ring-4 focus:ring-brand-gold/10 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:focus:bg-[#0f1422] [&>option]:bg-white dark:[&>option]:bg-[#0f1422]"
+                    className={`${inputDefault} appearance-none pr-12`}
                   >
                     <option value="" disabled>Sélectionner…</option>
                     {TUNISIAN_STATES.map((s) => (
@@ -284,10 +285,11 @@ export default function RegisterPage() {
                 </div>
               </Field>
 
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
               {/* Password */}
               <Field label="Mot de passe">
                 <div className="group relative">
-                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 transition group-focus-within:text-brand-gold dark:text-white/30">
+                  <span className={iconLeft}>
                     <IconLock />
                   </span>
                   <input
@@ -306,10 +308,9 @@ export default function RegisterPage() {
                 <PasswordStrength password={password} />
               </Field>
 
-              {/* Confirm password */}
               <Field label="Confirmer le mot de passe">
                 <div className="group relative">
-                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 transition group-focus-within:text-brand-gold dark:text-white/30">
+                  <span className={iconLeft}>
                     <IconLock />
                   </span>
                   <input
@@ -334,6 +335,7 @@ export default function RegisterPage() {
                   </p>
                 )}
               </Field>
+              </div>
 
               {/* Error */}
               {error && (
@@ -350,7 +352,7 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-brand-red to-brand-redDark py-3.5 text-sm font-bold text-white shadow-[0_8px_24px_-6px_rgba(225,29,45,0.6)] ring-1 ring-white/10 transition-all duration-200 hover:scale-[1.01] hover:shadow-[0_10px_30px_-4px_rgba(225,29,45,0.7)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+                className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-brand-red to-brand-redDark py-4 text-base font-bold text-white shadow-[0_8px_24px_-6px_rgba(225,29,45,0.6)] ring-1 ring-white/10 transition-all duration-200 hover:scale-[1.01] hover:shadow-[0_10px_30px_-4px_rgba(225,29,45,0.7)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 sm:py-4.5"
               >
                 <span className="relative z-10 flex items-center justify-center gap-2">
                   {loading ? (

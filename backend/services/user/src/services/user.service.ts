@@ -4,6 +4,8 @@ import { db } from '../db';
 import { config } from '../config';
 import { AppError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
+import * as userRepository from '../repositories/user.repository';
+import { comparePassword } from '../utils/password';
 
 interface User {
   id: string;
@@ -154,4 +156,30 @@ export async function softDelete(userId: string): Promise<void> {
     .where({ id: userId })
     .update({ is_active: false, updated_at: new Date() });
   if (!updated) throw new AppError(404, 'User not found');
+}
+
+export async function deleteMe(userId: string, password?: string): Promise<void> {
+  await userRepository.transaction(async (trx) => {
+    const row = (await trx('auth.users')
+      .where({ id: userId, is_active: true })
+      .select('id', 'role', 'password_hash')
+      .first()) as { id: string; role: string; password_hash: string | null } | undefined;
+
+    if (!row) throw new AppError(404, 'User not found');
+
+    if (row.role === 'super_admin') {
+      const count = await userRepository.countActiveSuperAdmins(trx);
+      if (count <= 1) throw new AppError(403, 'Cannot delete the last active super admin');
+    }
+
+    if (row.password_hash) {
+      if (!password) throw new AppError(400, 'Password required');
+      const valid = await comparePassword(password, row.password_hash);
+      if (!valid) throw new AppError(401, 'Invalid password');
+    }
+
+    const updated = await userRepository.updateUser(userId, { is_active: false }, trx);
+    if (!updated) throw new AppError(404, 'User not found');
+    await userRepository.revokeRefreshTokens(userId, trx);
+  });
 }

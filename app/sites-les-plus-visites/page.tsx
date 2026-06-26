@@ -1,6 +1,7 @@
 import { PageShell } from "@/components/site/PageShell";
 import { topRetailSites, retailSitesMonth } from "@/lib/topRetailSites";
 import { RetailSitesTable } from "@/components/site/RetailSitesTable";
+import { RetailSitesSourceAttribution } from "@/components/site/RetailSitesSourceAttribution";
 
 export const metadata = {
   title: "Sites e-commerce les plus visités en Tunisie - 1111.tn",
@@ -26,9 +27,9 @@ export default function SitesLesPlusVisitesPage() {
         { label: "Mois", value: retailSitesMonth, tone: "blue" },
       ]}
     >
-      <section className="mx-auto mt-5 max-w-[1600px] px-3 sm:px-4">
-        <RetailSitesTable sites={topRetailSites} month={retailSitesMonth} />
-      </section>
+      <RetailSitesSourceAttribution variant="footer" />
+      <RetailSitesTable sites={topRetailSites} month={retailSitesMonth} />
+      <RetailSitesSourceAttribution variant="footer" className="mt-4" />
     </PageShell>
   );
 }

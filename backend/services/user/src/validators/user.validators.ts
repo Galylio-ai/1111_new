@@ -51,6 +51,10 @@ export const emailVerificationSchema = z.object({
   is_email_verified: z.boolean(),
 });
 
+export const deleteMeSchema = z.object({
+  password: z.string().min(1).optional(),
+});
+
 export const adminResetPasswordSchema = z.object({
   password: z.string().min(8).max(128),
 });

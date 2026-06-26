@@ -31,6 +31,16 @@ export async function updateMe(req: Request, res: Response, next: NextFunction):
   }
 }
 
+export async function deleteMe(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const userId = req.headers['x-user-id'] as string;
+    await userService.deleteMe(userId, req.body?.password);
+    res.json({ success: true, message: 'Account deleted' });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function uploadAvatar(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const userId = req.headers['x-user-id'] as string;

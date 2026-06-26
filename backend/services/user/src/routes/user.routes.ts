@@ -11,6 +11,7 @@ router.use(requireAuth);
 
 router.get('/me', ctrl.getMe);
 router.patch('/me', validate(v.updateMeSchema), ctrl.updateMe);
+router.delete('/me', validate(v.deleteMeSchema), ctrl.deleteMe);
 router.post('/me/avatar', avatarUpload.single('avatar'), ctrl.uploadAvatar);
 
 router.post('/admins', requireRole('super_admin'), validate(v.createAdminUserSchema), ctrl.createStaffUser);

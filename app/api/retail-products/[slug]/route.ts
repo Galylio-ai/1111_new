@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Pool } from "pg";
+import { nameSimilarityScore, resolveDetailPriceHistory } from "@/lib/productDetail";
 
 const pool = new Pool({ connectionString: process.env.RETAIL_DB_URL, max: 3 });
 
@@ -12,6 +13,8 @@ export async function GET(_req: NextRequest, { params }: { params: { slug: strin
          p.id, p.name, p.slug, p.source_product_id,
          b.name AS brand,
          tc.name AS category,
+         sc.name AS subcategory,
+         lc.name AS low_category,
          (SELECT pi.image_url FROM product_images pi WHERE pi.product_id = p.id ORDER BY pi.id ASC LIMIT 1) AS img
        FROM products p
        LEFT JOIN brands b ON b.id = p.brand_id
@@ -56,10 +59,14 @@ export async function GET(_req: NextRequest, { params }: { params: { slug: strin
         `SELECT p2.name, p2.slug,
            b2.name AS brand,
            tc2.name AS category,
+           sc2.name AS subcategory,
            MIN(sp2.current_price) AS min_price,
            MAX(sp2.current_price) AS max_price,
            (SELECT pi2.image_url FROM product_images pi2 WHERE pi2.product_id = p2.id ORDER BY pi2.id LIMIT 1) AS img,
-           array_agg(DISTINCT s2.shop_key) AS shop_keys
+           array_agg(DISTINCT s2.shop_key) AS shop_keys,
+           MAX(CASE WHEN sc2.name IS NOT DISTINCT FROM $3 THEN 1 ELSE 0 END) AS sub_match,
+           MAX(CASE WHEN lc2.name IS NOT DISTINCT FROM $4 THEN 1 ELSE 0 END) AS low_match,
+           MAX(CASE WHEN b2.name IS NOT DISTINCT FROM $5 THEN 1 ELSE 0 END) AS brand_match
          FROM products p2
          LEFT JOIN brands b2 ON b2.id = p2.brand_id
          LEFT JOIN product_subcategories psc2 ON psc2.product_id = p2.id
@@ -68,11 +75,16 @@ export async function GET(_req: NextRequest, { params }: { params: { slug: strin
          LEFT JOIN top_categories tc2 ON tc2.id = lc2.top_category_id
          LEFT JOIN shop_prices sp2 ON sp2.product_id = p2.id
          LEFT JOIN shops s2 ON s2.id = sp2.shop_id
-         WHERE tc2.name = $1 AND p2.id != $2
-         GROUP BY p2.id, p2.name, p2.slug, b2.name, tc2.name
-         ORDER BY p2.id ASC
-         LIMIT 6`,
-        [head.category, head.id]
+         WHERE p2.id != $2
+           AND (
+             sc2.name IS NOT DISTINCT FROM $3
+             OR lc2.name IS NOT DISTINCT FROM $4
+             OR tc2.name IS NOT DISTINCT FROM $1
+           )
+         GROUP BY p2.id, p2.name, p2.slug, b2.name, tc2.name, sc2.name
+         ORDER BY sub_match DESC, low_match DESC, brand_match DESC, MIN(sp2.current_price) ASC
+         LIMIT 18`,
+        [head.category, head.id, head.subcategory, head.low_category, head.brand]
       ),
     ]);
 
@@ -94,22 +106,46 @@ export async function GET(_req: NextRequest, { params }: { params: { slug: strin
       if (maxPrice === null || price > maxPrice) maxPrice = price;
     }
 
-    const priceHistory = historyRes.rows.map((r) => ({
+    const rawHistory = historyRes.rows.map((r) => ({
       date: new Date(r.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }),
       prix: parseFloat(r.prix),
     }));
+    const priceHistory = resolveDetailPriceHistory(rawHistory, minPrice);
 
-    const related = relatedRes.rows.map((r) => ({
-      name: r.name,
-      slug: r.slug,
-      brand: r.brand ?? "",
-      category: r.category ?? "",
-      img: r.img ?? null,
-      minPrice: r.min_price ? parseFloat(r.min_price) : null,
-      maxPrice: r.max_price ? parseFloat(r.max_price) : null,
-      shopNames: r.shop_keys ?? [],
-      discount: null,
-    }));
+    const scored = relatedRes.rows
+      .map((r) => ({
+        name: r.name,
+        slug: r.slug,
+        brand: r.brand ?? "",
+        category: r.category ?? "",
+        img: r.img ?? null,
+        minPrice: r.min_price ? parseFloat(r.min_price) : null,
+        maxPrice: r.max_price ? parseFloat(r.max_price) : null,
+        shopNames: r.shop_keys ?? [],
+        discount: null,
+        _score: nameSimilarityScore(head.name, r.name),
+      }))
+      .filter((r) => r._score > 0)
+      .sort((a, b) => b._score - a._score);
+
+    const relatedSource = scored.length >= 3
+      ? scored
+      : relatedRes.rows.map((r) => ({
+          name: r.name,
+          slug: r.slug,
+          brand: r.brand ?? "",
+          category: r.category ?? "",
+          img: r.img ?? null,
+          minPrice: r.min_price ? parseFloat(r.min_price) : null,
+          maxPrice: r.max_price ? parseFloat(r.max_price) : null,
+          shopNames: r.shop_keys ?? [],
+          discount: null,
+          _score: 0,
+        }));
+
+    const related = relatedSource
+      .slice(0, 6)
+      .map(({ _score: _, ...rest }) => rest);
 
     return NextResponse.json({
       name: head.name,

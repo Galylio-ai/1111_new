@@ -10,6 +10,11 @@ data_matching/
 !lib/data/
 !lib/data/retailCategoryHierarchy.fr.json
 !lib/data/retailSubSlugMap.json
+!lib/data/grocery-crossing-ranking.json
+!lib/data/five-shop-essential-basket-v2.json
+!lib/data/carrefour-essential-basket-v2.json
+!lib/data/plat-populaire-*-v2.json
+!lib/data/strict-same-product-plates-v2-summary.json
 supermarché/
 *.tsbuildinfo
 
