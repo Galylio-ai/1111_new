@@ -65,6 +65,7 @@ export async function GET(
     let images: string[] = [];
     let reference: string | null = null;
     let priceHistory: { date: string; prix: number }[] = [];
+    let specs: Record<string, string> = {};
     let related: {
       name: string;
       brand: string;
@@ -159,7 +160,7 @@ export async function GET(
         ),
       ]);
 
-      const specs: Record<string, string> = {};
+      specs = {};
       for (const row of specsRes.rows) {
         if (row.spec_key && row.spec_value) specs[row.spec_key] = row.spec_value;
       }
