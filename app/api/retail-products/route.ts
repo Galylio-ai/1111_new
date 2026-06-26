@@ -5,14 +5,21 @@ const pool = new Pool({ connectionString: process.env.RETAIL_DB_URL, max: 4 });
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
-  const page  = Math.max(0, parseInt(searchParams.get("page")  ?? "0", 10));
-  const limit = Math.min(48, Math.max(1, parseInt(searchParams.get("limit") ?? "24", 10)));
-  const cat   = (searchParams.get("cat")  ?? "").trim().toLowerCase();
-  const q     = (searchParams.get("q")    ?? "").trim().toLowerCase();
-  const shop  = (searchParams.get("shop") ?? "").trim().toLowerCase();
+  const page    = Math.max(0, parseInt(searchParams.get("page")  ?? "0", 10));
+  const limit   = Math.min(48, Math.max(1, parseInt(searchParams.get("limit") ?? "24", 10)));
+  const cat     = (searchParams.get("cat")     ?? "").trim().toLowerCase();
+  const q       = (searchParams.get("q")       ?? "").trim().toLowerCase();
+  const shop    = (searchParams.get("shop")    ?? "").trim().toLowerCase();
+  const matched = searchParams.get("matched"); // "true" | "false" | null = all
 
   const conditions: string[] = [];
-  const params: (string | number)[] = [];
+  const params: (string | number | boolean)[] = [];
+
+  if (matched === "true") {
+    conditions.push(`p.is_matched = TRUE`);
+  } else if (matched === "false") {
+    conditions.push(`p.is_matched = FALSE`);
+  }
 
   if (cat) {
     params.push(`%${cat}%`);
@@ -23,11 +30,11 @@ export async function GET(req: NextRequest) {
     conditions.push(`(lower(p.name) LIKE $${params.length} OR lower(b.name) LIKE $${params.length})`);
   }
   if (shop) {
-    params.push(`%${shop}%`);
+    params.push(shop);
     conditions.push(`p.id IN (
       SELECT sp2.product_id FROM shop_prices sp2
       JOIN shops s2 ON s2.id = sp2.shop_id
-      WHERE lower(s2.shop_key) LIKE $${params.length} OR lower(s2.name) LIKE $${params.length}
+      WHERE lower(s2.shop_key) = $${params.length} OR lower(s2.name) = $${params.length}
     )`);
   }
 
@@ -35,26 +42,32 @@ export async function GET(req: NextRequest) {
 
   const client = await pool.connect();
   try {
-    const countRes = await client.query(
-      `SELECT COUNT(DISTINCT p.id) AS total
-       FROM products p
-       LEFT JOIN brands b ON b.id = p.brand_id
-       LEFT JOIN product_subcategories psc ON psc.product_id = p.id
-       LEFT JOIN subcategories sc ON sc.id = psc.subcategory_id
-       LEFT JOIN low_categories lc ON lc.id = sc.low_category_id
-       LEFT JOIN top_categories tc ON tc.id = lc.top_category_id
-       ${where}`,
-      params
-    );
-    const total = parseInt(countRes.rows[0].total, 10);
+    const [countRes, shopCountRes, allShopsRes, allCatsRes] = await Promise.all([
+      client.query(
+        `SELECT COUNT(DISTINCT p.id) AS total
+         FROM products p
+         LEFT JOIN brands b ON b.id = p.brand_id
+         LEFT JOIN product_subcategories psc ON psc.product_id = p.id
+         LEFT JOIN subcategories sc ON sc.id = psc.subcategory_id
+         LEFT JOIN low_categories lc ON lc.id = sc.low_category_id
+         LEFT JOIN top_categories tc ON tc.id = lc.top_category_id
+         ${where}`,
+        params
+      ),
+      client.query(`SELECT COUNT(*) AS cnt FROM shops`),
+      client.query(`SELECT shop_key, name FROM shops ORDER BY name ASC`),
+      client.query(`SELECT id, name, slug FROM top_categories ORDER BY name ASC`),
+    ]);
 
-    const shopCountRes = await client.query(`SELECT COUNT(*) AS cnt FROM shops`);
+    const total     = parseInt(countRes.rows[0].total, 10);
     const shopCount = parseInt(shopCountRes.rows[0].cnt, 10);
+    const allShops  = allShopsRes.rows.map(r => ({ key: r.shop_key, name: r.name }));
+    const allCats   = allCatsRes.rows.map(r => ({ id: r.id, name: r.name, slug: r.slug }));
 
     params.push(limit, page * limit);
     const dataRes = await client.query(
       `SELECT
-         p.id, p.name, p.slug,
+         p.id, p.name, p.slug, p.is_matched,
          b.name AS brand,
          tc.name AS category,
          MIN(sp.current_price) AS min_price,
@@ -71,7 +84,7 @@ export async function GET(req: NextRequest) {
        LEFT JOIN shop_prices sp ON sp.product_id = p.id
        LEFT JOIN shops s ON s.id = sp.shop_id
        ${where}
-       GROUP BY p.id, p.name, p.slug, b.name, tc.name
+       GROUP BY p.id, p.name, p.slug, p.is_matched, b.name, tc.name
        ORDER BY p.id ASC
        LIMIT $${params.length - 1} OFFSET $${params.length}`,
       params
@@ -86,10 +99,11 @@ export async function GET(req: NextRequest) {
       minPrice: r.min_price ? parseFloat(r.min_price) : null,
       maxPrice: r.max_price ? parseFloat(r.max_price) : null,
       shopNames: r.shop_keys ?? [],
+      isMatched: r.is_matched,
       discount: null,
     }));
 
-    return NextResponse.json({ total, page, limit, items, shopCount });
+    return NextResponse.json({ total, page, limit, items, shopCount, allShops, allCats });
   } finally {
     client.release();
   }

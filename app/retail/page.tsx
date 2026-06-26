@@ -165,21 +165,32 @@ function RetailPageInner() {
   const [activeShop, setActiveShop] = useState(sp?.get("shop") ?? "");
   const [search, setSearch]         = useState(sp?.get("q") ?? "");
   const [query, setQuery]           = useState(sp?.get("q") ?? "");
+  // "all" | "matched" | "catalog"
+  const [viewMode, setViewMode]     = useState<"all" | "matched" | "catalog">("all");
+  const [dynShops, setDynShops]     = useState<{ key: string; name: string }[]>([]);
+  const [dynCats, setDynCats]       = useState<{ id: number; name: string; slug: string }[]>([]);
 
   useEffect(() => {
     fetch("/api/retail-products?limit=1")
       .then(r => r.json())
-      .then(d => { setTotalAll(d.total); setShopCount(d.shopCount ?? 0); })
+      .then(d => {
+        setTotalAll(d.total);
+        setShopCount(d.shopCount ?? 0);
+        if (d.allShops?.length) setDynShops(d.allShops);
+        if (d.allCats?.length)  setDynCats(d.allCats);
+      })
       .catch(() => {});
   }, []);
 
-  const fetchProducts = useCallback(async (p: number, cat: string, q: string, shop: string) => {
+  const fetchProducts = useCallback(async (p: number, cat: string, q: string, shop: string, mode: "all" | "matched" | "catalog") => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ page: String(p), limit: String(LIMIT) });
       if (cat)  params.set("cat", cat);
       if (q)    params.set("q", q);
       if (shop) params.set("shop", shop);
+      if (mode === "matched") params.set("matched", "true");
+      if (mode === "catalog") params.set("matched", "false");
       const res  = await fetch(`/api/retail-products?${params}`);
       const data = await res.json();
       setProducts(data.items);
@@ -189,14 +200,14 @@ function RetailPageInner() {
     }
   }, []);
 
-  useEffect(() => { fetchProducts(0, "", "", ""); }, [fetchProducts]);
+  useEffect(() => { fetchProducts(0, "", "", "", viewMode); }, [fetchProducts]); // eslint-disable-line
 
   useEffect(() => {
     setPage(0);
-    fetchProducts(0, activeCat, query, activeShop);
-  }, [activeCat, activeShop, query, fetchProducts]);
+    fetchProducts(0, activeCat, query, activeShop, viewMode);
+  }, [activeCat, activeShop, query, viewMode, fetchProducts]);
 
-  useEffect(() => { fetchProducts(page, activeCat, query, activeShop); }, [page]); // eslint-disable-line
+  useEffect(() => { fetchProducts(page, activeCat, query, activeShop, viewMode); }, [page]); // eslint-disable-line
 
   useEffect(() => {
     const t = setTimeout(() => setQuery(search), 350);
@@ -204,6 +215,12 @@ function RetailPageInner() {
   }, [search]);
 
   const totalPages = Math.ceil(total / LIMIT);
+  const shopOptions = dynShops.length > 0
+    ? dynShops.map(s => ({ value: s.key, label: s.name }))
+    : shops.map(s => ({ value: s.key, label: s.name }));
+  const catOptions = dynCats.length > 0
+    ? dynCats.map(c => ({ value: c.slug, label: c.name }))
+    : categories.map(c => ({ value: c.id, label: c.fr }));
 
   return (
     <main className="min-h-screen bg-white dark:bg-[#0a0e1a]">
@@ -313,12 +330,34 @@ function RetailPageInner() {
             )}
           </div>
 
+          {/* Catalogue / Similaires toggle */}
+          <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-white/10 dark:bg-white/[0.04] shrink-0">
+            {([
+              { key: "all",     label: "Tous" },
+              { key: "catalog", label: "Catalogue" },
+              { key: "matched", label: "Similaires", icon: true },
+            ] as const).map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setViewMode(tab.key)}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                  viewMode === tab.key
+                    ? "bg-white text-slate-900 shadow dark:bg-white/10 dark:text-white"
+                    : "text-slate-500 hover:text-slate-700 dark:text-white/40 dark:hover:text-white/70"
+                }`}
+              >
+                {tab.icon && <Tag className="h-3 w-3 opacity-70" />}
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
           {/* category dropdown */}
           <Dropdown
             value={activeCat}
             onChange={setActiveCat}
             placeholder="Toutes catégories"
-            options={categories.map(c => ({ value: c.id, label: c.fr }))}
+            options={catOptions}
           />
 
           {/* shop dropdown */}
@@ -326,7 +365,7 @@ function RetailPageInner() {
             value={activeShop}
             onChange={setActiveShop}
             placeholder="Tous les magasins"
-            options={shops.map(s => ({ value: s.key, label: s.name }))}
+            options={shopOptions}
           />
 
           {/* active filters pills */}
