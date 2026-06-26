@@ -20,7 +20,7 @@ const LOGO_FILES: Record<string, string | null> = {
   krichen: "/shop-logos/krichen.png",
   maalejaudio: "/shop-logos/maalejaudio.png",
   graiet: "/shop-logos/graiet.png",
-  electrohadjkacem: null,
+  electrohadjkacem: "/shop-logos/electrohadjkacem.svg",
   electrochaabani: "/shop-logos/electrochaabani.png",
 };
 

@@ -54,10 +54,10 @@ function initialsColor(key: string) {
 
 function ShopLogo({ shopKey, size = 56 }: { shopKey: string; size?: number }) {
   const fallbacks = [
+    `/shop-logos/${shopKey}.svg`,
     `/shop-logos/${shopKey}.png`,
     `/shop-logos/${shopKey}.webp`,
     `/shop-logos/${shopKey}.jpg`,
-    `/shop-logos/${shopKey}.svg`,
   ];
   const [idx, setIdx] = useState(0);
 
