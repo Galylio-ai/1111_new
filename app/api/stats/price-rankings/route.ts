@@ -3,7 +3,7 @@ import { Pool } from "pg";
 
 const pool = new Pool({ connectionString: process.env.RETAIL_DB_URL, max: 2 });
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const client = await pool.connect();
