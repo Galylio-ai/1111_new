@@ -35,11 +35,12 @@ async function getDbData(productName: string, slug: string): Promise<{
   specs: Record<string, string>;
   shopUrls: Record<string, string>;
   shopPrices: Record<string, number>;
+  priceHistory: { date: string; prix: number }[];
 }> {
   try {
     const client = await pool.connect();
     try {
-      const [headRes, specsRes, imagesRes, pricesRes] = await Promise.all([
+      const [headRes, specsRes, imagesRes, pricesRes, historyRes] = await Promise.all([
         client.query(`SELECT p.description, p.source_product_id FROM products p WHERE p.slug = $1 LIMIT 1`, [slug]),
         client.query(
           `SELECT ps.spec_key, ps.spec_value
@@ -66,6 +67,16 @@ async function getDbData(productName: string, slug: string): Promise<{
            ORDER BY sp.current_price ASC`,
           [slug]
         ),
+        client.query(
+          `SELECT DATE(ph.recorded_at) AS date, MIN(ph.price) AS prix
+           FROM products p
+           JOIN price_history ph ON ph.product_id = p.id
+           WHERE p.slug = $1
+             AND ph.recorded_at >= NOW() - INTERVAL '90 days'
+           GROUP BY DATE(ph.recorded_at)
+           ORDER BY DATE(ph.recorded_at) ASC`,
+          [slug]
+        ),
       ]);
 
       const description = headRes.rows[0]?.description ?? null;
@@ -85,12 +96,16 @@ async function getDbData(productName: string, slug: string): Promise<{
           if (url) shopUrls[key] = url;
         }
       }
-      return { description, reference, images, specs, shopUrls, shopPrices };
+      const priceHistory = historyRes.rows.map(r => ({
+        date: new Date(r.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }),
+        prix: parseFloat(r.prix),
+      }));
+      return { description, reference, images, specs, shopUrls, shopPrices, priceHistory };
     } finally {
       client.release();
     }
   } catch {
-    return { description: null, reference: null, images: [], specs: {}, shopUrls: {}, shopPrices: {} };
+    return { description: null, reference: null, images: [], specs: {}, shopUrls: {}, shopPrices: {}, priceHistory: [] };
   }
 }
 
@@ -118,6 +133,7 @@ export async function GET(_req: NextRequest, { params }: { params: { slug: strin
     specs: dbData.specs,
     shopUrls: dbData.shopUrls,
     shopPrices: dbData.shopPrices,
+    priceHistory: dbData.priceHistory,
     related,
   });
 }

@@ -3,8 +3,13 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft, ChevronRight, ExternalLink, FileText,
-  ListChecks, Scale, ShieldCheck, Sparkles, Star, Store, Tag, Truck,
+  ListChecks, Scale, ShieldCheck, Sparkles, Star, Store, Tag, TrendingUp, Truck,
 } from "lucide-react";
+import {
+  Area, AreaChart, CartesianGrid, ResponsiveContainer,
+  Tooltip, XAxis, YAxis,
+} from "recharts";
+import { useTheme } from "@/components/ThemeProvider";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { FavoriteAlertButtons } from "@/components/site/FavoriteAlertButtons";
@@ -34,6 +39,7 @@ type Product = {
   specs: Record<string, string> | null;
   shopUrls: Record<string, string> | null;
   shopPrices: Record<string, number> | null;
+  priceHistory?: { date: string; prix: number }[];
   related: RelatedProduct[];
 };
 
@@ -91,11 +97,67 @@ function shopUrl(shopKey: string, productName: string): string {
   return pattern.replace("{q}", encodeURIComponent(productName));
 }
 
-function shopBadge(name: string, isCheapest: boolean) {
+function shopBadge(_name: string, isCheapest: boolean) {
   if (isCheapest) {
     return "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 ring-1 ring-emerald-500/30";
   }
   return "bg-brand-gold/10 text-brand-gold ring-1 ring-brand-gold/25";
+}
+
+function PriceHistoryChart({ data }: { data: { date: string; prix: number }[] }) {
+  const { theme } = useTheme();
+  const dark = theme === "dark";
+  return (
+    <div className="h-[220px] w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={data} margin={{ top: 10, right: 16, left: -10, bottom: 0 }}>
+          <defs>
+            <linearGradient id="catalogPriceFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#f6c453" stopOpacity={0.45} />
+              <stop offset="100%" stopColor="#f6c453" stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid stroke={dark ? "#1f2740" : "#e2e8f0"} strokeDasharray="3 3" vertical={false} />
+          <XAxis
+            dataKey="date"
+            tick={{ fill: dark ? "#8a93ab" : "#64748b", fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
+            interval={Math.max(0, Math.floor(data.length / 8))}
+          />
+          <YAxis
+            tick={{ fill: dark ? "#8a93ab" : "#64748b", fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
+            domain={[(min: number) => Math.floor(min * 0.97), (max: number) => Math.ceil(max * 1.03)]}
+            width={60}
+            tickFormatter={(v: number) => `${v.toFixed(0)}`}
+          />
+          <Tooltip
+            contentStyle={{
+              background: dark ? "#0f1422" : "#ffffff",
+              border: `1px solid ${dark ? "#222b44" : "#e2e8f0"}`,
+              borderRadius: 8,
+              fontSize: 12,
+            }}
+            formatter={(v: number) => [`${v.toLocaleString("fr-FR", { minimumFractionDigits: 3 })} DT`, "Prix"]}
+            labelStyle={{ color: dark ? "#e6e8ee" : "#0f172a" }}
+          />
+          <Area
+            type="monotone"
+            dataKey="prix"
+            stroke="#f6c453"
+            strokeWidth={2.4}
+            fill="url(#catalogPriceFill)"
+            dot={false}
+            activeDot={{ r: 5, stroke: "#f6c453", fill: dark ? "#0a0e1a" : "#ffffff", strokeWidth: 2 }}
+            isAnimationActive
+            animationDuration={900}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
 }
 
 function PriceBar({ min, max, current }: { min: number; max: number; current: number }) {
@@ -192,7 +254,7 @@ export function CatalogProductDetail({
       </div>
 
       <section className="mx-auto mt-2 max-w-[1400px] px-4">
-        <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[420px_1fr]">
+        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[420px_1fr_380px]">
 
           {/* LEFT — image (stretches to match right column height) */}
           <div className="flex flex-col gap-3">
@@ -383,6 +445,25 @@ export function CatalogProductDetail({
                 Les prix sont mis à jour quotidiennement par 1111.tn.
               </div>
             </div>
+
+          </div>
+
+          {/* COLONNE 3 — Historique des prix */}
+          <div className="rounded-2xl border border-bg-border bg-bg-card p-5 shadow-card">
+            <h2 className="section-title mb-4 flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-brand-gold" />
+              Historique des prix (90 jours)
+            </h2>
+            {product.priceHistory && product.priceHistory.length > 1 ? (
+              <PriceHistoryChart data={product.priceHistory} />
+            ) : (
+              <div className="flex h-[220px] flex-col items-center justify-center gap-2 text-center">
+                <TrendingUp className="h-8 w-8 text-slate-300 dark:text-white/15" />
+                <p className="text-[12px] text-slate-400 dark:text-white/35">
+                  L'historique des prix sera disponible<br />après quelques jours de suivi.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 

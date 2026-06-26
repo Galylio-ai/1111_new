@@ -1,8 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import { BarChart3, Flame, Package, Search, Store, TrendingUp } from "lucide-react";
+import { BarChart3, Flame, Package, Search, TrendingUp } from "lucide-react";
 import Link from "next/link";
-import { PromosBars, PromoPoint } from "./charts/PromosBars";
 import { SearchModal } from "./SearchModal";
 
 const tags = ["climatiseur", "iphone 15", "samsung", "machine à laver", "parfum", "laptop"];
@@ -10,7 +9,7 @@ const tags = ["climatiseur", "iphone 15", "samsung", "machine à laver", "parfum
 type MarketData = {
   index: number;
   yesterdayIndex: number;
-  topShops: PromoPoint[];
+  topShops: { name: string; promos: number }[];
   stats: {
     totalProducts: number;
     totalPrices: number;
@@ -150,13 +149,34 @@ export function Hero() {
           </div>
 
           <div className="mt-1">
-            <div className="mb-1 flex items-center justify-between">
+            <div className="mb-2 flex items-center justify-between">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/50">
-                Top parapharmacies en promo
+                Cheapest Supermarket
               </span>
-              <span className="text-[10px] text-slate-400 dark:text-white/40">survol pour détails</span>
+              <span className="text-[10px] text-slate-400 dark:text-white/40">Indice de prix</span>
             </div>
-            <PromosBars data={data.topShops} height={130} />
+            <div className="flex items-end justify-center gap-1">
+              {[
+                { rank: 2, name: "Carrefour",  logo: "/Carrefour-Logo.png",    blockH: 44, blockColor: "from-slate-400 to-slate-500 dark:from-slate-500 dark:to-slate-600", numColor: "text-brand-gold", ring: "ring-1 ring-slate-300 dark:ring-white/20", logoSize: "h-12 w-12" },
+                { rank: 1, name: "Aziza",      logo: "/aziza-logo.jpg",        blockH: 72, blockColor: "from-brand-gold to-amber-500",        numColor: "text-white",     ring: "ring-2 ring-brand-gold",               logoSize: "h-14 w-14", badge: true },
+                { rank: 3, name: "Monoprix",   logo: "/monoprix.png",          blockH: 32, blockColor: "from-amber-600 to-amber-700",          numColor: "text-white",     ring: "ring-1 ring-amber-400/50",             logoSize: "h-12 w-12" },
+                { rank: 4, name: "C. Market",  logo: "/carrefour-market.png",  blockH: 22, blockColor: "from-slate-500 to-slate-600",          numColor: "text-white/80",  ring: "ring-1 ring-slate-200 dark:ring-white/10", logoSize: "h-10 w-10" },
+                { rank: 5, name: "C. Express", logo: "/Carrefour_Express.png", blockH: 14, blockColor: "from-slate-600 to-slate-700",          numColor: "text-white/70",  ring: "ring-1 ring-slate-200 dark:ring-white/10", logoSize: "h-10 w-10" },
+                { rank: 6, name: "Géant",      logo: "/geant-logo.png",        blockH: 8,  blockColor: "from-slate-700 to-slate-800",          numColor: "text-white/60",  ring: "ring-1 ring-slate-200 dark:ring-white/10", logoSize: "h-10 w-10" },
+              ].map((s) => (
+                <div key={s.name} className="flex flex-col items-center gap-0.5 flex-1 min-w-0">
+                  {s.badge
+                    ? <span className="text-[7px] font-black text-emerald-500 uppercase tracking-wide text-center leading-tight">MOINS CHER</span>
+                    : <span className="text-[7px] leading-tight">&nbsp;</span>
+                  }
+                  <img src={s.logo} alt={s.name} className={`${s.logoSize} rounded-lg object-contain bg-white p-0.5 shadow-md ${s.ring}`} />
+                  <span className={`text-[9px] font-bold text-center leading-tight truncate w-full px-0.5 ${s.rank === 1 ? "text-emerald-600 dark:text-emerald-300" : "text-slate-400 dark:text-white/45"}`}>{s.name}</span>
+                  <div className={`w-full rounded-t-lg bg-gradient-to-b ${s.blockColor} flex items-center justify-center shadow-md`} style={{ height: s.blockH }}>
+                    <span className={`font-black drop-shadow ${s.rank === 1 ? "text-xl" : s.rank <= 3 ? "text-base" : "text-xs"} ${s.numColor}`}>{s.rank}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
