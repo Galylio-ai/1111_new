@@ -48,6 +48,9 @@ export async function GET(req: NextRequest) {
     );
     const total = parseInt(countRes.rows[0].total, 10);
 
+    const shopCountRes = await client.query(`SELECT COUNT(*) AS cnt FROM shops`);
+    const shopCount = parseInt(shopCountRes.rows[0].cnt, 10);
+
     params.push(limit, page * limit);
     const dataRes = await client.query(
       `SELECT
@@ -85,7 +88,7 @@ export async function GET(req: NextRequest) {
       discount: null,
     }));
 
-    return NextResponse.json({ total, page, limit, items });
+    return NextResponse.json({ total, page, limit, items, shopCount });
   } finally {
     client.release();
   }

@@ -157,12 +157,21 @@ function RetailPageInner() {
   const sp = useSearchParams();
   const [products, setProducts]   = useState<Product[]>([]);
   const [total, setTotal]         = useState(0);
+  const [totalAll, setTotalAll]   = useState(0);
+  const [shopCount, setShopCount] = useState(0);
   const [page, setPage]           = useState(0);
   const [loading, setLoading]     = useState(false);
   const [activeCat, setActiveCat]   = useState(sp?.get("cat") ?? "");
   const [activeShop, setActiveShop] = useState(sp?.get("shop") ?? "");
   const [search, setSearch]         = useState(sp?.get("q") ?? "");
   const [query, setQuery]           = useState(sp?.get("q") ?? "");
+
+  useEffect(() => {
+    fetch("/api/retail-products?limit=1")
+      .then(r => r.json())
+      .then(d => { setTotalAll(d.total); setShopCount(d.shopCount ?? 0); })
+      .catch(() => {});
+  }, []);
 
   const fetchProducts = useCallback(async (p: number, cat: string, q: string, shop: string) => {
     setLoading(true);
@@ -227,16 +236,16 @@ function RetailPageInner() {
                     التجزئة — قارن الأسعار على المنتجات التقنية والمنزلية
                   </p>
                   <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-600 dark:text-white/65">
-                    Comparez les prix de <span className="font-bold text-slate-900 dark:text-white">11 313</span> produits tech & électroménager
-                    sur <span className="font-bold text-slate-900 dark:text-white">30+ enseignes</span> tunisiennes.
+                    Comparez les prix de <span className="font-bold text-slate-900 dark:text-white">{totalAll > 0 ? totalAll.toLocaleString("fr-FR") : "…"}</span> produits tech & électroménager
+                    sur <span className="font-bold text-slate-900 dark:text-white">{shopCount > 0 ? `${shopCount}+` : "…"} enseignes</span> tunisiennes.
                   </p>
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 shrink-0">
                 {[
-                  { label: "Produits",   value: "11 313", cls: "border-brand-gold/25 bg-brand-gold/10 text-brand-gold" },
-                  { label: "Enseignes",  value: "30+",    cls: "border-sky-500/25 bg-sky-500/10 text-sky-600 dark:text-sky-300" },
-                  { label: "Catégories", value: "4",      cls: "border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300" },
+                  { label: "Produits",   value: totalAll > 0 ? totalAll.toLocaleString("fr-FR") : "…", cls: "border-brand-gold/25 bg-brand-gold/10 text-brand-gold" },
+                  { label: "Enseignes",  value: shopCount > 0 ? String(shopCount) : "…",               cls: "border-sky-500/25 bg-sky-500/10 text-sky-600 dark:text-sky-300" },
+                  { label: "Catégories", value: String(categories.length),                               cls: "border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300" },
                 ].map((c) => (
                   <div key={c.label} className={`rounded-xl border px-4 py-2.5 ${c.cls}`}>
                     <div className="text-xl font-black tabular-nums leading-none">{c.value}</div>
@@ -562,11 +571,11 @@ function RetailPageInner() {
               <div className="flex shrink-0 flex-col items-center gap-4 lg:items-end">
                 <div className="flex gap-3">
                   <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3 text-center">
-                    <div className="text-2xl font-black tabular-nums text-white">11 313</div>
+                    <div className="text-2xl font-black tabular-nums text-white">{totalAll > 0 ? totalAll.toLocaleString("fr-FR") : "…"}</div>
                     <div className="text-[11px] font-medium text-white/50">produits</div>
                   </div>
                   <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3 text-center">
-                    <div className="text-2xl font-black tabular-nums text-white">30+</div>
+                    <div className="text-2xl font-black tabular-nums text-white">{shopCount > 0 ? shopCount : "…"}</div>
                     <div className="text-[11px] font-medium text-white/50">enseignes</div>
                   </div>
                 </div>
