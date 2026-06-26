@@ -81,6 +81,9 @@ export async function GET(req: NextRequest) {
           JOIN low_categories lc ON lc.id = sc.low_category_id
           WHERE lc.top_category_id = tc.id
         )
+        AND (
+          tc.slug ~* '(informati|ordinat|portable|smartphone|telephone|tablette|gaming|console|audio|casque|haut.parleur|enceinte|tv|televi|ecran|moniteur|composant|stockage|reseau|imprimante|peripherique|electromenager|refriger|congelat|lave|climatiseur|climatisation|aspirateur|four|cuisiniere|batterie|chargeur|cable|accessoire|camera|photo|scanner|onduleur|clavier|souris|processeur|ram|carte.graphique|boitier|alimentation|refroidissement|disque|ssd|usb|hdmi)'
+        )
         ORDER BY tc.name ASC
       `),
     ]);
