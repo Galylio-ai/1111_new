@@ -24,14 +24,14 @@ const CATALOG_META: Record<LatestProduct["catalog"], { label: string; href: stri
 };
 
 const qoffaBestItems = [
-  { name: "Semoule fine", qty: "5 kg", price: 3.7, shop: "Carrefour" },
-  { name: "Huile végétale", qty: "1 bidon", price: 8.97, shop: "Geant / Monoprix" },
-  { name: "Boeuf", qty: "2 kg", price: 105, shop: "Carrefour" },
-  { name: "Légumes frais", qty: "mix", price: 2.49, shop: "Aziza / Monoprix" },
-  { name: "Lait", qty: "6 L", price: 8.1, shop: "Carrefour" },
-  { name: "Oeufs", qty: "1 plateau", price: 9.79, shop: "Aziza" },
-  { name: "Café moulu", qty: "2 paquets", price: 9.78, shop: "Aziza" },
-  { name: "Sucre", qty: "2 kg", price: 2.8, shop: "Carrefour" },
+  { name: "Semoule fine", qty: "5 kg", price: 12.5, shop: "Aziza" },
+  { name: "Huile végétale", qty: "1 bidon 5L", price: 34.9, shop: "Géant" },
+  { name: "Boeuf haché", qty: "1 kg", price: 38.5, shop: "Monoprix" },
+  { name: "Tomates", qty: "1 kg", price: 1.8, shop: "Aziza" },
+  { name: "Lait demi-écrémé", qty: "6 × 1L", price: 11.4, shop: "Carrefour" },
+  { name: "Oeufs frais", qty: "plateau 30", price: 18.9, shop: "Aziza" },
+  { name: "Café moulu", qty: "250 g", price: 8.95, shop: "Géant" },
+  { name: "Sucre blanc", qty: "2 kg", price: 4.6, shop: "Carrefour" },
 ];
 
 function fmtRelative(iso: string): string {
@@ -200,7 +200,7 @@ export function QoffaSection() {
               className="h-40 w-40 md:h-48 md:w-48 animate-couffin-swing object-contain drop-shadow-[0_8px_20px_rgba(212,175,55,0.35)]"
             />
           </div>
-          <Link href="/qoffa" className="btn-primary mt-3 w-full">Voir toutes les recettes</Link>
+          <Link href="/couffin" className="btn-primary mt-3 w-full">Voir toutes les recettes</Link>
 
           {/* Stat cards */}
           <div className="mt-3 grid grid-cols-2 gap-2">
