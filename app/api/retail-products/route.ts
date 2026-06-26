@@ -22,8 +22,19 @@ export async function GET(req: NextRequest) {
   }
 
   if (cat) {
-    params.push(cat);
-    conditions.push(`(tc.slug = $${params.length} OR lc.slug = $${params.length} OR sc.slug = $${params.length})`);
+    // Support comma-separated slugs for multi-category matching (e.g. gaming card)
+    const slugs = cat.split(",").map(s => s.trim()).filter(Boolean);
+    if (slugs.length === 1) {
+      params.push(slugs[0]);
+      conditions.push(`(tc.slug = $${params.length} OR lc.slug = $${params.length} OR sc.slug = $${params.length})`);
+    } else {
+      const placeholders = slugs.map((s, i) => {
+        params.push(s);
+        return `$${params.length}`;
+      });
+      const inList = placeholders.join(",");
+      conditions.push(`(tc.slug IN (${inList}) OR lc.slug IN (${inList}) OR sc.slug IN (${inList}))`);
+    }
   }
   if (q) {
     params.push(`%${q}%`);

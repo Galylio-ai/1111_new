@@ -112,33 +112,34 @@ type Product = {
 };
 
 /* ── Categories from retail catalog ─────────────────────────────────────── */
+// id = comma-separated DB slugs that map to this card
 const categories = [
   {
-    id: "informatique",
+    id: "informatique,pc-portables,ordinateurs-de-bureau,tablettes,smartphones,telephonie",
     fr: "Informatique",
     ar: "المعلوماتية",
-    count: 6785,
+    count: null,
     img: "/informatique.png",
   },
   {
-    id: "electromenager",
+    id: "electromenager,gros-electromenager,petit-electromenager,climatisation-et-chauffage,climatiseurs,refrigerateurs,lave-linge,aspirateurs-et-nettoyage",
     fr: "Électroménager",
     ar: "الأجهزة المنزلية",
-    count: 3889,
+    count: null,
     img: "/electromenager.png",
   },
   {
-    id: "gaming",
-    fr: "Gaming",
-    ar: "الألعاب",
-    count: 31,
+    id: "gaming,composants,cartes-graphiques,ram,processeurs,ecrans,moniteurs,accessoires-gaming,accessoires-gamer,chaises-et-bureaux-gamer,consoles,jeux-video",
+    fr: "Gaming & PC",
+    ar: "الألعاب والحاسوب",
+    count: null,
     img: "/gaming.png",
   },
   {
-    id: "divers",
-    fr: "Divers",
-    ar: "متنوعات",
-    count: 608,
+    id: "audio-casques-et-haut-parleurs,cameras,appareils-photo,accessoires-telephonie,accessoires-informatiques,batteries-et-chargeurs,cables-adaptateurs,divers,tv-home-cinema,television",
+    fr: "Divers & Accessoires",
+    ar: "متنوعات وملحقات",
+    count: null,
     img: "/divers.png",
   },
 ];
@@ -250,9 +251,7 @@ function RetailPageInner() {
   const shopOptions = dynShops.length > 0
     ? dynShops.map(s => ({ value: s.key, label: s.name }))
     : shops.map(s => ({ value: s.key, label: s.name }));
-  const catOptions = dynCats.length > 0
-    ? dynCats.map(c => ({ value: c.slug, label: c.name }))
-    : categories.map(c => ({ value: c.id, label: c.fr }));
+  const catOptions = dynCats.map(c => ({ value: c.slug, label: c.name }));
 
   return (
     <main className="min-h-screen bg-white dark:bg-[#0a0e1a]">
@@ -333,7 +332,7 @@ function RetailPageInner() {
                   <div className="absolute bottom-3 left-0 right-0 px-3">
                     <div className="text-sm font-black text-white leading-tight drop-shadow">{cat.fr}</div>
                     <div className="font-arabic text-[11px] text-white/60 mt-0.5" dir="rtl">{cat.ar}</div>
-                    <div className="mt-1 text-[10px] text-white/50 tabular-nums">{cat.count.toLocaleString("fr-FR")} produits</div>
+                    {cat.count !== null && <div className="mt-1 text-[10px] text-white/50 tabular-nums">{cat.count.toLocaleString("fr-FR")} produits</div>}
                   </div>
                 </div>
               </button>
