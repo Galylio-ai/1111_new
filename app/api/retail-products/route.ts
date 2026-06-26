@@ -60,7 +60,8 @@ export async function GET(req: NextRequest) {
          MIN(sp.current_price) AS min_price,
          MAX(sp.current_price) AS max_price,
          array_agg(DISTINCT s.shop_key ORDER BY s.shop_key) AS shop_keys,
-         (SELECT pi.image_url FROM product_images pi WHERE pi.product_id = p.id ORDER BY pi.id ASC LIMIT 1) AS img
+         (SELECT pi.image_url FROM product_images pi WHERE pi.product_id = p.id ORDER BY pi.id ASC OFFSET 1 LIMIT 1) AS img2,
+         (SELECT pi.image_url FROM product_images pi WHERE pi.product_id = p.id ORDER BY pi.id ASC LIMIT 1) AS img1
        FROM products p
        LEFT JOIN brands b ON b.id = p.brand_id
        LEFT JOIN product_subcategories psc ON psc.product_id = p.id
@@ -81,7 +82,7 @@ export async function GET(req: NextRequest) {
       slug: r.slug,
       brand: r.brand ?? "",
       category: r.category ?? "",
-      img: r.img ?? null,
+      img: r.img2 ?? r.img1 ?? null,
       minPrice: r.min_price ? parseFloat(r.min_price) : null,
       maxPrice: r.max_price ? parseFloat(r.max_price) : null,
       shopNames: r.shop_keys ?? [],
