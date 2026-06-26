@@ -291,15 +291,14 @@ function buildRecord(raw) {
     // matched_retail uses `regular_price` as the current price; alimentation uses `price`
     const cur = num(o.price ?? o.regular_price);
     if (!(cur && cur > 0)) continue;
-    const url = o.url || fallbackUrl;
-    if (!url) continue;
+    const url = o.url || fallbackUrl || null;
     seenShopKeys.add(shopKey);
     const reg = num(o.old_price ?? o.regular_price_orig ?? null);
     prices.push({
       shopKey,
       current: cur,
       regular: reg && reg > cur ? reg : null,
-      url: String(url),
+      url: url ? String(url) : null,
     });
   }
   if (prices.length === 0) return null;
