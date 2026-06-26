@@ -32,11 +32,25 @@ const SCOPE_LABELS: Record<string, { fr: string; icon: string; color: string }> 
   "tv_audio_photo/televisions":           { fr: "Télévisions",   icon: "📺", color: "from-rose-500/10 to-rose-600/5 border-rose-400/20" },
 };
 
-const RANK_STYLE: Record<number, { medal: string; label: string; bar: string; badge: string }> = {
-  1: { medal: "🥇", label: "text-yellow-600 dark:text-yellow-400", bar: "bg-yellow-400", badge: "bg-yellow-400/15 text-yellow-700 dark:text-yellow-300 border border-yellow-400/30" },
-  2: { medal: "🥈", label: "text-slate-500 dark:text-slate-300",   bar: "bg-slate-400",  badge: "bg-slate-400/15 text-slate-600 dark:text-slate-300 border border-slate-300/30" },
-  3: { medal: "🥉", label: "text-orange-600 dark:text-orange-400", bar: "bg-orange-400", badge: "bg-orange-400/15 text-orange-700 dark:text-orange-300 border border-orange-400/30" },
+const RANK_STYLE: Record<number, { icon: React.ReactNode; label: string; bar: string; badge: string }> = {
+  1: { icon: <Trophy className="h-5 w-5 text-yellow-500 fill-yellow-400" />, label: "text-yellow-600 dark:text-yellow-400", bar: "bg-yellow-400", badge: "bg-yellow-400/15 text-yellow-700 dark:text-yellow-300 border border-yellow-400/30" },
+  2: { icon: <span className="text-[17px] font-black text-slate-400 dark:text-slate-300 leading-none">2</span>, label: "text-slate-500 dark:text-slate-300", bar: "bg-slate-400", badge: "bg-slate-400/15 text-slate-600 dark:text-slate-300 border border-slate-300/30" },
+  3: { icon: <span className="text-[17px] font-black text-orange-400 dark:text-orange-300 leading-none">3</span>, label: "text-orange-600 dark:text-orange-400", bar: "bg-orange-400", badge: "bg-orange-400/15 text-orange-700 dark:text-orange-300 border border-orange-400/30" },
 };
+
+const SHOP_INITIALS_COLORS: Record<string, string> = {
+  a: "bg-blue-500", b: "bg-violet-500", c: "bg-emerald-500", d: "bg-rose-500",
+  e: "bg-amber-500", f: "bg-cyan-500",  g: "bg-indigo-500", h: "bg-pink-500",
+  i: "bg-teal-500",  j: "bg-orange-500",k: "bg-lime-500",   l: "bg-sky-500",
+  m: "bg-purple-500",n: "bg-red-500",   o: "bg-green-500",  p: "bg-fuchsia-500",
+  q: "bg-slate-500", r: "bg-yellow-500",s: "bg-blue-600",   t: "bg-emerald-600",
+  u: "bg-rose-600",  v: "bg-indigo-600",w: "bg-violet-600", x: "bg-cyan-600",
+  y: "bg-pink-600",  z: "bg-amber-600",
+};
+
+function initialsColor(key: string) {
+  return SHOP_INITIALS_COLORS[key[0].toLowerCase()] ?? "bg-slate-500";
+}
 
 function ShopLogo({ shopKey, size = 56 }: { shopKey: string; size?: number }) {
   const fallbacks = [
@@ -48,12 +62,13 @@ function ShopLogo({ shopKey, size = 56 }: { shopKey: string; size?: number }) {
   const [idx, setIdx] = useState(0);
 
   if (idx >= fallbacks.length) {
+    const initials = shopKey.replace(/[_-]/g, " ").split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("");
     return (
       <div
         style={{ width: size, height: size }}
-        className="flex items-center justify-center rounded-xl bg-slate-100 dark:bg-white/10 text-sm font-black text-slate-400 dark:text-white/30 uppercase tracking-wide"
+        className={`flex items-center justify-center rounded-xl ${initialsColor(shopKey)} shadow-sm shrink-0`}
       >
-        {shopKey.slice(0, 2)}
+        <span className="text-white font-black text-sm tracking-wide">{initials}</span>
       </div>
     );
   }
@@ -93,8 +108,10 @@ function PodiumShop({ shop, isFirst }: { shop: RankedShop; isFirst: boolean }) {
 
   return (
     <div className={`flex flex-col items-center gap-3 rounded-2xl p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${isFirst ? "bg-gradient-to-b from-yellow-50 to-amber-50/30 dark:from-yellow-500/10 dark:to-yellow-400/5 border border-yellow-200/60 dark:border-yellow-400/20" : "bg-slate-50/60 dark:bg-white/[0.03] border border-slate-100 dark:border-white/[0.06]"}`}>
-      {/* Medal */}
-      <span className="text-2xl leading-none">{style.medal}</span>
+      {/* Rank icon */}
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/80 dark:bg-white/10 shadow-sm border border-white/60 dark:border-white/10">
+        {style.icon}
+      </div>
 
       {/* Logo with white bg */}
       <ShopLogo shopKey={shop.shop_key} size={60} />
@@ -224,11 +241,9 @@ function FullRankingModal({ scope, onClose }: { scope: Scope; onClose: () => voi
                 }`}
               >
                 {/* Rank */}
-                <div className="w-8 text-center shrink-0">
-                  {style ? (
-                    <span className="text-lg">{style.medal}</span>
-                  ) : (
-                    <span className="text-[13px] font-black text-slate-300 dark:text-white/20">#{sh.rank}</span>
+                <div className="w-8 flex items-center justify-center shrink-0">
+                  {style ? style.icon : (
+                    <span className="text-[12px] font-black text-slate-300 dark:text-white/20">#{sh.rank}</span>
                   )}
                 </div>
 
