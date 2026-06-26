@@ -22,8 +22,8 @@ export async function GET(req: NextRequest) {
   }
 
   if (cat) {
-    params.push(`%${cat}%`);
-    conditions.push(`(lower(tc.name) LIKE $${params.length} OR lower(lc.name) LIKE $${params.length} OR lower(sc.name) LIKE $${params.length})`);
+    params.push(cat);
+    conditions.push(`(tc.slug = $${params.length} OR lc.slug = $${params.length} OR sc.slug = $${params.length})`);
   }
   if (q) {
     params.push(`%${q}%`);
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
     conditions.push(`p.id IN (
       SELECT sp2.product_id FROM shop_prices sp2
       JOIN shops s2 ON s2.id = sp2.shop_id
-      WHERE lower(s2.shop_key) = $${params.length} OR lower(s2.name) = $${params.length}
+      WHERE s2.shop_key = $${params.length}
     )`);
   }
 
@@ -55,8 +55,23 @@ export async function GET(req: NextRequest) {
         params
       ),
       client.query(`SELECT COUNT(*) AS cnt FROM shops`),
-      client.query(`SELECT shop_key, name FROM shops ORDER BY name ASC`),
-      client.query(`SELECT id, name, slug FROM top_categories ORDER BY name ASC`),
+      client.query(`
+        SELECT s.shop_key, s.name
+        FROM shops s
+        WHERE EXISTS (SELECT 1 FROM shop_prices sp WHERE sp.shop_id = s.id)
+        ORDER BY s.name ASC
+      `),
+      client.query(`
+        SELECT tc.id, tc.name, tc.slug
+        FROM top_categories tc
+        WHERE EXISTS (
+          SELECT 1 FROM product_subcategories psc
+          JOIN subcategories sc ON sc.id = psc.subcategory_id
+          JOIN low_categories lc ON lc.id = sc.low_category_id
+          WHERE lc.top_category_id = tc.id
+        )
+        ORDER BY tc.name ASC
+      `),
     ]);
 
     const total     = parseInt(countRes.rows[0].total, 10);
