@@ -10,7 +10,8 @@ import { NotificationBell } from "./site/NotificationBell";
 
 type RetailCategory = { id: number; name: string; slug: string; subcategories: { name: string; slug: string }[] };
 
-const COLS = 3; // categories per page
+const COLS = 3;
+const SUBS_PER_COL = 12; // subcategories shown per top category
 
 function MagasinsMegaMenu({ onClose }: { onClose: () => void }) {
   const [cats, setCats]   = useState<RetailCategory[]>([]);
@@ -54,10 +55,10 @@ function MagasinsMegaMenu({ onClose }: { onClose: () => void }) {
           <div className="py-8 text-center text-sm text-slate-400">Chargement…</div>
         ) : (
           <>
-            {/* 3-column grid */}
-            <div className="grid grid-cols-3 gap-6 min-h-[180px]">
+            {/* 3-column grid — each col fills available height */}
+            <div className="grid grid-cols-3 gap-6">
               {pageCats.map(cat => (
-                <div key={cat.id}>
+                <div key={cat.id} className="flex flex-col">
                   <Link
                     href={`/retail?cat=${encodeURIComponent(cat.slug)}`}
                     onClick={onClose}
@@ -65,8 +66,8 @@ function MagasinsMegaMenu({ onClose }: { onClose: () => void }) {
                   >
                     {cat.name}
                   </Link>
-                  <ul className="space-y-1">
-                    {cat.subcategories.slice(0, 7).map(sub => (
+                  <ul className="flex-1 space-y-1.5">
+                    {cat.subcategories.slice(0, SUBS_PER_COL).map(sub => (
                       <li key={sub.slug}>
                         <Link
                           href={`/retail?cat=${encodeURIComponent(sub.slug)}`}
@@ -77,14 +78,14 @@ function MagasinsMegaMenu({ onClose }: { onClose: () => void }) {
                         </Link>
                       </li>
                     ))}
-                    {cat.subcategories.length > 7 && (
+                    {cat.subcategories.length > SUBS_PER_COL && (
                       <li>
                         <Link
                           href={`/retail?cat=${encodeURIComponent(cat.slug)}`}
                           onClick={onClose}
                           className="block text-xs text-brand-gold/60 hover:text-brand-gold transition"
                         >
-                          +{cat.subcategories.length - 7} autres
+                          +{cat.subcategories.length - SUBS_PER_COL} autres
                         </Link>
                       </li>
                     )}

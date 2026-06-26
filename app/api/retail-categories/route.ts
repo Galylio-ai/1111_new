@@ -5,6 +5,8 @@ const pool = new Pool({ connectionString: process.env.RETAIL_DB_URL, max: 2 });
 
 type Cat = { id: number; name: string; slug: string; subcategories: { name: string; slug: string }[] };
 let cache: Cat[] | null = null;
+// Bust stale cache on module reload
+cache = null;
 
 // Only top-level categories that belong to tech / electroménager retail shops.
 // Matched by slug keywords — anything else (alimentation, parapharmacie, etc.) is excluded.
@@ -59,12 +61,12 @@ export async function GET() {
         JOIN low_categories lc2 ON lc2.id = sc2.low_category_id
         WHERE lc2.top_category_id = tc.id
       )
+      AND tc.slug ~* '(informati|ordinat|portable|smartphone|telephone|tablette|gaming|console|audio|casque|haut.parleur|enceinte|tv|televi|ecran|moniteur|composant|stockage|reseau|imprimante|peripherique|electromenager|refriger|congelat|lave|climatiseur|climatisation|aspirateur|four|cuisiniere|batterie|chargeur|cable|accessoire|camera|photo|scanner|onduleur|clavier|souris|processeur|ram|carte.graphique|boitier|alimentation|refroidissement|disque|ssd|usb|hdmi|gamer|gaming)'
       ORDER BY tc.name ASC, sc.name ASC
     `);
 
     const map = new Map<number, Cat>();
     for (const row of res.rows) {
-      if (!isAllowed(row.top_name, row.top_slug)) continue;
       if (!map.has(row.top_id)) {
         map.set(row.top_id, { id: row.top_id, name: row.top_name, slug: row.top_slug, subcategories: [] });
       }
