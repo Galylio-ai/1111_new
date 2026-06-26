@@ -1,26 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readFileSync } from "fs";
-import path from "path";
+import { Pool } from "pg";
 
-type Product = {
-  name: string;
-  brand: string;
-  category: string;
-  img: string;
-  minPrice: number;
-  maxPrice: number;
-  shopNames: string[];
-  discount: number | null;
-};
-
-let cache: Product[] | null = null;
-
-function loadData(): Product[] {
-  if (cache) return cache;
-  const file = path.join(process.cwd(), "app/api/retail-products/data.json");
-  cache = JSON.parse(readFileSync(file, "utf8")) as Product[];
-  return cache;
-}
+const pool = new Pool({ connectionString: process.env.RETAIL_DB_URL, max: 4 });
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -30,16 +11,82 @@ export async function GET(req: NextRequest) {
   const q     = (searchParams.get("q")    ?? "").trim().toLowerCase();
   const shop  = (searchParams.get("shop") ?? "").trim().toLowerCase();
 
-  let data = loadData();
+  const conditions: string[] = [];
+  const params: (string | number)[] = [];
 
-  if (cat)  data = data.filter(p => p.category.toLowerCase().includes(cat));
-  if (shop) data = data.filter(p => p.shopNames.some(s => s.toLowerCase().includes(shop)));
-  if (q)    data = data.filter(p =>
-    p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q)
-  );
+  if (cat) {
+    params.push(`%${cat}%`);
+    conditions.push(`(lower(tc.name) LIKE $${params.length} OR lower(lc.name) LIKE $${params.length} OR lower(sc.name) LIKE $${params.length})`);
+  }
+  if (q) {
+    params.push(`%${q}%`);
+    conditions.push(`(lower(p.name) LIKE $${params.length} OR lower(b.name) LIKE $${params.length})`);
+  }
+  if (shop) {
+    params.push(`%${shop}%`);
+    conditions.push(`p.id IN (
+      SELECT sp2.product_id FROM shop_prices sp2
+      JOIN shops s2 ON s2.id = sp2.shop_id
+      WHERE lower(s2.shop_key) LIKE $${params.length} OR lower(s2.name) LIKE $${params.length}
+    )`);
+  }
 
-  const total = data.length;
-  const items = data.slice(page * limit, (page + 1) * limit);
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
-  return NextResponse.json({ total, page, limit, items });
+  const client = await pool.connect();
+  try {
+    const countRes = await client.query(
+      `SELECT COUNT(DISTINCT p.id) AS total
+       FROM products p
+       LEFT JOIN brands b ON b.id = p.brand_id
+       LEFT JOIN product_subcategories psc ON psc.product_id = p.id
+       LEFT JOIN subcategories sc ON sc.id = psc.subcategory_id
+       LEFT JOIN low_categories lc ON lc.id = sc.low_category_id
+       LEFT JOIN top_categories tc ON tc.id = lc.top_category_id
+       ${where}`,
+      params
+    );
+    const total = parseInt(countRes.rows[0].total, 10);
+
+    params.push(limit, page * limit);
+    const dataRes = await client.query(
+      `SELECT
+         p.id, p.name, p.slug,
+         b.name AS brand,
+         tc.name AS category,
+         MIN(sp.current_price) AS min_price,
+         MAX(sp.current_price) AS max_price,
+         array_agg(DISTINCT s.shop_key ORDER BY s.shop_key) AS shop_keys,
+         (SELECT pi.image_url FROM product_images pi WHERE pi.product_id = p.id ORDER BY pi.id ASC LIMIT 1) AS img
+       FROM products p
+       LEFT JOIN brands b ON b.id = p.brand_id
+       LEFT JOIN product_subcategories psc ON psc.product_id = p.id
+       LEFT JOIN subcategories sc ON sc.id = psc.subcategory_id
+       LEFT JOIN low_categories lc ON lc.id = sc.low_category_id
+       LEFT JOIN top_categories tc ON tc.id = lc.top_category_id
+       LEFT JOIN shop_prices sp ON sp.product_id = p.id
+       LEFT JOIN shops s ON s.id = sp.shop_id
+       ${where}
+       GROUP BY p.id, p.name, p.slug, b.name, tc.name
+       ORDER BY p.id ASC
+       LIMIT $${params.length - 1} OFFSET $${params.length}`,
+      params
+    );
+
+    const items = dataRes.rows.map((r) => ({
+      name: r.name,
+      slug: r.slug,
+      brand: r.brand ?? "",
+      category: r.category ?? "",
+      img: r.img ?? null,
+      minPrice: r.min_price ? parseFloat(r.min_price) : null,
+      maxPrice: r.max_price ? parseFloat(r.max_price) : null,
+      shopNames: r.shop_keys ?? [],
+      discount: null,
+    }));
+
+    return NextResponse.json({ total, page, limit, items });
+  } finally {
+    client.release();
+  }
 }
