@@ -367,6 +367,21 @@ async function main() {
   try {
     if (!DRY_RUN) await client.query("BEGIN");
 
+    // When appending (--no-truncate), pre-load existing slugs/ids into cache
+    // so we avoid duplicate key errors and redundant FK inserts.
+    if (!DRY_RUN && NO_TRUNCATE) {
+      console.log("→ Loading existing data into cache…");
+      const [slugs, shopRows, brandRows] = await Promise.all([
+        client.query(`SELECT slug FROM products`),
+        client.query(`SELECT shop_key, id FROM shops`),
+        client.query(`SELECT slug, id FROM brands`),
+      ]);
+      for (const row of slugs.rows) cache.productSlugs.add(row.slug);
+      for (const row of shopRows.rows) cache.shops.set(row.shop_key, row.id);
+      for (const row of brandRows.rows) cache.brands.set(row.slug, row.id);
+      console.log(`  cached ${cache.productSlugs.size} slugs, ${cache.shops.size} shops, ${cache.brands.size} brands.`);
+    }
+
     const rl = createInterface({
       input: createReadStream(FILE, { encoding: "utf8" }),
       crlfDelay: Infinity,
