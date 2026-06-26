@@ -2,11 +2,78 @@
 import { ChevronDown, Flame, LogOut, Menu, ShieldCheck, Sparkles, TrendingUp, User, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { navLinks } from "@/lib/nav";
 import { ThemeToggle } from "./ThemeToggle";
 import { useAuth, avatarSrc } from "@/lib/auth";
 import { NotificationBell } from "./site/NotificationBell";
+
+type RetailCategory = { id: number; name: string; slug: string; subcategories: { name: string; slug: string }[] };
+
+function MagasinsMegaMenu({ onClose }: { onClose: () => void }) {
+  const [cats, setCats] = useState<RetailCategory[]>([]);
+  useEffect(() => {
+    fetch("/api/retail-categories")
+      .then(r => r.json())
+      .then(d => setCats(d.categories ?? []))
+      .catch(() => {});
+  }, []);
+
+  return (
+    <div
+      className="absolute left-1/2 top-full z-50 mt-2 w-[720px] -translate-x-1/2 rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-white/10 dark:bg-[#0f1422]"
+      onMouseLeave={onClose}
+    >
+      <div className="p-5">
+        <div className="mb-3 flex items-center justify-between">
+          <span className="text-xs font-bold uppercase tracking-widest text-brand-gold">Catégories Magasins</span>
+          <Link href="/retail" onClick={onClose} className="text-xs text-slate-400 hover:text-brand-gold transition">Voir tout →</Link>
+        </div>
+        {cats.length === 0 ? (
+          <div className="py-8 text-center text-sm text-slate-400">Chargement…</div>
+        ) : (
+          <div className="grid grid-cols-3 gap-4">
+            {cats.map(cat => (
+              <div key={cat.id}>
+                <Link
+                  href={`/retail?cat=${encodeURIComponent(cat.slug)}`}
+                  onClick={onClose}
+                  className="mb-1.5 block text-sm font-bold text-slate-900 hover:text-brand-gold dark:text-white dark:hover:text-brand-gold transition"
+                >
+                  {cat.name}
+                </Link>
+                <ul className="space-y-0.5">
+                  {cat.subcategories.slice(0, 6).map(sub => (
+                    <li key={sub.slug}>
+                      <Link
+                        href={`/retail?cat=${encodeURIComponent(sub.slug)}`}
+                        onClick={onClose}
+                        className="block text-xs text-slate-500 hover:text-brand-gold dark:text-white/50 dark:hover:text-brand-gold transition"
+                      >
+                        {sub.name}
+                      </Link>
+                    </li>
+                  ))}
+                  {cat.subcategories.length > 6 && (
+                    <li>
+                      <Link
+                        href={`/retail?cat=${encodeURIComponent(cat.slug)}`}
+                        onClick={onClose}
+                        className="block text-xs text-brand-gold/60 hover:text-brand-gold transition"
+                      >
+                        +{cat.subcategories.length - 6} autres
+                      </Link>
+                    </li>
+                  )}
+                </ul>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 const tickerItems = [
   { icon: TrendingUp, label: "Indice marché", value: "108.7", trend: "+1.2%", trendUp: true },
@@ -20,6 +87,8 @@ export function Header() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [megaOpen, setMegaOpen] = useState(false);
+  const megaRef = useRef<HTMLDivElement>(null);
 
   async function handleLogout() {
     await logout();
@@ -101,6 +170,36 @@ export function Header() {
           <nav className="hidden xl:flex items-center gap-0.5 rounded-2xl border border-slate-200 bg-slate-50 p-1 dark:border-white/5 dark:bg-white/[0.02]">
             {navLinks.map((n) => {
               const isActive = pathname === n.href || pathname.startsWith(n.href + "/");
+              if (n.megaMenu) {
+                return (
+                  <div
+                    key={n.href}
+                    ref={megaRef}
+                    className="relative"
+                    onMouseEnter={() => setMegaOpen(true)}
+                    onMouseLeave={() => setMegaOpen(false)}
+                  >
+                    <Link
+                      href={n.href}
+                      className={`group relative flex flex-col items-center rounded-xl px-3 py-1.5 transition ${
+                        isActive
+                          ? "bg-gradient-to-b from-slate-200 to-slate-100 text-slate-900 shadow-inner ring-1 ring-slate-300 dark:from-white/10 dark:to-white/[0.04] dark:text-white dark:ring-white/10"
+                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-white/75 dark:hover:bg-white/[0.04] dark:hover:text-white"
+                      }`}
+                    >
+                      <span className="flex items-center gap-1 text-[13px] font-semibold">
+                        {n.fr}
+                        <ChevronDown className={`h-3.5 w-3.5 opacity-60 transition-transform ${megaOpen ? "rotate-180 opacity-100" : ""}`} />
+                      </span>
+                      <span className={`font-arabic text-[10px] leading-tight transition ${isActive ? "text-brand-gold" : "text-slate-400 group-hover:text-brand-gold/70 dark:text-white/40"}`}>
+                        {n.ar}
+                      </span>
+                      {isActive && <span className="absolute -bottom-[5px] left-1/2 h-1 w-8 -translate-x-1/2 rounded-full bg-gradient-to-r from-brand-red via-brand-gold to-brand-red shadow-[0_0_8px_rgba(246,196,83,0.6)]" />}
+                    </Link>
+                    {megaOpen && <MagasinsMegaMenu onClose={() => setMegaOpen(false)} />}
+                  </div>
+                );
+              }
               return (
                 <Link
                   key={n.href}
