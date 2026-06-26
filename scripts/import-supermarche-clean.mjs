@@ -265,53 +265,67 @@ async function insertProductBatch(client, batch) {
 }
 
 function buildRecord(raw) {
-  const name = String(raw.name ?? "").trim();
+  // Support both `title` (matched_retail format) and `name` (alimentation format)
+  const name = String(raw.title ?? raw.name ?? "").trim();
   if (!name) return null;
 
-  const offers = Array.isArray(raw.offers) ? raw.offers : [];
-  if (offers.length === 0) return null;
+  // Support both `offers` (alimentation) and `prices` (matched_retail)
+  const offerList = Array.isArray(raw.offers) ? raw.offers
+    : Array.isArray(raw.prices) ? raw.prices
+    : [];
+  if (offerList.length === 0) return null;
 
-  // A usable offer must have a positive price. shop_product_url is NOT NULL, so
-  // fall back to the first offer's url, then any offer url, for shops missing one.
-  const fallbackUrl =
-    offers.find((o) => o && o.url)?.url || raw.url || null;
+  const fallbackUrl = offerList.find((o) => o && o.url)?.url || raw.url || null;
 
   const prices = [];
   const seenShopKeys = new Set();
-  for (const o of offers) {
+  for (const o of offerList) {
     if (!o) continue;
-    // Newer feeds emit `shop_name` only (e.g. "Carrefour"); older canonical
-    // feeds use explicit `shop_key`. Accept both — derive a key when missing.
-    const shopKey = o.shop_key || (o.shop_name ? slugify(o.shop_name).replace(/-/g, "_") : null);
+    // matched_retail uses `shop` (key directly); alimentation uses `shop_key` or `shop_name`
+    const shopKey = o.shop_key || o.shop
+      || (o.shop_name ? slugify(o.shop_name).replace(/-/g, "_") : null);
     if (!shopKey) continue;
-    if (seenShopKeys.has(shopKey)) continue; // one row per shop (PK)
-    const cur = num(o.price);
+    if (seenShopKeys.has(shopKey)) continue;
+    // matched_retail uses `regular_price` as the current price; alimentation uses `price`
+    const cur = num(o.price ?? o.regular_price);
     if (!(cur && cur > 0)) continue;
     const url = o.url || fallbackUrl;
-    if (!url) continue; // can't satisfy NOT NULL url
+    if (!url) continue;
     seenShopKeys.add(shopKey);
-    const reg = num(o.regular_price);
+    const reg = num(o.old_price ?? o.regular_price_orig ?? null);
     prices.push({
       shopKey,
       current: cur,
-      regular: reg && reg > 0 ? reg : null,
+      regular: reg && reg > cur ? reg : null,
       url: String(url),
     });
   }
   if (prices.length === 0) return null;
 
-  // Images: product-level first, then any offer image, deduped, http only.
+  // Images: product-level array (matched_retail) or image_url string (alimentation)
   const imgSet = new Set();
+  if (Array.isArray(raw.images)) raw.images.filter(isHttp).forEach((u) => imgSet.add(u));
   if (isHttp(raw.image_url)) imgSet.add(raw.image_url);
-  for (const o of offers) if (isHttp(o.image_url)) imgSet.add(o.image_url);
+  for (const o of offerList) if (isHttp(o?.image_url)) imgSet.add(o.image_url);
+
+  // Brand: from specs array (matched_retail) or brand field (alimentation)
+  const brand = raw.brand
+    ?? raw.specs?.find((s) => s.key === "brand")?.value
+    ?? null;
+
+  // Category: from category_level_2 or category_level_1 (matched_retail) or category (alimentation)
+  const category = raw.category
+    ?? raw.category_level_2?.name
+    ?? raw.category_level_1?.name
+    ?? null;
 
   return {
     name,
-    brand: raw.brand,
-    category: raw.category,
-    sourceId: raw.canonical_product_id ?? null,
+    brand,
+    category,
+    sourceId: raw.id ?? raw.canonical_product_id ?? null,
     images: [...imgSet],
-    prices, // shopKey resolved to shopId later
+    prices,
   };
 }
 
