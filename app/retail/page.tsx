@@ -293,7 +293,7 @@ function RetailPageInner() {
                 {[
                   { label: "Produits",   value: totalAll > 0 ? totalAll.toLocaleString("fr-FR") : "…", cls: "border-brand-gold/25 bg-brand-gold/10 text-brand-gold" },
                   { label: "Enseignes",  value: shopCount > 0 ? String(shopCount) : "…",               cls: "border-sky-500/25 bg-sky-500/10 text-sky-600 dark:text-sky-300" },
-                  { label: "Catégories", value: String(categories.length),                               cls: "border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300" },
+                  { label: "Catégories", value: dynCats.length > 0 ? String(dynCats.length) : "…",      cls: "border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300" },
                 ].map((c) => (
                   <div key={c.label} className={`rounded-xl border px-4 py-2.5 ${c.cls}`}>
                     <div className="text-xl font-black tabular-nums leading-none">{c.value}</div>
