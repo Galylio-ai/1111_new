@@ -22,7 +22,7 @@ export const PRICE_RANKING_CATALOG: PriceRankingCatalogEntry[] = [
     scopeId: "tv_audio_photo/televisions",
     title: "Télévisions",
     subtitle: "TV et écrans",
-    image: "/Ecran.png",
+    image: "/televisions.jpg",
     retailCat: "televisions",
   },
   {

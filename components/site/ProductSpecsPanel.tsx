@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Cpu, ListChecks, Monitor, Smartphone, Wifi, Zap } from "lucide-react";
 import { dimensionOf, type Dimension } from "@/lib/compareDimensions";
+import { formatSpecLabel, HIDDEN_SPEC_KEYS, SPEC_LABELS } from "@/lib/productSpecLabels";
 
 type SpecItem = { key: string; label: string; value: string };
 
@@ -27,40 +28,6 @@ const GROUP_ICONS: Partial<Record<Dimension | "Général" | "Autre", typeof Cpu>
   Design: Monitor,
 };
 
-const SPEC_LABELS: Record<string, string> = {
-  brand: "Marque",
-  color: "Couleur",
-  connectors: "Connecteurs",
-  dimensions: "Dimensions",
-  frequency: "Fréquence",
-  graphics_card: "Carte graphique",
-  graphics_reference: "Réf. graphique",
-  is_gaming: "Gaming",
-  keyboard: "Clavier",
-  memory: "Mémoire",
-  memory_type: "Type mémoire",
-  model: "Modèle",
-  operating_system: "Système d'exploitation",
-  processor: "Processeur",
-  processor_cache: "Cache processeur",
-  processor_frequency: "Fréq. processeur",
-  processor_generation: "Génération",
-  processor_model: "Modèle processeur",
-  ram: "Mémoire RAM",
-  screen_size: "Taille écran",
-  screen_resolution: "Résolution",
-  screen_type: "Type d'écran",
-  storage: "Stockage",
-  storage_type: "Type stockage",
-  weight: "Poids",
-  warranty: "Garantie",
-  wifi: "Wi‑Fi",
-  bluetooth: "Bluetooth",
-  battery: "Batterie",
-  camera: "Caméra",
-  refresh_rate: "Fréquence de rafraîchissement",
-};
-
 const PRIORITY_KEYS = [
   "processor",
   "memory",
@@ -74,15 +41,6 @@ const PRIORITY_KEYS = [
   "weight",
   "dimensions",
 ];
-
-const HIDDEN_KEYS = new Set(["brand", "data_quality_score", "shop_count", "gtin", "sku", "reference"]);
-
-function formatSpecLabel(key: string): string {
-  if (SPEC_LABELS[key]) return SPEC_LABELS[key];
-  return key
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
 
 function formatSpecValue(value: string): string {
   const v = value.trim();
@@ -193,7 +151,7 @@ export function ProductSpecsPanel({
       push(`base:${label}`, label, value, true);
     }
 
-    const techEntries = Object.entries(techSpecs ?? {}).filter(([k]) => !HIDDEN_KEYS.has(k));
+    const techEntries = Object.entries(techSpecs ?? {}).filter(([k]) => !HIDDEN_SPEC_KEYS.has(k));
     for (const [key, value] of techEntries) {
       const label = formatSpecLabel(key);
       if (items.some((it) => it.label.toLowerCase() === label.toLowerCase())) continue;

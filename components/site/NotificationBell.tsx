@@ -75,19 +75,25 @@ export function NotificationBell() {
   if (!user) return null;
 
   return (
-    <div ref={boxRef} className="relative hidden sm:block">
+    <div ref={boxRef} className="relative">
       <button
+        type="button"
         onClick={() => { setOpen((o) => !o); if (!open && unread > 0) markAllRead(); }}
-        className="relative flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-white/80 dark:hover:bg-white/10 dark:hover:text-white"
+        className="group relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-600 shadow-sm transition-all duration-300 hover:scale-[1.06] hover:border-brand-gold/40 hover:bg-slate-50 hover:shadow-[0_0_18px_-4px_rgba(246,196,83,0.4)] hover:text-brand-gold active:scale-95 dark:border-white/10 dark:bg-bg-800 dark:text-white/85 dark:hover:border-brand-gold/40 dark:hover:bg-white/[0.08] dark:hover:text-brand-gold"
         aria-label="Notifications"
+        aria-expanded={open}
       >
-        <Bell className="h-4 w-4" />
+        <Bell
+          className={`h-5 w-5 transition-transform duration-300 ${
+            unread > 0 ? "nav-bell-ring" : "group-hover:rotate-12"
+          }`}
+        />
         {unread > 0 && (
           <>
-            <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-red px-1 text-[10px] font-bold text-white ring-2 ring-white dark:ring-bg-900">
+            <span className="absolute right-1.5 top-1.5 flex h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-full bg-brand-red px-1 text-[10px] font-bold text-white ring-2 ring-white dark:ring-bg-900">
               {unread > 9 ? "9+" : unread}
             </span>
-            <span className="pointer-events-none absolute right-1 top-1 h-4 w-4 animate-ping rounded-full bg-brand-red/60" />
+            <span className="pointer-events-none absolute right-1.5 top-1.5 h-[1.125rem] w-[1.125rem] animate-ping rounded-full bg-brand-red/55" />
           </>
         )}
       </button>

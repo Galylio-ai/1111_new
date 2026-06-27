@@ -58,18 +58,9 @@ export function TechOffers() {
 
   const totalProducts = scopes.reduce((a, s) => a + (s.matched_products ?? 0), 0);
 
-  function cardGridClass(index: number, total: number) {
-    const xlSpan = "xl:col-span-2";
-    const remainder = total % 3;
-    if (remainder === 0) return xlSpan;
-    const lastRowStart = total - remainder;
-    if (index < lastRowStart) return xlSpan;
-    if (remainder === 1) return `${xlSpan} xl:col-start-3`;
-    if (remainder === 2) {
-      return index === lastRowStart ? `${xlSpan} xl:col-start-2` : xlSpan;
-    }
-    return xlSpan;
-  }
+  const scrollRowClass =
+    "-mx-3 flex snap-x snap-mandatory gap-4 overflow-x-auto px-3 pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0";
+  const cardWrapClass = "w-[min(88vw,20rem)] shrink-0 snap-start sm:w-[19rem] lg:w-[21rem]";
 
   return (
     <section className="mx-auto mt-8 max-w-[1600px] px-3 sm:px-4">
@@ -83,12 +74,13 @@ export function TechOffers() {
             )}
           </p>
         </div>
+        <span className="text-[10px] font-medium text-slate-400 dark:text-white/35">Glisser →</span>
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-6">
-          {PRICE_RANKING_CATALOG.map((c, i) => (
-            <div key={c.slug} className={cardGridClass(i, PRICE_RANKING_CATALOG.length)}>
+        <div className={scrollRowClass}>
+          {PRICE_RANKING_CATALOG.map((c) => (
+            <div key={c.slug} className={cardWrapClass}>
               {SKELETON}
             </div>
           ))}
@@ -98,9 +90,9 @@ export function TechOffers() {
           Classements en cours de chargement. Vérifiez que les données sont importées dans la base retail.
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-6 xl:justify-items-stretch">
-          {cards.map(({ catalog, scope }, i) => (
-            <div key={catalog.slug} className={cardGridClass(i, cards.length)}>
+        <div className={scrollRowClass}>
+          {cards.map(({ catalog, scope }) => (
+            <div key={catalog.slug} className={cardWrapClass}>
               <PriceRankingCard
                 catalog={catalog}
                 scopeName={scope.scope_name}

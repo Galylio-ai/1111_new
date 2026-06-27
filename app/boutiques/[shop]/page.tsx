@@ -118,7 +118,7 @@ function ShopCatalogInner() {
               <input
                 id="prod-search"
                 type="search"
-                placeholder="Rechercher dans ce catalogue…"
+                placeholder="Titre, SKU ou référence produit…"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 className="w-full rounded-xl border border-transparent bg-slate-50 py-2.5 pl-10 pr-9 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-brand-gold/50 focus:bg-white focus:ring-2 focus:ring-brand-gold/20 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/30"

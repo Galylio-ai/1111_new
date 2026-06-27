@@ -1,20 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Pool } from "pg";
+import { alimentPool } from "@/lib/db";
+import { appendProductSearch, normalizeSearchText } from "@/lib/productSearch";
 import { productCoverImageSql } from "@/lib/productImages";
 
-// Search supermarché products to add to the couffin. Returns the stable product
-// id (needed for basket cost computation), name, image, brand and price range.
-const pool = new Pool({ connectionString: process.env.ALIMENTATION_DB_URL, max: 5 });
-
+// Search supermarché products to add to the couffin.
 export async function GET(req: NextRequest) {
-  const q = (req.nextUrl.searchParams.get("q") ?? "").trim().toLowerCase();
+  const q = normalizeSearchText(req.nextUrl.searchParams.get("q") ?? "");
   const limit = Math.min(20, Math.max(1, parseInt(req.nextUrl.searchParams.get("limit") ?? "10", 10)));
   if (q.length < 2) return NextResponse.json({ items: [] });
 
   try {
+    const pool = alimentPool();
+    const conditions: string[] = [];
+    const params: (string | number)[] = [];
+    const relevanceOrder = appendProductSearch(q, conditions, params);
+    const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+    const orderBy = relevanceOrder ?? "COUNT(DISTINCT sp.shop_id) DESC, p.id";
+
     const { rows } = await pool.query<{
-      id: number; name: string; brand: string; img: string | null;
-      min_price: string; max_price: string; shop_count: string;
+      id: number;
+      name: string;
+      brand: string;
+      img: string | null;
+      min_price: string;
+      max_price: string;
+      shop_count: string;
     }>(
       `SELECT p.id, p.name, COALESCE(b.name,'') AS brand,
               ${productCoverImageSql("p.id")} AS img,
@@ -24,15 +34,15 @@ export async function GET(req: NextRequest) {
        FROM products p
        LEFT JOIN brands b ON b.id = p.brand_id
        JOIN shop_prices sp ON sp.product_id = p.id
-       WHERE lower(p.name) LIKE $1
+       ${where}
        GROUP BY p.id, p.name, b.name
-       ORDER BY COUNT(DISTINCT sp.shop_id) DESC, p.id
-       LIMIT $2`,
-      [`%${q}%`, limit]
+       ORDER BY ${orderBy}
+       LIMIT $${params.length + 1}`,
+      [...params, limit],
     );
 
     const items = rows.map((r) => ({
-      id: Number(r.id), // pg returns bigint as string — coerce so compute's id match works
+      id: Number(r.id),
       name: r.name,
       brand: r.brand,
       img: r.img ?? "",

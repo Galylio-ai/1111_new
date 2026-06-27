@@ -197,7 +197,7 @@ export default function CouffinPage() {
                 value={query}
                 onChange={e => { setQuery(e.target.value); setOpen(true); }}
                 onFocus={() => setOpen(true)}
-                placeholder="Rechercher un produit à ajouter (lait, huile, café…)"
+                placeholder="Titre, SKU ou nom exact (lait, huile…)"
                 className="min-w-0 flex-1 bg-transparent py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder:text-white/40"
               />
               {searching

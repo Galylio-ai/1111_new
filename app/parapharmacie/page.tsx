@@ -3,71 +3,20 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowRight, BadgeCheck, ChevronDown, ChevronRight, FlaskConical, Loader2, Search, Store, Tag, X,
+  ArrowRight, BadgeCheck, ChevronRight, FlaskConical, Loader2, Store, Tag,
 } from "lucide-react";
-
-/* ── Custom dropdown ─────────────────────────────────────────────────────── */
-function Dropdown({
-  value, onChange, options, placeholder,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  options: { value: string; label: string }[];
-  placeholder: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  const selected = options.find(o => o.value === value);
-
-  useEffect(() => {
-    function handler(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen(o => !o)}
-        className="flex h-[42px] min-w-[170px] items-center justify-between gap-2 rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition hover:border-brand-gold/40 dark:border-white/10 dark:bg-white/[0.06] dark:text-white"
-      >
-        <span className={selected ? "" : "text-slate-400 dark:text-white/35"}>
-          {selected ? selected.label : placeholder}
-        </span>
-        <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform text-slate-400 dark:text-white/40 ${open ? "rotate-180" : ""}`} />
-      </button>
-
-      {open && (
-        <div className="absolute left-0 top-[46px] z-50 max-h-72 min-w-full overflow-y-auto overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-white/10 dark:bg-[#0f1422]">
-          <button
-            type="button"
-            onClick={() => { onChange(""); setOpen(false); }}
-            className={`w-full px-4 py-2.5 text-left text-sm transition hover:bg-slate-50 dark:hover:bg-white/[0.06] ${!value ? "font-bold text-brand-gold" : "text-slate-500 dark:text-white/50"}`}
-          >
-            {placeholder}
-          </button>
-          {options.map(o => (
-            <button
-              key={o.value}
-              type="button"
-              onClick={() => { onChange(o.value); setOpen(false); }}
-              className={`w-full px-4 py-2.5 text-left text-sm transition hover:bg-slate-50 dark:hover:bg-white/[0.06] ${value === o.value ? "font-bold text-brand-gold bg-brand-gold/5" : "text-slate-700 dark:text-white/80"}`}
-            >
-              {o.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/site/Reveal";
 import { ParaRanking } from "@/components/ParaRanking";
+import { CatalogListToolbar } from "@/components/catalog/CatalogListToolbar";
+import { HorizontalChipRow } from "@/components/catalog/HorizontalChipRow";
+import {
+  SimpleCatalogFilterPanel,
+  countSimpleCatalogFilters,
+  type SimpleCatalogFilterDraft,
+} from "@/components/catalog/SimpleCatalogFilterPanel";
+import { DEFAULT_CATALOG_SORT, type CatalogSortOption } from "@/lib/catalogFilters";
 
 type Product = {
   name: string;
@@ -126,6 +75,8 @@ export default function ParapharmacyPage() {
 
 function ParapharmacyPageInner() {
   const sp = useSearchParams();
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const scrollOnPageChange = useRef(false);
   const [products, setProducts]   = useState<Product[]>([]);
   const [total, setTotal]         = useState(0);
   const [page, setPage]           = useState(0);
@@ -134,14 +85,45 @@ function ParapharmacyPageInner() {
   const [activeShop, setActiveShop] = useState(sp?.get("shop") ?? "");
   const [search, setSearch]         = useState(sp?.get("q") ?? "");
   const [query, setQuery]           = useState(sp?.get("q") ?? "");
+  const [sort, setSort]             = useState<CatalogSortOption>(DEFAULT_CATALOG_SORT);
+  const [minPrice, setMinPrice]     = useState("");
+  const [maxPrice, setMaxPrice]     = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filterDraft, setFilterDraft] = useState<SimpleCatalogFilterDraft>({
+    shop: sp?.get("shop") ?? "",
+    cat: sp?.get("cat") ?? "",
+    minPrice: "",
+    maxPrice: "",
+    similar: false,
+    sort: DEFAULT_CATALOG_SORT,
+  });
 
-  const fetchProducts = useCallback(async (p: number, cat: string, q: string, shop: string) => {
+  const activeFilterCount = countSimpleCatalogFilters({
+    shop: activeShop,
+    cat: activeCat,
+    minPrice,
+    maxPrice,
+    similar: false,
+    sort,
+  });
+
+  const fetchProducts = useCallback(async (
+    p: number,
+    cat: string,
+    q: string,
+    shop: string,
+    sortOpt: CatalogSortOption,
+    min: string,
+    max: string,
+  ) => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page: String(p), limit: String(LIMIT) });
-      if (cat)  params.set("cat", cat);
-      if (q)    params.set("q", q);
+      const params = new URLSearchParams({ page: String(p), limit: String(LIMIT), sort: sortOpt });
+      if (cat) params.set("cat", cat);
+      if (q) params.set("q", q);
       if (shop) params.set("shop", shop);
+      if (min) params.set("min", min);
+      if (max) params.set("max", max);
       const res  = await fetch(`/api/para-products?${params}`);
       const data = await res.json();
       setProducts(data.items);
@@ -151,20 +133,75 @@ function ParapharmacyPageInner() {
     }
   }, []);
 
-  useEffect(() => { fetchProducts(0, "", "", ""); }, [fetchProducts]);
+  useEffect(() => { fetchProducts(0, "", "", "", DEFAULT_CATALOG_SORT, "", ""); }, [fetchProducts]);
 
   useEffect(() => {
     setPage(0);
-    fetchProducts(0, activeCat, query, activeShop);
-  }, [activeCat, activeShop, query, fetchProducts]);
+    fetchProducts(0, activeCat, query, activeShop, sort, minPrice, maxPrice);
+  }, [activeCat, activeShop, query, sort, minPrice, maxPrice, fetchProducts]);
 
-  useEffect(() => { fetchProducts(page, activeCat, query, activeShop); }, [page]); // eslint-disable-line
+  useEffect(() => {
+    if (page === 0) return;
+    fetchProducts(page, activeCat, query, activeShop, sort, minPrice, maxPrice);
+  }, [page]); // eslint-disable-line
 
-  // debounce search input → query
   useEffect(() => {
     const t = setTimeout(() => setQuery(search), 350);
     return () => clearTimeout(t);
   }, [search]);
+
+  useEffect(() => {
+    if (!scrollOnPageChange.current) return;
+    scrollOnPageChange.current = false;
+    toolbarRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [page]);
+
+  const openFilters = () => {
+    setFilterDraft({
+      shop: activeShop,
+      cat: activeCat,
+      minPrice,
+      maxPrice,
+      similar: false,
+      sort,
+    });
+    setFiltersOpen(true);
+  };
+
+  const applyFilters = () => {
+    setPage(0);
+    setActiveCat(filterDraft.cat);
+    setActiveShop(filterDraft.shop);
+    setSort(filterDraft.sort);
+    setMinPrice(filterDraft.minPrice);
+    setMaxPrice(filterDraft.maxPrice);
+    setFiltersOpen(false);
+  };
+
+  const resetFilters = () => {
+    setPage(0);
+    setActiveCat("");
+    setActiveShop("");
+    setSort(DEFAULT_CATALOG_SORT);
+    setMinPrice("");
+    setMaxPrice("");
+    setSearch("");
+    setQuery("");
+    setFilterDraft({
+      shop: "",
+      cat: "",
+      minPrice: "",
+      maxPrice: "",
+      similar: false,
+      sort: DEFAULT_CATALOG_SORT,
+    });
+    setFiltersOpen(false);
+  };
+
+  const goToPage = (idx: number) => {
+    scrollOnPageChange.current = true;
+    setPage(idx);
+  };
 
   const totalPages = Math.ceil(total / LIMIT);
 
@@ -219,137 +256,53 @@ function ParapharmacyPageInner() {
       </div>
 
       {/* ── Categories ────────────────────────────────────────────────────── */}
-      <section className="mx-auto mt-10 max-w-[1600px] px-4">
-        <Reveal>
-          <h2 className="mb-6 text-lg font-black text-slate-900 dark:text-white">
-            Catégories <span className="gradient-text-gold">para</span>
-          </h2>
-        </Reveal>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
-          {categories.map((cat, i) => (
-            <Reveal key={cat.id} delay={i * 0.03}>
-              <button
-                onClick={() => setActiveCat(activeCat === cat.id ? "" : cat.id)}
-                className={`group relative w-full overflow-hidden rounded-2xl transition-all duration-300 hover:-translate-y-2 ${
-                  activeCat === cat.id
-                    ? "shadow-[0_0_0_2px_rgba(246,196,83,0.9),0_16px_40px_-8px_rgba(246,196,83,0.3)]"
-                    : "shadow-[0_2px_12px_rgba(0,0,0,0.15)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.35)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.5)] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.7)]"
-                }`}
-              >
-                {/* Image — tall */}
-                <div className="relative h-60 w-full overflow-hidden bg-slate-100 dark:bg-white/[0.04]">
-                  <img
-                    src={cat.img}
-                    alt={cat.fr}
-                    className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-115"
-                    loading="lazy"
-                  />
-
-                  {/* Base dark gradient always visible */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-                  {/* Extra overlay that fades in on hover — darkens top half */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-
-                  {/* Shimmer sweep */}
-                  <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-
-                  {/* Active gold ring inset */}
-                  {activeCat === cat.id && (
-                    <div className="absolute inset-0 rounded-2xl ring-2 ring-inset ring-brand-gold/80" />
-                  )}
-
-                  {/* Active checkmark */}
-                  {activeCat === cat.id && (
-                    <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-brand-gold shadow-[0_0_12px_rgba(246,196,83,0.8)]">
-                      <svg viewBox="0 0 12 12" fill="none" className="h-3.5 w-3.5" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M2 6l3 3 5-5" />
-                      </svg>
-                    </span>
-                  )}
-
-                  {/* Text block — slides up on hover */}
-                  <div className="absolute bottom-0 left-0 right-0 p-3 transition-transform duration-300 group-hover:-translate-y-1">
-                    <p className="text-[13px] font-black leading-tight text-white drop-shadow-lg">{cat.fr}</p>
-                    {/* Arabic — hidden, slides in on hover */}
-                    <p className="mt-0.5 max-h-0 overflow-hidden font-arabic text-[10px] text-white/60 transition-all duration-300 group-hover:max-h-6 dir-rtl" dir="rtl">
-                      {cat.ar}
-                    </p>
-                    {/* Count pill */}
-                    <div className={`mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold backdrop-blur-sm transition-colors duration-300 ${
-                      activeCat === cat.id
-                        ? "bg-brand-gold/30 text-brand-gold"
-                        : "bg-white/15 text-white/80 group-hover:bg-white/25"
-                    }`}>
-                      {cat.count.toLocaleString("fr-FR")} produits
-                    </div>
-                  </div>
-                </div>
-              </button>
-            </Reveal>
-          ))}
-        </div>
+      <section className="mt-6 sm:mt-8">
+        <HorizontalChipRow
+          title="Catégories"
+          titleAccent="para"
+          activeId={activeCat}
+          onSelect={(id) => { setPage(0); setActiveCat(id); }}
+          items={categories.map((c) => ({
+            id: c.id,
+            label: c.fr,
+            sub: `${c.count.toLocaleString("fr-FR")} produits`,
+            image: c.img,
+          }))}
+        />
       </section>
 
+      <SimpleCatalogFilterPanel
+        open={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        title="Filtres parapharmacie"
+        draft={filterDraft}
+        onChange={(patch) => setFilterDraft((d) => ({ ...d, ...patch }))}
+        onApply={applyFilters}
+        onReset={resetFilters}
+        activeCount={activeFilterCount}
+        shops={shops.map((s) => ({ key: s.key, name: s.name }))}
+        categories={categories.map((c) => ({ id: c.id, label: c.fr }))}
+      />
+
       {/* ── Search + filters bar ──────────────────────────────────────────── */}
-      <section className="mx-auto mt-24 max-w-[1600px] px-4">
-        <Reveal>
-          <h2 className="mb-6 text-lg font-black text-slate-900 dark:text-white">
-            Les Produits <span className="gradient-text-gold">similaires</span>
-          </h2>
-        </Reveal>
-        <div className="flex flex-wrap items-center gap-3">
-          {/* search */}
-          <div className="relative flex-1 min-w-[180px]">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-white/30" />
-            <input
-              type="search"
-              placeholder="Rechercher un produit ou une marque…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-9 pr-9 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-brand-gold/50 focus:ring-2 focus:ring-brand-gold/20 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/30"
-            />
-            {search && (
-              <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-white/30 dark:hover:text-white/70">
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-
-          {/* category dropdown */}
-          <Dropdown
-            value={activeCat}
-            onChange={setActiveCat}
-            placeholder="Toutes catégories"
-            options={categories.map(c => ({ value: c.id, label: c.fr }))}
-          />
-
-          {/* shop dropdown */}
-          <Dropdown
-            value={activeShop}
-            onChange={setActiveShop}
-            placeholder="Toutes les enseignes"
-            options={shops.map(s => ({ value: s.key, label: s.name }))}
-          />
-
-          {/* reset */}
-          {(activeCat || activeShop) && (
-            <button
-              onClick={() => { setActiveCat(""); setActiveShop(""); }}
-              className="flex items-center gap-1.5 rounded-xl border border-slate-300 bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-200 dark:border-white/10 dark:bg-white/[0.06] dark:text-white/60 dark:hover:bg-white/[0.1]"
-            >
-              Réinitialiser <X className="h-3 w-3" />
-            </button>
-          )}
-
-          <span className="ml-auto text-sm text-slate-500 dark:text-white/40 shrink-0 tabular-nums">
-            {total.toLocaleString("fr-FR")} produit{total > 1 ? "s" : ""}
-          </span>
-        </div>
+      <section ref={toolbarRef} className="mx-auto mt-4 max-w-[1600px] scroll-mt-20 sm:mt-6">
+        <CatalogListToolbar
+          search={search}
+          onSearchChange={setSearch}
+          onSearchSubmit={() => setQuery(search)}
+          sort={sort}
+          onSortChange={(v) => { setPage(0); setSort(v); }}
+          filterOpen={filtersOpen}
+          onFilterToggle={() => (filtersOpen ? setFiltersOpen(false) : openFilters())}
+          activeFilterCount={activeFilterCount}
+        />
+        <p className="mt-2 px-4 text-right text-[11px] tabular-nums text-slate-500 dark:text-white/40">
+          {total.toLocaleString("fr-FR")} produit{total > 1 ? "s" : ""}
+        </p>
       </section>
 
       {/* ── Products grid ─────────────────────────────────────────────────── */}
-      <section className="mx-auto mt-5 max-w-[1600px] px-4">
+      <section className="mx-auto mt-4 max-w-[1600px] px-4 sm:mt-5">
         {loading ? (
           <div className="flex items-center justify-center py-24">
             <Loader2 className="h-8 w-8 animate-spin text-brand-gold" />
@@ -455,16 +408,12 @@ function ParapharmacyPageInner() {
         {/* ── Pagination ──────────────────────────────────────────────────── */}
         {!loading && totalPages > 1 && (
           <div className="mt-10 flex items-center justify-center gap-2 flex-wrap">
-            <button
-              onClick={() => setPage(0)}
-              disabled={page === 0}
+            <button onClick={() => goToPage(0)} disabled={page === 0}
               className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-brand-gold/40 disabled:opacity-40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
             >
               «
             </button>
-            <button
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              disabled={page === 0}
+            <button onClick={() => goToPage(Math.max(0, page - 1))} disabled={page === 0}
               className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-brand-gold/40 disabled:opacity-40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
             >
               ← Précédent
@@ -477,7 +426,7 @@ function ParapharmacyPageInner() {
               return (
                 <button
                   key={idx}
-                  onClick={() => setPage(idx)}
+                  onClick={() => goToPage(idx)}
                   className={`h-9 w-9 rounded-xl text-sm font-bold transition ${
                     page === idx
                       ? "bg-brand-gold text-black shadow"
@@ -489,16 +438,12 @@ function ParapharmacyPageInner() {
               );
             })}
 
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-              disabled={page === totalPages - 1}
+            <button onClick={() => goToPage(Math.min(totalPages - 1, page + 1))} disabled={page === totalPages - 1}
               className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-brand-gold/40 disabled:opacity-40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
             >
               Suivant →
             </button>
-            <button
-              onClick={() => setPage(totalPages - 1)}
-              disabled={page === totalPages - 1}
+            <button onClick={() => goToPage(totalPages - 1)} disabled={page === totalPages - 1}
               className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-brand-gold/40 disabled:opacity-40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
             >
               »

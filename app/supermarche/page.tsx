@@ -2,11 +2,19 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowRight, BadgeCheck, ChevronDown, ChevronRight, Loader2, Search, ShoppingCart, Store, Tag, X,
+  ArrowRight, BadgeCheck, ChevronRight, Loader2, ShoppingCart, Store, Tag,
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/site/Reveal";
+import { CatalogListToolbar } from "@/components/catalog/CatalogListToolbar";
+import { HorizontalChipRow } from "@/components/catalog/HorizontalChipRow";
+import {
+  SimpleCatalogFilterPanel,
+  countSimpleCatalogFilters,
+  type SimpleCatalogFilterDraft,
+} from "@/components/catalog/SimpleCatalogFilterPanel";
+import { DEFAULT_CATALOG_SORT, type CatalogSortOption } from "@/lib/catalogFilters";
 import { getStoreLogo } from "@/lib/data";
 
 type Product = {
@@ -29,49 +37,11 @@ const shops = [
   { key: "carrefour_express", name: "Carrefour Express", count: 2820,  color: "bg-indigo-500", logo: "/Carrefour_Express.png",  logoSize: "h-28 px-4", imgs: ["https://cdn.monoprix.tn/ennasr/163018-home_default/nectar.jpg","https://cdn.monoprix.tn/ennasr/178113-home_default/lessive-machine.jpg","https://clusteraz.flesk.fr/images/100013271.jpg","https://clusteraz.flesk.fr/images/100009532.jpg"] },
 ];
 
-/* ── Custom Dropdown ─────────────────────────────────────────────────────── */
-function Dropdown({ value, onChange, options, placeholder }: {
-  value: string; onChange: (v: string) => void;
-  options: { value: string; label: string }[]; placeholder: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  const selected = options.find(o => o.value === value);
-
-  useEffect(() => {
-    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
-    document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
-  }, []);
-
-  return (
-    <div ref={ref} className="relative">
-      <button type="button" onClick={() => setOpen(o => !o)}
-        className="flex h-[42px] min-w-[170px] items-center justify-between gap-2 rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition hover:border-brand-gold/40 dark:border-white/10 dark:bg-white/[0.06] dark:text-white">
-        <span className={selected ? "" : "text-slate-400 dark:text-white/35"}>{selected ? selected.label : placeholder}</span>
-        <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform text-slate-400 dark:text-white/40 ${open ? "rotate-180" : ""}`} />
-      </button>
-      {open && (
-        <div className="absolute left-0 top-[46px] z-50 min-w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-white/10 dark:bg-[#0f1422]">
-          <button type="button" onClick={() => { onChange(""); setOpen(false); }}
-            className={`w-full px-4 py-2.5 text-left text-sm transition hover:bg-slate-50 dark:hover:bg-white/[0.06] ${!value ? "font-bold text-brand-gold" : "text-slate-500 dark:text-white/50"}`}>
-            {placeholder}
-          </button>
-          {options.map(o => (
-            <button key={o.value} type="button" onClick={() => { onChange(o.value); setOpen(false); }}
-              className={`w-full px-4 py-2.5 text-left text-sm transition hover:bg-slate-50 dark:hover:bg-white/[0.06] ${value === o.value ? "font-bold text-brand-gold bg-brand-gold/5" : "text-slate-700 dark:text-white/80"}`}>
-              {o.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 const LIMIT = 24;
 
 export default function SupermarchePage() {
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const scrollOnPageChange = useRef(false);
   const [products, setProducts]     = useState<Product[]>([]);
   const [total, setTotal]           = useState(0);
   const [page, setPage]             = useState(0);
@@ -80,14 +50,45 @@ export default function SupermarchePage() {
   const [similarOnly, setSimilarOnly] = useState(false);
   const [search, setSearch]         = useState("");
   const [query, setQuery]           = useState("");
+  const [sort, setSort]             = useState<CatalogSortOption>(DEFAULT_CATALOG_SORT);
+  const [minPrice, setMinPrice]     = useState("");
+  const [maxPrice, setMaxPrice]     = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filterDraft, setFilterDraft] = useState<SimpleCatalogFilterDraft>({
+    shop: "",
+    cat: "",
+    minPrice: "",
+    maxPrice: "",
+    similar: false,
+    sort: DEFAULT_CATALOG_SORT,
+  });
 
-  const fetchProducts = useCallback(async (p: number, q: string, shop: string, similar: boolean) => {
+  const activeFilterCount = countSimpleCatalogFilters({
+    shop: activeShop,
+    cat: "",
+    minPrice,
+    maxPrice,
+    similar: similarOnly,
+    sort,
+  });
+
+  const fetchProducts = useCallback(async (
+    p: number,
+    q: string,
+    shop: string,
+    similar: boolean,
+    sortOpt: CatalogSortOption,
+    min: string,
+    max: string,
+  ) => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page: String(p), limit: String(LIMIT) });
-      if (q)    params.set("q", q);
+      const params = new URLSearchParams({ page: String(p), limit: String(LIMIT), sort: sortOpt });
+      if (q) params.set("q", q);
       if (shop) params.set("shop", shop);
       if (similar) params.set("similar", "1");
+      if (min) params.set("min", min);
+      if (max) params.set("max", max);
       const res  = await fetch(`/api/super-products?${params}`);
       const data = await res.json();
       setProducts(data.items ?? []);
@@ -97,19 +98,73 @@ export default function SupermarchePage() {
     }
   }, []);
 
-  useEffect(() => { fetchProducts(0, "", "", false); }, [fetchProducts]);
+  useEffect(() => { fetchProducts(0, "", "", false, DEFAULT_CATALOG_SORT, "", ""); }, [fetchProducts]);
 
   useEffect(() => {
     setPage(0);
-    fetchProducts(0, query, activeShop, similarOnly);
-  }, [activeShop, query, similarOnly, fetchProducts]);
+    fetchProducts(0, query, activeShop, similarOnly, sort, minPrice, maxPrice);
+  }, [activeShop, query, similarOnly, sort, minPrice, maxPrice, fetchProducts]);
 
-  useEffect(() => { fetchProducts(page, query, activeShop, similarOnly); }, [page]); // eslint-disable-line
+  useEffect(() => {
+    if (page === 0) return;
+    fetchProducts(page, query, activeShop, similarOnly, sort, minPrice, maxPrice);
+  }, [page]); // eslint-disable-line
 
   useEffect(() => {
     const t = setTimeout(() => setQuery(search), 350);
     return () => clearTimeout(t);
   }, [search]);
+
+  useEffect(() => {
+    if (!scrollOnPageChange.current) return;
+    scrollOnPageChange.current = false;
+    toolbarRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [page]);
+
+  const openFilters = () => {
+    setFilterDraft({
+      shop: activeShop,
+      cat: "",
+      minPrice,
+      maxPrice,
+      similar: similarOnly,
+      sort,
+    });
+    setFiltersOpen(true);
+  };
+
+  const applyFilters = () => {
+    setPage(0);
+    setActiveShop(filterDraft.shop);
+    setSimilarOnly(filterDraft.similar);
+    setSort(filterDraft.sort);
+    setMinPrice(filterDraft.minPrice);
+    setMaxPrice(filterDraft.maxPrice);
+    setFiltersOpen(false);
+  };
+
+  const resetFilters = () => {
+    setPage(0);
+    setActiveShop("");
+    setSimilarOnly(false);
+    setSort(DEFAULT_CATALOG_SORT);
+    setMinPrice("");
+    setMaxPrice("");
+    setFilterDraft({
+      shop: "",
+      cat: "",
+      minPrice: "",
+      maxPrice: "",
+      similar: false,
+      sort: DEFAULT_CATALOG_SORT,
+    });
+    setFiltersOpen(false);
+  };
+
+  const goToPage = (idx: number) => {
+    scrollOnPageChange.current = true;
+    setPage(idx);
+  };
 
   const totalPages = Math.ceil(total / LIMIT);
 
@@ -166,145 +221,57 @@ export default function SupermarchePage() {
       </div>
 
       {/* ── Shops ─────────────────────────────────────────────────────────── */}
-      <section className="mx-auto mt-10 max-w-[1600px] px-4">
-        <Reveal>
-          <h2 className="mb-6 text-lg font-black text-slate-900 dark:text-white">
-            Enseignes <span className="gradient-text-gold">supermarché</span>
-          </h2>
-        </Reveal>
-        <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-6">
-          {shops.map((shop, i) => (
-            <Reveal key={shop.key} delay={i * 0.06}>
-              <button
-                onClick={() => setActiveShop(activeShop === shop.key ? "" : shop.key)}
-                className={`group relative w-full overflow-hidden rounded-3xl transition-all duration-300 ${
-                  activeShop === shop.key
-                    ? "shadow-[0_0_0_2px_rgba(246,196,83,0.8),0_20px_40px_-8px_rgba(246,196,83,0.25)]"
-                    : "shadow-[0_2px_16px_rgba(0,0,0,0.08)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.18)] dark:shadow-[0_2px_16px_rgba(0,0,0,0.4)] dark:hover:shadow-[0_16px_48px_rgba(0,0,0,0.6)]"
-                } hover:-translate-y-2`}
-              >
-                {/* Logo panel — white bg so all logos pop */}
-                <div className="relative flex h-36 items-center justify-center overflow-hidden bg-white">
-                  {/* Animated shimmer sweep on hover */}
-                  <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-
-                  <img
-                    src={shop.logo!}
-                    alt={shop.name}
-                    className={`w-full object-contain transition-all duration-500 group-hover:scale-110 group-hover:drop-shadow-lg ${shop.logoSize}`}
-                  />
-
-                  {/* Active badge top-right */}
-                  {activeShop === shop.key && (
-                    <span className="absolute right-2.5 top-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-brand-gold shadow-[0_0_10px_rgba(246,196,83,0.7)]">
-                      <svg viewBox="0 0 12 12" fill="none" className="h-3 w-3" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M2 6l3 3 5-5" />
-                      </svg>
-                    </span>
-                  )}
-                </div>
-
-                {/* Info panel */}
-                <div className={`relative px-4 py-3.5 transition-colors duration-300 ${
-                  activeShop === shop.key
-                    ? "bg-gradient-to-b from-[#1a1506] to-[#0f0e09]"
-                    : "bg-gradient-to-b from-[#0f1218] to-[#0a0c14] group-hover:from-[#14171f] group-hover:to-[#0d1019]"
-                }`}>
-                  {/* Glow line at top */}
-                  <div className={`absolute inset-x-0 top-0 h-px transition-all duration-300 ${
-                    activeShop === shop.key
-                      ? "bg-brand-gold/60"
-                      : "bg-white/8 group-hover:bg-white/20"
-                  }`} />
-
-                  <p className="truncate text-[13px] font-bold text-white">{shop.name}</p>
-
-                  <div className="mt-1.5 flex items-center justify-between">
-                    <span className="tabular-nums text-[11px] text-white/45">
-                      {shop.count.toLocaleString("fr-FR")}
-                    </span>
-                    <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider transition-colors duration-300 ${
-                      activeShop === shop.key
-                        ? "bg-brand-gold/20 text-brand-gold"
-                        : "bg-white/8 text-white/40 group-hover:bg-emerald-500/15 group-hover:text-emerald-400"
-                    }`}>
-                      {activeShop === shop.key ? "Sélectionné" : "produits"}
-                    </span>
-                  </div>
-                </div>
-              </button>
-            </Reveal>
-          ))}
-        </div>
+      <section className="mt-6 sm:mt-8">
+        <HorizontalChipRow
+          title="Enseignes"
+          titleAccent="supermarché"
+          variant="shop"
+          activeId={activeShop}
+          onSelect={(id) => { setPage(0); setActiveShop(id); }}
+          items={shops.map((s) => ({
+            id: s.key,
+            label: s.name,
+            sub: `${s.count.toLocaleString("fr-FR")} produits`,
+            image: s.logo,
+          }))}
+        />
       </section>
 
+      <SimpleCatalogFilterPanel
+        open={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        title="Filtres supermarché"
+        draft={filterDraft}
+        onChange={(patch) => setFilterDraft((d) => ({ ...d, ...patch }))}
+        onApply={applyFilters}
+        onReset={resetFilters}
+        activeCount={activeFilterCount}
+        shops={shops.map((s) => ({ key: s.key, name: s.name }))}
+        showSimilarToggle
+      />
+
       {/* ── Search + filters ──────────────────────────────────────────────── */}
-      <section className="mx-auto mt-8 max-w-[1600px] px-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative flex-1 min-w-[180px]">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-white/30" />
-            <input
-              type="search"
-              placeholder="Rechercher un produit ou une marque…"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-9 pr-9 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-brand-gold/50 focus:ring-2 focus:ring-brand-gold/20 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/30"
-            />
-            {search && (
-              <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-white/30 dark:hover:text-white/60">
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-
-          <Dropdown
-            value={activeShop}
-            onChange={setActiveShop}
-            placeholder="Tous les magasins"
-            options={shops.map(s => ({ value: s.key, label: s.name }))}
-          />
-
-          <div className="flex h-[42px] rounded-xl border border-slate-300 bg-white p-1 dark:border-white/10 dark:bg-white/[0.04]">
-            <button
-              type="button"
-              onClick={() => setSimilarOnly(false)}
-              className={`rounded-lg px-3 text-xs font-black transition ${
-                !similarOnly
-                  ? "bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-950"
-                  : "text-slate-500 hover:text-slate-800 dark:text-white/50 dark:hover:text-white"
-              }`}
-            >
-              Catalogue
-            </button>
-            <button
-              type="button"
-              onClick={() => setSimilarOnly(true)}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3 text-xs font-black transition ${
-                similarOnly
-                  ? "bg-brand-gold text-black shadow-sm"
-                  : "text-slate-500 hover:text-slate-800 dark:text-white/50 dark:hover:text-white"
-              }`}
-            >
-              <Tag className="h-3 w-3" />
-              Similaires
-            </button>
-          </div>
-
-          {(activeShop || search || similarOnly) && (
-            <button onClick={() => { setActiveShop(""); setSearch(""); setSimilarOnly(false); }}
-              className="flex items-center gap-1.5 rounded-xl border border-slate-300 bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-200 dark:border-white/10 dark:bg-white/[0.06] dark:text-white/60 dark:hover:bg-white/[0.1]">
-              Réinitialiser <X className="h-3 w-3" />
-            </button>
-          )}
-
-          <span className="ml-auto text-sm text-slate-500 dark:text-white/40 shrink-0 tabular-nums">
-            {total.toLocaleString("fr-FR")} produit{total > 1 ? "s" : ""}
-          </span>
-        </div>
+      <section ref={toolbarRef} className="mx-auto mt-4 max-w-[1600px] scroll-mt-20 sm:mt-6">
+        <CatalogListToolbar
+          search={search}
+          onSearchChange={setSearch}
+          onSearchSubmit={() => setQuery(search)}
+          sort={sort}
+          onSortChange={(v) => { setPage(0); setSort(v); }}
+          filterOpen={filtersOpen}
+          onFilterToggle={() => (filtersOpen ? setFiltersOpen(false) : openFilters())}
+          activeFilterCount={activeFilterCount}
+          showViewToggle
+          viewMode={similarOnly ? "similaires" : "catalogue"}
+          onViewModeChange={(mode) => { setPage(0); setSimilarOnly(mode === "similaires"); }}
+        />
+        <p className="mt-2 px-4 text-right text-[11px] tabular-nums text-slate-500 dark:text-white/40">
+          {total.toLocaleString("fr-FR")} produit{total > 1 ? "s" : ""}
+        </p>
       </section>
 
       {/* ── Products grid ─────────────────────────────────────────────────── */}
-      <section className="mx-auto mt-5 max-w-[1600px] px-4">
+      <section className="mx-auto mt-4 max-w-[1600px] px-4 sm:mt-5">
         {loading ? (
           <div className="flex items-center justify-center py-24">
             <Loader2 className="h-8 w-8 animate-spin text-brand-gold" />
@@ -410,22 +377,22 @@ export default function SupermarchePage() {
         {/* ── Pagination ────────────────────────────────────────────────── */}
         {!loading && totalPages > 1 && (
           <div className="mt-10 flex items-center justify-center gap-2 flex-wrap">
-            <button onClick={() => setPage(0)} disabled={page === 0} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-brand-gold/40 disabled:opacity-40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">«</button>
-            <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-brand-gold/40 disabled:opacity-40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">← Précédent</button>
+            <button onClick={() => goToPage(0)} disabled={page === 0} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-brand-gold/40 disabled:opacity-40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">«</button>
+            <button onClick={() => goToPage(Math.max(0, page - 1))} disabled={page === 0} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-brand-gold/40 disabled:opacity-40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">← Précédent</button>
 
             {Array.from({ length: totalPages }).map((_, idx) => {
               if (idx !== 0 && idx !== totalPages - 1 && Math.abs(idx - page) > 2) return null;
               if (Math.abs(idx - page) === 3) return <span key={idx} className="text-slate-400 dark:text-white/30">…</span>;
               return (
-                <button key={idx} onClick={() => setPage(idx)}
+                <button key={idx} onClick={() => goToPage(idx)}
                   className={`h-9 w-9 rounded-xl text-sm font-bold transition ${page === idx ? "bg-brand-gold text-black shadow" : "border border-slate-200 bg-white text-slate-700 hover:border-brand-gold/40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"}`}>
                   {idx + 1}
                 </button>
               );
             })}
 
-            <button onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page === totalPages - 1} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-brand-gold/40 disabled:opacity-40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">Suivant →</button>
-            <button onClick={() => setPage(totalPages - 1)} disabled={page === totalPages - 1} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-brand-gold/40 disabled:opacity-40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">»</button>
+            <button onClick={() => goToPage(Math.min(totalPages - 1, page + 1))} disabled={page === totalPages - 1} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-brand-gold/40 disabled:opacity-40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">Suivant →</button>
+            <button onClick={() => goToPage(totalPages - 1)} disabled={page === totalPages - 1} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-brand-gold/40 disabled:opacity-40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">»</button>
 
             <span className="ml-2 text-xs text-slate-400 dark:text-white/40 tabular-nums">Page {page + 1} / {totalPages}</span>
           </div>

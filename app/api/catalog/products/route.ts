@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { catalogPool } from "@/lib/db";
+import { appendCatalogShopSearch, normalizeSearchText } from "@/lib/productSearch";
 
 // Pulls the last valid image URL out of a possibly-corrupted string.
 // The migration imported some rows where the scraper concatenated two URLs with
@@ -28,7 +29,7 @@ export async function GET(req: NextRequest) {
   const shop  = (searchParams.get("shop") ?? "").trim().toLowerCase();
   const page  = Math.max(0, parseInt(searchParams.get("page")  ?? "0", 10));
   const limit = Math.min(48, Math.max(1, parseInt(searchParams.get("limit") ?? "24", 10)));
-  const q     = (searchParams.get("q")   ?? "").trim().toLowerCase();
+  const q     = normalizeSearchText(searchParams.get("q")   ?? "");
   const cat   = (searchParams.get("cat") ?? "").trim();
 
   if (!shop) return NextResponse.json({ error: "shop required" }, { status: 400 });
@@ -44,10 +45,17 @@ export async function GET(req: NextRequest) {
 
     const where: string[] = ["p.shop_id = $1"];
     const params: (string | number)[] = [shopId];
-    let i = 2;
-    if (q)   { where.push(`lower(p.name) LIKE $${i++}`); params.push(`%${q}%`); }
-    if (cat) { where.push(`p.top_category = $${i++}`);   params.push(cat); }
+    const searchOrder = q ? appendCatalogShopSearch(q, where, params) : null;
+    if (cat) {
+      params.push(cat);
+      where.push(`p.top_category = $${params.length}`);
+    }
     const whereSql = `WHERE ${where.join(" AND ")}`;
+    const orderSql = searchOrder
+      ? `${searchOrder}, (p.image IS NOT NULL) DESC, p.id`
+      : `(p.image IS NOT NULL) DESC, p.id`;
+    const limitIdx = params.length + 1;
+    const offsetIdx = params.length + 2;
 
     const [countRes, itemsRes, catsRes] = await Promise.all([
       pool.query<{ total: string }>(`SELECT COUNT(*) AS total FROM products p ${whereSql}`, params),
@@ -55,8 +63,8 @@ export async function GET(req: NextRequest) {
         `SELECT p.slug, p.name, p.brand, p.image, p.price, p.old_price, p.available,
                 p.top_category, p.low_category
          FROM products p ${whereSql}
-         ORDER BY (p.image IS NOT NULL) DESC, p.id
-         LIMIT $${i} OFFSET $${i + 1}`,
+         ORDER BY ${orderSql}
+         LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
         [...params, limit, page * limit]
       ),
       pool.query<{ top_category: string; n: string }>(

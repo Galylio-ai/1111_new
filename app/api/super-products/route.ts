@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Pool } from "pg";
+import { catalogSortSql, parseCatalogSort } from "@/lib/catalogFilters";
+import { appendProductSearch, normalizeSearchText } from "@/lib/productSearch";
 import { productCoverImageSql } from "@/lib/productImages";
 
 const pool = new Pool({
@@ -11,37 +13,53 @@ export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const page  = Math.max(0, parseInt(searchParams.get("page")  ?? "0", 10));
   const limit = Math.min(48, Math.max(1, parseInt(searchParams.get("limit") ?? "24", 10)));
-  const q     = (searchParams.get("q")    ?? "").trim();
+  const q     = normalizeSearchText(searchParams.get("q") ?? "");
   const shop  = (searchParams.get("shop") ?? "").trim().toLowerCase();
   const similarOnly = ["1", "true", "yes"].includes((searchParams.get("similar") ?? "").trim().toLowerCase());
+  const sort = parseCatalogSort(searchParams.get("sort"));
+  const minRaw = searchParams.get("min");
+  const maxRaw = searchParams.get("max");
+  const minPrice = minRaw != null && minRaw !== "" ? parseFloat(minRaw) : null;
+  const maxPrice = maxRaw != null && maxRaw !== "" ? parseFloat(maxRaw) : null;
 
   const conditions: string[] = [];
+  const having: string[] = [];
   const params: (string | number)[] = [];
-  let idx = 1;
 
+  let relevanceOrder: string | null = null;
   if (q) {
-    conditions.push(`(lower(p.name) LIKE $${idx} OR lower(b.name) LIKE $${idx})`);
-    params.push(`%${q.toLowerCase()}%`);
-    idx++;
+    relevanceOrder = appendProductSearch(q, conditions, params);
   }
   if (shop) {
+    params.push(shop);
+    const shopIdx = params.length;
     if (similarOnly) {
       conditions.push(`EXISTS (
         SELECT 1
         FROM shop_prices sp_shop
         JOIN shops s_shop ON s_shop.id = sp_shop.shop_id
         WHERE sp_shop.product_id = p.id
-          AND s_shop.shop_key = $${idx}
+          AND s_shop.shop_key = $${shopIdx}
       )`);
     } else {
-      conditions.push(`s.shop_key = $${idx}`);
+      conditions.push(`s.shop_key = $${shopIdx}`);
     }
-    params.push(shop);
-    idx++;
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
-  const having = similarOnly ? "HAVING COUNT(DISTINCT s.id) > 1" : "";
+  if (similarOnly) having.push("COUNT(DISTINCT s.id) > 1");
+  if (minPrice != null && Number.isFinite(minPrice)) {
+    params.push(minPrice);
+    having.push(`MIN(sp.current_price) >= $${params.length}`);
+  }
+  if (maxPrice != null && Number.isFinite(maxPrice)) {
+    params.push(maxPrice);
+    having.push(`MIN(sp.current_price) <= $${params.length}`);
+  }
+  const havingClause = having.length ? `HAVING ${having.join(" AND ")}` : "";
+  const orderBy = relevanceOrder ? `${relevanceOrder}, ${catalogSortSql(sort)}` : catalogSortSql(sort);
+  const limitIdx = params.length + 1;
+  const offsetIdx = params.length + 2;
 
   const countSql = `
     SELECT COUNT(*) AS total
@@ -53,7 +71,7 @@ export async function GET(req: NextRequest) {
       JOIN shops s ON s.id = sp.shop_id
       ${where}
       GROUP BY p.id
-      ${having}
+      ${havingClause}
     ) matches
   `;
 
@@ -72,9 +90,9 @@ export async function GET(req: NextRequest) {
     JOIN shops s ON s.id = sp.shop_id
     ${where}
     GROUP BY p.id, p.name, b.name
-    ${having}
-    ORDER BY COUNT(DISTINCT s.id) DESC, p.id
-    LIMIT $${idx} OFFSET $${idx + 1}
+    ${havingClause}
+    ORDER BY ${orderBy}
+    LIMIT $${limitIdx} OFFSET $${offsetIdx}
   `;
 
   try {

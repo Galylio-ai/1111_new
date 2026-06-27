@@ -2,12 +2,21 @@ import hierarchyJson from "@/lib/data/retailCategoryHierarchy.fr.json";
 import slugMapJson from "@/lib/data/retailSubSlugMap.json";
 import type { LucideIcon } from "lucide-react";
 import {
+  Baby,
   BatteryCharging,
+  BookOpen,
+  Car,
+  Dumbbell,
   Gamepad2,
+  Gift,
+  Heart,
   Home,
   Laptop,
-  Monitor,
+  MoreHorizontal,
+  PawPrint,
   Printer,
+  Shirt,
+  ShoppingBasket,
   Smartphone,
   Tv,
   Zap,
@@ -38,7 +47,17 @@ const TOP_ICONS: Record<string, LucideIcon> = {
   tv_audio_photo: Tv,
   office_printing_school: Printer,
   home_garden_diy: Home,
+  auto_moto_mobility: Car,
+  sports_leisure: Dumbbell,
+  health_beauty_pharmacy: Heart,
+  fashion_accessories: Shirt,
+  baby_kids: Baby,
+  books_culture: BookOpen,
+  grocery_consumables: ShoppingBasket,
   energy_power: BatteryCharging,
+  pets: PawPrint,
+  gifts_collections: Gift,
+  other: MoreHorizontal,
 };
 
 const TOP_SHORT_LABELS: Record<string, string> = {
@@ -47,9 +66,19 @@ const TOP_SHORT_LABELS: Record<string, string> = {
   gaming_consoles: "Gaming",
   home_appliances: "Électroménager",
   tv_audio_photo: "TV & Son",
-  office_printing_school: "Imprimante et Bureau",
-  home_garden_diy: "Jardinage",
-  energy_power: "Onduleur",
+  office_printing_school: "Bureau",
+  home_garden_diy: "Maison & Jardin",
+  auto_moto_mobility: "Auto & Moto",
+  sports_leisure: "Sports",
+  health_beauty_pharmacy: "Beauté & Santé",
+  fashion_accessories: "Mode",
+  baby_kids: "Bébé",
+  books_culture: "Livres",
+  grocery_consumables: "Épicerie",
+  energy_power: "Énergie",
+  pets: "Animalerie",
+  gifts_collections: "Cadeaux",
+  other: "Autre",
 };
 
 export type NavRetailTop = RetailTopCategory & {
@@ -178,6 +207,42 @@ const HOME_CARD_THEMES: Record<string, { badge: string; text: string }> = {
   energy_power: {
     badge: "bg-yellow-500/20 text-yellow-200 border-yellow-400/30",
     text: "text-yellow-300",
+  },
+  auto_moto_mobility: {
+    badge: "bg-orange-500/20 text-orange-200 border-orange-500/30",
+    text: "text-orange-300",
+  },
+  sports_leisure: {
+    badge: "bg-green-500/20 text-green-200 border-green-500/30",
+    text: "text-green-300",
+  },
+  health_beauty_pharmacy: {
+    badge: "bg-rose-500/20 text-rose-200 border-rose-500/30",
+    text: "text-rose-300",
+  },
+  fashion_accessories: {
+    badge: "bg-fuchsia-500/20 text-fuchsia-200 border-fuchsia-500/30",
+    text: "text-fuchsia-300",
+  },
+  baby_kids: {
+    badge: "bg-sky-500/20 text-sky-200 border-sky-500/30",
+    text: "text-sky-300",
+  },
+  books_culture: {
+    badge: "bg-stone-500/20 text-stone-200 border-stone-400/30",
+    text: "text-stone-300",
+  },
+  grocery_consumables: {
+    badge: "bg-lime-500/20 text-lime-200 border-lime-400/30",
+    text: "text-lime-300",
+  },
+  pets: {
+    badge: "bg-teal-500/20 text-teal-200 border-teal-400/30",
+    text: "text-teal-300",
+  },
+  gifts_collections: {
+    badge: "bg-red-500/20 text-red-200 border-red-400/30",
+    text: "text-red-300",
   },
 };
 

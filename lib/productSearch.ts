@@ -31,6 +31,182 @@ export function slugifySearch(q: string): string {
     .replace(/^-|-$/g, "");
 }
 
+/** Push unified product search params; returns ORDER BY relevance expression or null. */
+export function appendProductSearch(
+  rawQuery: string,
+  conditions: string[],
+  params: (string | number | boolean | string[])[],
+): string | null {
+  const q = normalizeSearchText(rawQuery);
+  if (!q) return null;
+
+  const qLower = q.toLowerCase();
+  const slugQ = slugifySearch(q);
+  const like = `%${qLower}%`;
+  const prefix = `${qLower}%`;
+
+  params.push(qLower, slugQ, like, SKU_SPEC_KEYS, prefix);
+  const qIdx = params.length - 4;
+  const slugIdx = params.length - 3;
+  const likeIdx = params.length - 2;
+  const skuKeysIdx = params.length - 1;
+  const prefixIdx = params.length;
+
+  conditions.push(`(
+    lower(regexp_replace(trim(p.name), '\\s+', ' ', 'g')) = $${qIdx}
+    OR lower(coalesce(p.source_product_id, '')) = $${qIdx}
+    OR lower(p.slug) = $${slugIdx}
+    OR lower(p.name) LIKE $${likeIdx}
+    OR lower(coalesce(b.name, '')) LIKE $${likeIdx}
+    OR lower(coalesce(p.source_product_id, '')) LIKE $${likeIdx}
+    OR EXISTS (
+      SELECT 1 FROM product_specs ps_q
+      WHERE ps_q.product_id = p.id
+        AND (
+          lower(ps_q.spec_value) = $${qIdx}
+          OR (ps_q.spec_key = ANY($${skuKeysIdx}::text[]) AND lower(ps_q.spec_value) LIKE $${likeIdx})
+        )
+    )
+  )`);
+
+  return `
+    MIN(
+      CASE
+        WHEN lower(regexp_replace(trim(p.name), '\\s+', ' ', 'g')) = $${qIdx} THEN 0
+        WHEN lower(coalesce(p.source_product_id, '')) = $${qIdx} THEN 1
+        WHEN lower(p.slug) = $${slugIdx} THEN 2
+        WHEN EXISTS (
+          SELECT 1 FROM product_specs ps_r
+          WHERE ps_r.product_id = p.id AND lower(ps_r.spec_value) = $${qIdx}
+        ) THEN 3
+        WHEN lower(p.name) LIKE $${prefixIdx} THEN 4
+        WHEN lower(p.name) LIKE $${likeIdx} THEN 5
+        WHEN lower(coalesce(b.name, '')) LIKE $${likeIdx} THEN 6
+        WHEN lower(coalesce(p.source_product_id, '')) LIKE $${likeIdx} THEN 7
+        WHEN EXISTS (
+          SELECT 1 FROM product_specs ps_r
+          WHERE ps_r.product_id = p.id
+            AND ps_r.spec_key = ANY($${skuKeysIdx}::text[])
+            AND lower(ps_r.spec_value) LIKE $${likeIdx}
+        ) THEN 8
+        ELSE 9
+      END
+    ) ASC,
+    length(p.name) ASC,
+    p.name ASC
+  `;
+}
+
+/** Catalog DB (boutiques) — title, slug, source id, SKU/barcode in product_details. */
+export function appendCatalogShopSearch(
+  rawQuery: string,
+  where: string[],
+  params: (string | number)[],
+): string | null {
+  const q = normalizeSearchText(rawQuery);
+  if (!q) return null;
+
+  const qLower = q.toLowerCase();
+  const slugQ = slugifySearch(q);
+  const like = `%${qLower}%`;
+  const prefix = `${qLower}%`;
+
+  params.push(qLower, slugQ, like, prefix);
+  const qIdx = params.length - 3;
+  const slugIdx = params.length - 2;
+  const likeIdx = params.length - 1;
+  const prefixIdx = params.length;
+
+  where.push(`(
+    lower(regexp_replace(trim(p.name), '\\s+', ' ', 'g')) = $${qIdx}
+    OR lower(p.slug) = $${slugIdx}
+    OR lower(coalesce(p.source_product_id, '')) = $${qIdx}
+    OR lower(p.name) LIKE $${likeIdx}
+    OR lower(coalesce(p.brand, '')) LIKE $${likeIdx}
+    OR lower(coalesce(p.source_product_id, '')) LIKE $${likeIdx}
+    OR EXISTS (
+      SELECT 1 FROM product_details pd
+      WHERE pd.product_id = p.id
+        AND (
+          lower(coalesce(pd.sku, '')) = $${qIdx}
+          OR lower(coalesce(pd.barcode, '')) = $${qIdx}
+          OR lower(coalesce(pd.sku, '')) LIKE $${likeIdx}
+          OR lower(coalesce(pd.barcode, '')) LIKE $${likeIdx}
+        )
+    )
+  )`);
+
+  return `
+    CASE
+      WHEN lower(regexp_replace(trim(p.name), '\\s+', ' ', 'g')) = $${qIdx} THEN 0
+      WHEN lower(p.slug) = $${slugIdx} THEN 1
+      WHEN lower(coalesce(p.source_product_id, '')) = $${qIdx} THEN 2
+      WHEN EXISTS (
+        SELECT 1 FROM product_details pd
+        WHERE pd.product_id = p.id
+          AND (lower(coalesce(pd.sku, '')) = $${qIdx} OR lower(coalesce(pd.barcode, '')) = $${qIdx})
+      ) THEN 3
+      WHEN lower(p.name) LIKE $${prefixIdx} THEN 4
+      WHEN lower(p.name) LIKE $${likeIdx} THEN 5
+      WHEN lower(coalesce(p.brand, '')) LIKE $${likeIdx} THEN 6
+      ELSE 7
+    END ASC,
+    length(p.name) ASC,
+    p.name ASC
+  `;
+}
+
+export type MemorySearchable = {
+  name: string;
+  brand?: string;
+  category?: string;
+  slug?: string;
+  sourceId?: string;
+};
+
+export function matchesMemoryProductSearch(item: MemorySearchable, rawQuery: string): boolean {
+  const q = normalizeSearchText(rawQuery).toLowerCase();
+  if (!q) return true;
+
+  const name = normalizeSearchText(item.name).toLowerCase();
+  const brand = (item.brand ?? "").toLowerCase();
+  const slug = item.slug ?? slugifySearch(item.name);
+  const sourceId = (item.sourceId ?? "").toLowerCase();
+
+  if (name === q || slug === slugifySearch(rawQuery) || sourceId === q) return true;
+  if (name.includes(q) || brand.includes(q) || sourceId.includes(q)) return true;
+  return false;
+}
+
+export function scoreMemoryProductSearch(item: MemorySearchable, rawQuery: string): number {
+  const q = normalizeSearchText(rawQuery).toLowerCase();
+  const name = normalizeSearchText(item.name).toLowerCase();
+  const brand = (item.brand ?? "").toLowerCase();
+  const slug = item.slug ?? slugifySearch(item.name);
+  const sourceId = (item.sourceId ?? "").toLowerCase();
+  const slugQ = slugifySearch(rawQuery);
+
+  if (name === q) return 0;
+  if (sourceId === q) return 1;
+  if (slug === slugQ) return 2;
+  if (name.startsWith(q)) return 3;
+  if (name.includes(q)) return 4;
+  if (brand.includes(q)) return 5;
+  if (sourceId.includes(q)) return 6;
+  return 99;
+}
+
+export function sortMemorySearchResults<T extends MemorySearchable>(items: T[], rawQuery: string): T[] {
+  const q = normalizeSearchText(rawQuery);
+  if (!q) return items;
+  return [...items].sort(
+    (a, b) =>
+      scoreMemoryProductSearch(a, q) - scoreMemoryProductSearch(b, q) ||
+      a.name.length - b.name.length ||
+      a.name.localeCompare(b.name, "fr"),
+  );
+}
+
 function coverImageSql(source: "para" | "retail" | "super"): string {
   if (source === "super") return productCoverImageSql("p.id");
   return `(SELECT pi.image_url FROM product_images pi WHERE pi.product_id = p.id ORDER BY pi.id ASC LIMIT 1)`;
@@ -173,12 +349,13 @@ export function rankSearchResults(items: SearchProduct[], rawQuery: string): Sea
     if (p.slug === slugQ) return 1;
     if (name.startsWith(q)) return 2;
     if (name.includes(q)) return 3;
-    return 4;
+    if ((p.brand ?? "").toLowerCase().includes(q)) return 4;
+    return 5;
   };
 
   return [...items].sort((a, b) => {
     const d = score(a) - score(b);
     if (d !== 0) return d;
-    return a.name.length - b.name.length;
+    return a.name.length - b.name.length || a.name.localeCompare(b.name, "fr");
   });
 }

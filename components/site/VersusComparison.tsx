@@ -21,6 +21,8 @@ type SearchItem = {
   price: number | null;
   category: string;
   shopCount: number;
+  specCount?: number;
+  reference?: string | null;
 };
 
 type Offer = {
@@ -45,6 +47,7 @@ type Product = {
   specs: Record<string, string>;
   hasSpecs?: boolean;
   specCount?: number;
+  reference?: string | null;
 };
 
 /* ────────────────────────────────────────────────────────────────────────── */
@@ -109,7 +112,7 @@ function ProductPicker({
     }
     let cancelled = false;
     setLoading(true);
-    fetch(`/api/catalog/compare/search?q=${encodeURIComponent(debounced)}&limit=10`)
+    fetch(`/api/catalog/compare/search?q=${encodeURIComponent(debounced)}&limit=12`)
       .then((r) => r.json())
       .then((d) => { if (!cancelled) setResults(d.items ?? []); })
       .catch(() => { if (!cancelled) setResults([]); })
@@ -142,6 +145,11 @@ function ProductPicker({
             </div>
             <div className="mt-0.5 text-xs font-bold tabular-nums text-slate-500 dark:text-white/55">
               {fmt(selected.minPrice)} DT
+              {(selected.specCount ?? 0) > 0 && (
+                <span className="ml-1.5 text-[10px] font-semibold text-brand-gold">
+                  · {selected.specCount} caractéristiques
+                </span>
+              )}
             </div>
           </div>
           <button
@@ -172,7 +180,7 @@ function ProductPicker({
             value={query}
             onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
             onFocus={() => setOpen(true)}
-            placeholder={`Choisir le produit ${side}…`}
+            placeholder={`Titre, SKU ou référence — produit ${side}…`}
             className="min-w-0 flex-1 bg-transparent py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder:text-white/40"
           />
           {loading && <Loader2 className="h-4 w-4 animate-spin text-slate-400" />}
@@ -199,13 +207,24 @@ function ProductPicker({
                 <div className="truncate text-[13px] font-semibold text-slate-900 dark:text-white">
                   {r.name}
                 </div>
-                <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-white/50">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-slate-500 dark:text-white/50">
                   {r.brand && <span className="font-bold">{r.brand}</span>}
+                  {r.category && <span className="truncate">{r.category}</span>}
                   <span className="tabular-nums">{fmt(r.price)} DT</span>
                   <span className="inline-flex items-center gap-0.5">
                     <Store className="h-3 w-3" />{r.shopCount}
                   </span>
+                  {(r.specCount ?? 0) > 0 && (
+                    <span className="rounded bg-brand-gold/15 px-1 py-0.5 text-[9px] font-bold text-brand-gold">
+                      {r.specCount} specs
+                    </span>
+                  )}
                 </div>
+                {r.reference && (
+                  <div className="mt-0.5 truncate font-mono text-[10px] text-slate-400 dark:text-white/35">
+                    Réf. {r.reference}
+                  </div>
+                )}
               </div>
             </button>
           ))}
@@ -349,8 +368,8 @@ export function VersusComparison({
     return rows;
   }, [a, b]);
 
-  // Both products have at least some specs → we can draw the radar.
-  const bothHaveSpecs = !!(a?.hasSpecs && b?.hasSpecs);
+  // Both products have specs on at least one side → draw radar when any specs exist.
+  const bothHaveSpecs = !!((a?.specCount ?? 0) > 0 && (b?.specCount ?? 0) > 0);
 
   // Radar data (A vs B, 0–100 per dimension) + overall points.
   const radar = useMemo(
@@ -438,9 +457,9 @@ export function VersusComparison({
           <h3 className="text-lg font-black text-slate-900 dark:text-white">
             Choisissez deux produits à comparer
           </h3>
-          <p className="mx-auto mt-2 max-w-md text-sm text-slate-500 dark:text-white/55">
-            Smartphones, PC portables, composants informatiques… Sélectionnez le produit A et le produit B
-            pour voir leurs caractéristiques et prix côte à côte.
+            <p className="mx-auto mt-2 max-w-md text-sm text-slate-500 dark:text-white/55">
+            Collez un titre complet, une référence SKU ou cherchez un modèle — smartphones, PC, TV, composants…
+            Les fiches techniques réelles de notre base alimentent la comparaison.
           </p>
         </div>
       )}

@@ -1,51 +1,20 @@
 import { NextResponse } from "next/server";
 import { Pool } from "pg";
+import { RETAIL_CATEGORY_SLUGS } from "@/lib/retailCategories";
 
 const pool = new Pool({ connectionString: process.env.RETAIL_DB_URL, max: 2 });
 
 type Cat = { id: number; name: string; slug: string; subcategories: { name: string; slug: string }[] };
 let cache: Cat[] | null = null;
-// Bust stale cache on module reload
 cache = null;
-
-// Only top-level categories that belong to tech / electroménager retail shops.
-// Matched by slug keywords — anything else (alimentation, parapharmacie, etc.) is excluded.
-const ALLOWED_SLUGS = new Set([
-  "informatique","pc-portables","ordinateurs","smartphones","telephonie",
-  "tablettes","accessoires-informatiques","composants","stockage","reseaux",
-  "imprimantes","moniteurs","ecrans","peripheriques","gaming","jeux-video",
-  "consoles","audio","tv-home-cinema","television","son","cameras",
-  "electromenager","gros-electromenager","petit-electromenager","climatisation",
-  "refrigerateurs","congelateurs","lave-linge","seche-linge","lave-vaisselle",
-  "cuisinieres","fours","hottes","aspirateurs","accessoires-electromenager",
-  "batteries-chargeurs","cables-adaptateurs","protection-telephone",
-  "accessoires-audio","accessoires-gaming","accessoires-gamer",
-  "accessoires-informatiques","accessoires-telephonie","chargeurs",
-]);
-
-// Also allow by keyword match in the category name
-const ALLOWED_KEYWORDS = [
-  "informati","ordinat","portable","smartphone","téléphone","tablette",
-  "gaming","console","audio","casque","haut-parleur","enceinte","tv","télé",
-  "écran","moniteur","composant","stockage","réseau","imprimante","périphérique",
-  "électroménager","electromenager","réfrigérateur","congélateur","lave",
-  "climatiseur","aspirateur","four","cuisinière","batterie","chargeur","câble",
-  "accessoire","camera","photo",
-];
-
-function isAllowed(name: string, slug: string): boolean {
-  const n = name.toLowerCase();
-  const s = slug.toLowerCase();
-  if (ALLOWED_SLUGS.has(s)) return true;
-  return ALLOWED_KEYWORDS.some(kw => n.includes(kw) || s.includes(kw));
-}
 
 export async function GET() {
   if (cache) return NextResponse.json({ categories: cache });
 
   const client = await pool.connect();
   try {
-    const res = await client.query(`
+    const res = await client.query(
+      `
       SELECT
         tc.id        AS top_id,
         tc.name      AS top_name,
@@ -61,22 +30,15 @@ export async function GET() {
         JOIN low_categories lc2 ON lc2.id = sc2.low_category_id
         WHERE lc2.top_category_id = tc.id
       )
-      AND tc.slug = ANY(ARRAY[
-        'accessoires-informatiques','accessoires-telephonie','accessoires-gamer',
-        'audio-casques-et-haut-parleurs','batteries-et-chargeurs','climatisation-et-chauffage',
-        'composants','consoles','ecrans-et-moniteurs','encre-et-toner',
-        'froid-et-refrigeration','gros-electromenager','home-cinema-et-streaming',
-        'imprimantes-et-scanners','jeux-video','lavage','manettes',
-        'montres-et-objets-connectes','onduleurs-et-alimentation','ordinateurs-apple',
-        'pc-de-bureau','pc-de-bureau-gamer','pc-portables','pc-portables-gamer',
-        'petit-electromenager','reseaux-serveurs-et-securite','smartphones',
-        'stockage','tablettes','televisions','videoprojecteurs',
-        'appareils-photo','aspirateurs-et-nettoyage','chaises-et-bureaux-gamer',
-        'cuisson','logiciels','materiel-point-de-vente','telephones-classiques',
-        'eclairage-et-electricite'
-      ])
+      AND (
+        tc.slug = ANY($1::text[])
+        OR lc.slug = ANY($1::text[])
+        OR sc.slug = ANY($1::text[])
+      )
       ORDER BY tc.name ASC, sc.name ASC
-    `);
+    `,
+      [RETAIL_CATEGORY_SLUGS],
+    );
 
     const map = new Map<number, Cat>();
     for (const row of res.rows) {

@@ -44,7 +44,9 @@
     "sous_categories": [
       { "id": "small_appliances", "nom": "Petit électroménager" },
       { "id": "large_appliances", "nom": "Gros électroménager" },
-      { "id": "ac_climate", "nom": "Climatisation et chauffage" },
+      { "id": "ac_climate", "nom": "Climatiseurs" },
+      { "id": "heating", "nom": "Chauffage" },
+      { "id": "fans_air_treatment", "nom": "Ventilation et traitement d'air" },
       { "id": "refrigeration", "nom": "Froid et réfrigération" },
       { "id": "laundry", "nom": "Lavage" },
       { "id": "cooking_appliances", "nom": "Cuisson" },
@@ -56,7 +58,10 @@
     "nom": "TV, son et photo",
     "sous_categories": [
       { "id": "televisions", "nom": "Télévisions" },
-      { "id": "audio_headphones_speakers", "nom": "Audio, casques et haut-parleurs" },
+      { "id": "headphones_earphones", "nom": "Casques et écouteurs" },
+      { "id": "microphones", "nom": "Microphones" },
+      { "id": "speakers_audio", "nom": "Enceintes et haut-parleurs" },
+      { "id": "audio_headphones_speakers", "nom": "Audio général" },
       { "id": "home_cinema_streaming", "nom": "Home cinéma et streaming" },
       { "id": "cameras_photo", "nom": "Appareils photo" },
       { "id": "projectors", "nom": "Vidéoprojecteurs" }
@@ -90,12 +95,117 @@
     ]
   },
   {
+    "id": "auto_moto_mobility",
+    "nom": "Auto, moto et mobilité",
+    "sous_categories": [
+      { "id": "auto_accessories", "nom": "Accessoires auto" },
+      { "id": "motorcycle_scooter", "nom": "Moto et scooter" },
+      { "id": "tires", "nom": "Pneus" },
+      { "id": "bicycles_urban_mobility", "nom": "Vélos et mobilité urbaine" },
+      { "id": "car_care_tools", "nom": "Entretien auto" }
+    ]
+  },
+  {
+    "id": "sports_leisure",
+    "nom": "Sports et loisirs",
+    "sous_categories": [
+      { "id": "sports_equipment", "nom": "Équipement sport" },
+      { "id": "fitness_equipment", "nom": "Fitness et musculation" },
+      { "id": "outdoor_leisure", "nom": "Loisirs extérieurs" },
+      { "id": "toys_games", "nom": "Jouets et jeux" },
+      { "id": "creative_leisure", "nom": "Loisirs créatifs" }
+    ]
+  },
+  {
+    "id": "health_beauty_pharmacy",
+    "nom": "Santé, beauté et parapharmacie",
+    "sous_categories": [
+      { "id": "skincare", "nom": "Soins visage" },
+      { "id": "haircare", "nom": "Soins cheveux" },
+      { "id": "bodycare_hygiene", "nom": "Corps et hygiène" },
+      { "id": "makeup", "nom": "Maquillage" },
+      { "id": "sun_care", "nom": "Protection solaire" },
+      { "id": "perfume", "nom": "Parfum" },
+      { "id": "supplements_nutrition", "nom": "Compléments alimentaires et nutrition" },
+      { "id": "medical_orthopedic", "nom": "Médical et orthopédie" }
+    ]
+  },
+  {
+    "id": "fashion_accessories",
+    "nom": "Mode et accessoires",
+    "sous_categories": [
+      { "id": "women_fashion", "nom": "Mode femme" },
+      { "id": "men_fashion", "nom": "Mode homme" },
+      { "id": "kids_fashion", "nom": "Mode enfant" },
+      { "id": "shoes", "nom": "Chaussures" },
+      { "id": "bags_luggage", "nom": "Sacs et bagages" },
+      { "id": "lingerie", "nom": "Lingerie" },
+      { "id": "watches_jewelry", "nom": "Montres et bijoux" }
+    ]
+  },
+  {
+    "id": "baby_kids",
+    "nom": "Bébé et enfants",
+    "sous_categories": [
+      { "id": "baby_care", "nom": "Soins bébé" },
+      { "id": "feeding", "nom": "Repas bébé" },
+      { "id": "strollers_car_seats", "nom": "Poussettes et sièges auto" },
+      { "id": "diapers_hygiene", "nom": "Couches et hygiène" },
+      { "id": "maternity", "nom": "Maternité" }
+    ]
+  },
+  {
+    "id": "books_culture",
+    "nom": "Livres et culture",
+    "sous_categories": [
+      { "id": "books", "nom": "Livres" },
+      { "id": "religious_books", "nom": "Livres religieux" },
+      { "id": "culture_media", "nom": "Culture et média" }
+    ]
+  },
+  {
+    "id": "grocery_consumables",
+    "nom": "Épicerie et consommables",
+    "sous_categories": [
+      { "id": "food_drinks", "nom": "Alimentation et boissons" },
+      { "id": "coffee_tea", "nom": "Café et thé" },
+      { "id": "household_consumables", "nom": "Consommables maison" }
+    ]
+  },
+  {
     "id": "energy_power",
     "nom": "Énergie et alimentation",
     "sous_categories": [
       { "id": "solar_energy", "nom": "Énergie solaire" },
       { "id": "ups_power_backup", "nom": "Onduleurs et alimentation" },
       { "id": "batteries_chargers", "nom": "Batteries et chargeurs" }
+    ]
+  },
+  {
+    "id": "pets",
+    "nom": "Animalerie",
+    "sous_categories": [
+      { "id": "pet_food", "nom": "Alimentation animale" },
+      { "id": "pet_care", "nom": "Soins animaux" },
+      { "id": "pet_accessories", "nom": "Accessoires animaux" }
+    ]
+  },
+  {
+    "id": "gifts_collections",
+    "nom": "Cadeaux et collections",
+    "sous_categories": [
+      { "id": "gift_ideas", "nom": "Idées cadeau" },
+      { "id": "corporate_gifts", "nom": "Cadeaux entreprise" },
+      { "id": "best_sellers", "nom": "Meilleures ventes" },
+      { "id": "promotions_deals", "nom": "Promotions et offres" }
+    ]
+  },
+  {
+    "id": "other",
+    "nom": "Autre",
+    "sous_categories": [
+      { "id": "uncategorized", "nom": "Non catégorisé" },
+      { "id": "ambiguous_generic_category", "nom": "Catégorie générique ambiguë" }
     ]
   }
 ]

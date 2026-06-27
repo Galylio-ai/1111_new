@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { SlidersHorizontal, X } from "lucide-react";
-import { RETAIL_PAGE_CARDS, retailPageCardSlug } from "@/lib/retailCategories";
+import { useEffect, useMemo, useState } from "react";
+import { SlidersHorizontal } from "lucide-react";
+import { CatalogFilterOverlay, FilterChip } from "@/components/catalog/CatalogFilterOverlay";
+import { getMagasinsNavCategories, slugsForTop } from "@/lib/retailCategories";
 import { RETAIL_SORT_OPTIONS, type RetailSortOption } from "@/lib/retailProductQuery";
 
 export type RetailFilterDraft = {
@@ -29,10 +30,12 @@ type FilterFacets = {
 
 type ShopOption = { key: string; name: string };
 
-const CATEGORY_OPTIONS = RETAIL_PAGE_CARDS.map((card) => ({
-  slug: retailPageCardSlug(card.topId),
-  label: card.fr,
-}));
+const CATEGORY_OPTIONS = getMagasinsNavCategories()
+  .map((top) => ({
+    slug: slugsForTop(top.id),
+    label: top.shortLabel,
+  }))
+  .filter((c) => c.slug);
 
 function Chip({
   active,
@@ -41,20 +44,12 @@ function Chip({
 }: {
   active: boolean;
   onClick: () => void;
-  children: ReactNode;
+  children: React.ReactNode;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold transition ${
-        active
-          ? "border-brand-gold/50 bg-brand-gold/15 text-brand-gold"
-          : "border-slate-200 bg-white text-slate-600 hover:border-brand-gold/30 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/70"
-      }`}
-    >
+    <FilterChip active={active} onClick={onClick}>
       {children}
-    </button>
+    </FilterChip>
   );
 }
 
@@ -115,35 +110,21 @@ export function RetailFilterPanel({
   if (!open) return null;
 
   return (
-    <div className="mb-3 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/80 shadow-lg dark:border-white/10 dark:bg-[#0f1422]/95">
-      <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-white/[0.06]">
-        <div className="flex items-center gap-2">
-          <SlidersHorizontal className="h-4 w-4 text-brand-gold" />
-          <h3 className="text-sm font-black text-slate-900 dark:text-white">Filtres</h3>
-          {activeCount > 0 && (
-            <span className="rounded-full bg-brand-gold/20 px-2 py-0.5 text-[10px] font-bold text-brand-gold">
-              {activeCount}
-            </span>
-          )}
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-200/60 hover:text-slate-700 dark:hover:bg-white/10 dark:hover:text-white"
-          aria-label="Fermer les filtres"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-
-      <div className="max-h-[min(70vh,520px)] overflow-y-auto px-4 py-4">
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <CatalogFilterOverlay
+      open={open}
+      onClose={onClose}
+      title="Filtres retail"
+      activeCount={activeCount}
+      onApply={onApply}
+      onReset={onReset}
+    >
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {/* Sort */}
           <div className="sm:col-span-2 lg:col-span-3">
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">
+            <p className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">
               Trier par
             </p>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1">
               {sortOptions.map((opt) => (
                 <Chip
                   key={opt.value}
@@ -158,10 +139,10 @@ export function RetailFilterPanel({
 
           {/* Type */}
           <div>
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">
+            <p className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">
               Type de produit
             </p>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1">
               {matchedOptions.map((opt) => (
                 <Chip
                   key={opt.label}
@@ -176,7 +157,7 @@ export function RetailFilterPanel({
 
           {/* Price */}
           <div>
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">
+            <p className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">
               Prix (DT)
             </p>
             <div className="flex items-center gap-2">
@@ -207,10 +188,10 @@ export function RetailFilterPanel({
 
           {/* Categories */}
           <div className="sm:col-span-2 lg:col-span-1">
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">
+            <p className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">
               Catégorie
             </p>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex max-h-24 flex-wrap gap-1 overflow-y-auto">
               <Chip active={!draft.cat} onClick={() => onChange({ cat: "" })}>
                 Toutes
               </Chip>
@@ -228,10 +209,10 @@ export function RetailFilterPanel({
 
           {/* Brands */}
           <div className="sm:col-span-2">
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">
+            <p className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">
               Marque
             </p>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex max-h-24 flex-wrap gap-1 overflow-y-auto">
               <Chip active={!draft.brand} onClick={() => onChange({ brand: "" })}>
                 Toutes
               </Chip>
@@ -253,10 +234,10 @@ export function RetailFilterPanel({
 
           {/* Shops */}
           <div className="sm:col-span-2">
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">
+            <p className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">
               Enseigne
             </p>
-            <div className="flex max-h-28 flex-wrap gap-1.5 overflow-y-auto">
+            <div className="flex max-h-24 flex-wrap gap-1 overflow-y-auto">
               <Chip active={!draft.shop} onClick={() => onChange({ shop: "" })}>
                 Toutes
               </Chip>
@@ -277,10 +258,10 @@ export function RetailFilterPanel({
             Object.entries(facets.specs).map(([id, group]) =>
               group.values.length > 0 ? (
                 <div key={id} className="sm:col-span-2 lg:col-span-1">
-                  <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">
+                  <p className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">
                     {group.label}
                   </p>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-1">
                     <Chip
                       active={
                         (id === "ram" && !draft.specRam) ||
@@ -323,25 +304,7 @@ export function RetailFilterPanel({
               ) : null,
             )}
         </div>
-      </div>
-
-      <div className="flex items-center justify-end gap-2 border-t border-slate-200 px-4 py-3 dark:border-white/[0.06]">
-        <button
-          type="button"
-          onClick={onReset}
-          className="rounded-xl px-3 py-2 text-xs font-semibold text-slate-500 transition hover:text-slate-800 dark:text-white/50 dark:hover:text-white"
-        >
-          Réinitialiser
-        </button>
-        <button
-          type="button"
-          onClick={onApply}
-          className="rounded-xl bg-brand-gold px-4 py-2 text-xs font-bold text-black shadow transition hover:brightness-105"
-        >
-          Appliquer
-        </button>
-      </div>
-    </div>
+    </CatalogFilterOverlay>
   );
 }
 

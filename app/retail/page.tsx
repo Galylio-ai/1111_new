@@ -8,6 +8,7 @@ import {
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/site/Reveal";
+import { HorizontalChipRow } from "@/components/catalog/HorizontalChipRow";
 import {
   RetailFilterButton,
   RetailFilterPanel,
@@ -124,7 +125,7 @@ function RetailPageInner() {
     specStorage: "",
     specScreen: "",
     matched: "",
-    sort: "price_asc",
+    sort: "price_desc",
   });
   const [dynShops, setDynShops]     = useState<{ key: string; name: string }[]>([]);
   const [dynCats, setDynCats]       = useState<{ id: number; name: string; slug: string }[]>([]);
@@ -190,7 +191,7 @@ function RetailPageInner() {
       spec_storage: filterDraft.specStorage || null,
       spec_screen: filterDraft.specScreen || null,
       matched: filterDraft.matched || null,
-      sort: filterDraft.sort === "price_asc" ? null : filterDraft.sort,
+      sort: filterDraft.sort === "price_desc" ? null : filterDraft.sort,
     });
     setFiltersOpen(false);
   };
@@ -198,7 +199,7 @@ function RetailPageInner() {
   const setSort = useCallback(
     (sort: RetailSortOption) => {
       setPage(0);
-      replaceParams({ sort: sort === "price_asc" ? null : sort });
+      replaceParams({ sort: sort === "price_desc" ? null : sort });
     },
     [replaceParams],
   );
@@ -215,7 +216,7 @@ function RetailPageInner() {
       specStorage: "",
       specScreen: "",
       matched: "",
-      sort: "price_asc",
+      sort: "price_desc",
     });
     replaceParams({
       cat: null,
@@ -368,40 +369,18 @@ function RetailPageInner() {
       </div>
 
       {/* ── Categories ────────────────────────────────────────────────────── */}
-      <section className="mx-auto mt-4 max-w-[1600px] px-4 sm:mt-8">
-        <Reveal>
-          <div className="mb-2.5 flex items-center justify-between sm:mb-4">
-            <h2 className="text-base font-black text-slate-900 sm:text-lg dark:text-white">
-              Catégories <span className="gradient-text-gold">magasins</span>
-            </h2>
-            <span className="text-[10px] font-medium text-slate-400 dark:text-white/35 sm:hidden">Glisser →</span>
-          </div>
-        </Reveal>
-        <div className="-mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:snap-none sm:grid-cols-4 sm:gap-3 sm:overflow-visible sm:px-0">
-          {categories.map((cat, i) => (
-            <Reveal key={cat.id} delay={i * 0.05} className="shrink-0 snap-start sm:shrink sm:w-auto">
-              <button
-                type="button"
-                onClick={() => setActiveCat(isCatFilterActive(cat.id, catFromUrl) ? "" : cat.id)}
-                className={`group relative w-[7.25rem] overflow-hidden rounded-xl border transition active:scale-[0.98] sm:w-full sm:rounded-2xl sm:hover:-translate-y-0.5 ${
-                  isCatFilterActive(cat.id, catFromUrl)
-                    ? "border-brand-gold/60 shadow-[0_0_12px_-4px_rgba(246,196,83,0.5)]"
-                    : "border-slate-200 dark:border-white/[0.06]"
-                }`}
-              >
-                <div className="relative h-[5rem] w-full overflow-hidden bg-slate-100 dark:bg-white/[0.04] sm:h-32 md:h-36">
-                  <img src={cat.img} alt={cat.fr} className="h-full w-full object-cover transition duration-500 group-hover:scale-110" loading="lazy" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
-                  {isCatFilterActive(cat.id, catFromUrl) && <div className="absolute inset-0 rounded-xl ring-2 ring-inset ring-brand-gold/70 sm:rounded-2xl" />}
-                  <div className="absolute bottom-1.5 left-0 right-0 px-1.5 sm:bottom-3 sm:px-3">
-                    <div className="line-clamp-2 text-[9px] font-black leading-tight text-white drop-shadow sm:text-sm">{cat.fr}</div>
-                    <div className="font-arabic hidden text-[9px] text-white/60 sm:mt-0.5 sm:block sm:text-[11px]" dir="rtl">{cat.ar}</div>
-                  </div>
-                </div>
-              </button>
-            </Reveal>
-          ))}
-        </div>
+      <section className="mt-4 sm:mt-8">
+        <HorizontalChipRow
+          title="Catégories"
+          titleAccent="magasins"
+          activeId={categories.find((c) => isCatFilterActive(c.id, catFromUrl))?.id ?? ""}
+          onSelect={(id) => setActiveCat(isCatFilterActive(id, catFromUrl) ? "" : id)}
+          items={categories.map((cat) => ({
+            id: cat.id,
+            label: cat.fr,
+            image: cat.img,
+          }))}
+        />
       </section>
 
       {/* ── Search + filters ──────────────────────────────────────────────── */}

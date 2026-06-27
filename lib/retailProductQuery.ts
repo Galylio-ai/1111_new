@@ -1,4 +1,4 @@
-import { normalizeSearchText, slugifySearch, SKU_SPEC_KEYS } from "@/lib/productSearch";
+import { normalizeSearchText, appendProductSearch } from "@/lib/productSearch";
 
 export const RETAIL_FILTER_SPECS = [
   {
@@ -22,8 +22,8 @@ export const RETAIL_FILTER_SPECS = [
 ] as const;
 
 export const RETAIL_SORT_OPTIONS = [
-  { value: "price_asc", label: "Prix croissant" },
   { value: "price_desc", label: "Prix décroissant" },
+  { value: "price_asc", label: "Prix croissant" },
   { value: "shops_desc", label: "Plus de boutiques" },
   { value: "shops_asc", label: "Moins de boutiques" },
   { value: "name_asc", label: "Nom A → Z" },
@@ -55,7 +55,7 @@ export function parseRetailListFilters(sp: URLSearchParams): RetailListFilters {
   const minPrice = minRaw != null && minRaw !== "" ? parseFloat(minRaw) : null;
   const maxPrice = maxRaw != null && maxRaw !== "" ? parseFloat(maxRaw) : null;
 
-  const sortRaw = sp.get("sort") ?? "price_asc";
+  const sortRaw = sp.get("sort") ?? "price_desc";
 
   return {
     cat: (sp.get("cat") ?? "").trim().toLowerCase(),
@@ -68,7 +68,7 @@ export function parseRetailListFilters(sp: URLSearchParams): RetailListFilters {
     specRam: (sp.get("spec_ram") ?? "").trim(),
     specStorage: (sp.get("spec_storage") ?? "").trim(),
     specScreen: (sp.get("spec_screen") ?? "").trim(),
-    sort: VALID_SORTS.has(sortRaw) ? (sortRaw as RetailSortOption) : "price_asc",
+    sort: VALID_SORTS.has(sortRaw) ? (sortRaw as RetailSortOption) : "price_desc",
   };
 }
 
@@ -117,11 +117,15 @@ function resolveRetailOrderBy(sort: RetailSortOption, searchRelevanceOrder: stri
     case "name_desc":
       return "p.name DESC";
     case "price_asc":
-    default:
       if (searchRelevanceOrder) {
         return `${searchRelevanceOrder}, ${priceAsc}`;
       }
       return priceAsc;
+    default:
+      if (searchRelevanceOrder) {
+        return `${searchRelevanceOrder}, ${priceDesc}`;
+      }
+      return priceDesc;
   }
 }
 
@@ -155,60 +159,8 @@ export function buildRetailProductQuery(filters: RetailListFilters) {
   }
 
   if (filters.q) {
-    const qLower = filters.q.toLowerCase();
-    const slugQ = slugifySearch(filters.q);
-    const like = `%${qLower}%`;
-    const prefix = `${qLower}%`;
-    params.push(qLower, slugQ, like, SKU_SPEC_KEYS, prefix);
-    const qIdx = params.length - 4;
-    const slugIdx = params.length - 3;
-    const likeIdx = params.length - 2;
-    const skuKeysIdx = params.length - 1;
-    const prefixIdx = params.length;
-
-    conditions.push(`(
-      lower(regexp_replace(trim(p.name), '\\s+', ' ', 'g')) = $${qIdx}
-      OR lower(coalesce(p.source_product_id, '')) = $${qIdx}
-      OR lower(p.slug) = $${slugIdx}
-      OR lower(p.name) LIKE $${likeIdx}
-      OR lower(coalesce(b.name, '')) LIKE $${likeIdx}
-      OR lower(coalesce(p.source_product_id, '')) LIKE $${likeIdx}
-      OR EXISTS (
-        SELECT 1 FROM product_specs ps_q
-        WHERE ps_q.product_id = p.id
-          AND (
-            lower(ps_q.spec_value) = $${qIdx}
-            OR (ps_q.spec_key = ANY($${skuKeysIdx}::text[]) AND lower(ps_q.spec_value) LIKE $${likeIdx})
-          )
-      )
-    )`);
-
-    searchRelevanceOrder = `
-      MIN(
-        CASE
-          WHEN lower(regexp_replace(trim(p.name), '\\s+', ' ', 'g')) = $${qIdx} THEN 0
-          WHEN lower(coalesce(p.source_product_id, '')) = $${qIdx} THEN 1
-          WHEN lower(p.slug) = $${slugIdx} THEN 2
-          WHEN EXISTS (
-            SELECT 1 FROM product_specs ps_r
-            WHERE ps_r.product_id = p.id AND lower(ps_r.spec_value) = $${qIdx}
-          ) THEN 3
-          WHEN lower(p.name) LIKE $${prefixIdx} THEN 4
-          WHEN lower(p.name) LIKE $${likeIdx} THEN 5
-          WHEN lower(coalesce(b.name, '')) LIKE $${likeIdx} THEN 6
-          WHEN lower(coalesce(p.source_product_id, '')) LIKE $${likeIdx} THEN 7
-          WHEN EXISTS (
-            SELECT 1 FROM product_specs ps_r
-            WHERE ps_r.product_id = p.id
-              AND ps_r.spec_key = ANY($${skuKeysIdx}::text[])
-              AND lower(ps_r.spec_value) LIKE $${likeIdx}
-          ) THEN 8
-          ELSE 9
-        END
-      ) ASC,
-      length(p.name) ASC,
-      p.name ASC
-    `;
+    const searchOrder = appendProductSearch(filters.q, conditions, params);
+    if (searchOrder) searchRelevanceOrder = searchOrder;
   }
 
   if (filters.shop) {
