@@ -18,11 +18,16 @@ type ScopePayload = {
 };
 
 const SKELETON = (
-  <div className="animate-pulse overflow-hidden rounded-xl border border-slate-200 dark:border-white/[0.08]">
+  <div className="animate-pulse overflow-hidden rounded-2xl border border-bg-border bg-bg-card">
     <div className="aspect-[16/10] bg-slate-100 dark:bg-white/[0.04]" />
-    <div className="space-y-3 p-4">
-      <div className="h-16 rounded-lg bg-slate-100 dark:bg-white/[0.04]" />
-      <div className="h-10 rounded-lg bg-slate-100 dark:bg-white/[0.04]" />
+    <div className="space-y-2 p-4">
+      <div className="h-3 w-24 rounded bg-slate-100 dark:bg-white/[0.04]" />
+      <div className="h-12 rounded-xl bg-slate-100 dark:bg-white/[0.04]" />
+      <div className="h-12 rounded-xl bg-slate-100 dark:bg-white/[0.04]" />
+      <div className="h-12 rounded-xl bg-slate-100 dark:bg-white/[0.04]" />
+    </div>
+    <div className="border-t border-bg-border p-4 dark:border-white/[0.06]">
+      <div className="h-10 rounded-xl bg-slate-100 dark:bg-white/[0.04]" />
     </div>
   </div>
 );
