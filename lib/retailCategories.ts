@@ -12,7 +12,6 @@ import {
   Heart,
   Home,
   Laptop,
-  MoreHorizontal,
   PawPrint,
   Printer,
   Shirt,
@@ -57,7 +56,6 @@ const TOP_ICONS: Record<string, LucideIcon> = {
   energy_power: BatteryCharging,
   pets: PawPrint,
   gifts_collections: Gift,
-  other: MoreHorizontal,
 };
 
 const TOP_SHORT_LABELS: Record<string, string> = {
@@ -78,7 +76,6 @@ const TOP_SHORT_LABELS: Record<string, string> = {
   energy_power: "Énergie",
   pets: "Animalerie",
   gifts_collections: "Cadeaux",
-  other: "Autre",
 };
 
 export type NavRetailTop = RetailTopCategory & {

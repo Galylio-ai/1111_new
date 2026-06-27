@@ -1,6 +1,6 @@
 "use client";
 
-import { FilterChip } from "@/components/catalog/CatalogFilterOverlay";
+import { FilterChip, FilterSectionLabel } from "@/components/catalog/CatalogFilterOverlay";
 import { CatalogFilterOverlay } from "@/components/catalog/CatalogFilterOverlay";
 import { CATALOG_SORT_OPTIONS, type CatalogSortOption } from "@/lib/catalogFilters";
 
@@ -17,11 +17,7 @@ type ShopOption = { key: string; name: string };
 type CatOption = { id: string; label: string };
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">
-      {children}
-    </p>
-  );
+  return <FilterSectionLabel>{children}</FilterSectionLabel>;
 }
 
 export function SimpleCatalogFilterPanel({
@@ -58,10 +54,10 @@ export function SimpleCatalogFilterPanel({
       onApply={onApply}
       onReset={onReset}
     >
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-6 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <SectionLabel>Trier par</SectionLabel>
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-2">
             {CATALOG_SORT_OPTIONS.map((opt) => (
               <FilterChip
                 key={opt.value}
@@ -77,7 +73,7 @@ export function SimpleCatalogFilterPanel({
         {showSimilarToggle && (
           <div>
             <SectionLabel>Type</SectionLabel>
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-2">
               <FilterChip active={!draft.similar} onClick={() => onChange({ similar: false })}>
                 Catalogue
               </FilterChip>
@@ -90,14 +86,14 @@ export function SimpleCatalogFilterPanel({
 
         <div>
           <SectionLabel>Prix (DT)</SectionLabel>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <input
               type="number"
               min={0}
               placeholder="Min"
               value={draft.minPrice}
               onChange={(e) => onChange({ minPrice: e.target.value })}
-              className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs outline-none focus:border-brand-gold/50 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-brand-gold/50 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
             />
             <span className="text-slate-400">—</span>
             <input
@@ -106,7 +102,7 @@ export function SimpleCatalogFilterPanel({
               placeholder="Max"
               value={draft.maxPrice}
               onChange={(e) => onChange({ maxPrice: e.target.value })}
-              className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs outline-none focus:border-brand-gold/50 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-brand-gold/50 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
             />
           </div>
         </div>
@@ -114,7 +110,7 @@ export function SimpleCatalogFilterPanel({
         {categories && categories.length > 0 && (
           <div className="sm:col-span-2">
             <SectionLabel>Catégorie</SectionLabel>
-            <div className="flex max-h-24 flex-wrap gap-1 overflow-y-auto">
+            <div className="flex max-h-36 flex-wrap gap-2 overflow-y-auto pr-1">
               <FilterChip active={!draft.cat} onClick={() => onChange({ cat: "" })}>
                 Toutes
               </FilterChip>
@@ -133,7 +129,7 @@ export function SimpleCatalogFilterPanel({
 
         <div className="sm:col-span-2">
           <SectionLabel>Enseigne</SectionLabel>
-          <div className="flex max-h-24 flex-wrap gap-1 overflow-y-auto">
+          <div className="flex max-h-36 flex-wrap gap-2 overflow-y-auto pr-1">
             <FilterChip active={!draft.shop} onClick={() => onChange({ shop: "" })}>
               Toutes
             </FilterChip>

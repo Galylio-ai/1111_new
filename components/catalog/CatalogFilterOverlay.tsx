@@ -17,14 +17,22 @@ export function FilterChip({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold transition sm:px-2.5 sm:py-1 sm:text-[11px] ${
+      className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition sm:px-3.5 sm:py-2 sm:text-sm ${
         active
-          ? "border-brand-gold/50 bg-brand-gold/15 text-brand-gold"
-          : "border-slate-200 bg-white text-slate-600 hover:border-brand-gold/30 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/70"
+          ? "border-brand-gold/60 bg-brand-gold/15 text-brand-gold shadow-[0_0_0_1px_rgba(246,196,83,0.2)]"
+          : "border-slate-200 bg-slate-50 text-slate-700 hover:border-brand-gold/35 hover:bg-white dark:border-white/10 dark:bg-white/[0.05] dark:text-white/80 dark:hover:border-brand-gold/30"
       }`}
     >
       {children}
     </button>
+  );
+}
+
+export function FilterSectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="mb-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-white/45">
+      {children}
+    </p>
   );
 }
 
@@ -53,67 +61,79 @@ export function CatalogFilterOverlay({
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
     };
-  }, [open]);
+  }, [open, onClose]);
 
   if (!open || !mounted) return null;
 
   return createPortal(
-    <>
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6">
       <button
         type="button"
         aria-label="Fermer les filtres"
-        className="fixed inset-0 z-[90] bg-black/50 backdrop-blur-[2px] animate-in fade-in duration-200"
+        className="absolute inset-0 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-200"
         onClick={onClose}
       />
-      <div className="fixed inset-x-0 top-[3.75rem] z-[100] mx-auto max-h-[min(78vh,540px)] w-full max-w-[1600px] px-3 sm:top-16 sm:px-4">
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="flex max-h-[inherit] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-white/10 dark:bg-[#0f1422]"
-        >
-          <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-3 py-2.5 dark:border-white/[0.06] sm:px-4">
-            <div className="flex items-center gap-2">
-              <SlidersHorizontal className="h-4 w-4 text-brand-gold" />
-              <h3 className="text-sm font-black text-slate-900 dark:text-white">{title}</h3>
-              {activeCount > 0 && (
-                <span className="rounded-full bg-brand-gold/20 px-1.5 py-0.5 text-[10px] font-bold text-brand-gold">
-                  {activeCount}
-                </span>
-              )}
+
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="catalog-filter-title"
+        className="relative z-10 flex max-h-[min(92vh,760px)] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_24px_80px_-12px_rgba(0,0,0,0.45)] animate-in zoom-in-95 fade-in duration-200 dark:border-white/10 dark:bg-[#0c101c] lg:max-w-4xl xl:max-w-5xl"
+      >
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-5 py-4 dark:border-white/[0.06] dark:from-white/[0.03] dark:to-transparent sm:px-6">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-gold/15 text-brand-gold ring-1 ring-brand-gold/25">
+              <SlidersHorizontal className="h-5 w-5" />
+            </span>
+            <div>
+              <h3 id="catalog-filter-title" className="text-base font-black text-slate-900 sm:text-lg dark:text-white">
+                {title}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-white/45">Affinez votre recherche</p>
             </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-white/10 dark:hover:text-white"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            {activeCount > 0 && (
+              <span className="rounded-full bg-brand-gold px-2.5 py-1 text-xs font-black text-black">
+                {activeCount} actif{activeCount > 1 ? "s" : ""}
+              </span>
+            )}
           </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-white/10 dark:hover:text-white"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6 sm:py-6">{children}</div>
 
-          <div className="flex shrink-0 items-center justify-end gap-2 border-t border-slate-100 px-3 py-2.5 dark:border-white/[0.06] sm:px-4">
-            <button
-              type="button"
-              onClick={onReset}
-              className="rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-500 transition hover:text-slate-800 dark:text-white/50 dark:hover:text-white"
-            >
-              Réinitialiser
-            </button>
-            <button
-              type="button"
-              onClick={onApply}
-              className="rounded-lg bg-brand-gold px-4 py-1.5 text-xs font-bold text-black shadow transition hover:brightness-105"
-            >
-              Appliquer
-            </button>
-          </div>
+        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-slate-100 bg-slate-50/80 px-5 py-4 dark:border-white/[0.06] dark:bg-white/[0.02] sm:px-6">
+          <button
+            type="button"
+            onClick={onReset}
+            className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-500 transition hover:bg-white hover:text-slate-800 dark:text-white/50 dark:hover:bg-white/10 dark:hover:text-white"
+          >
+            Réinitialiser
+          </button>
+          <button
+            type="button"
+            onClick={onApply}
+            className="rounded-xl bg-brand-gold px-6 py-2.5 text-sm font-bold text-black shadow-lg shadow-brand-gold/20 transition hover:brightness-105"
+          >
+            Appliquer les filtres
+          </button>
         </div>
       </div>
-    </>,
+    </div>,
     document.body,
   );
 }

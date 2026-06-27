@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { SlidersHorizontal } from "lucide-react";
-import { CatalogFilterOverlay, FilterChip } from "@/components/catalog/CatalogFilterOverlay";
+import { CatalogFilterOverlay, FilterChip, FilterSectionLabel } from "@/components/catalog/CatalogFilterOverlay";
 import { getMagasinsNavCategories, slugsForTop } from "@/lib/retailCategories";
 import { RETAIL_SORT_OPTIONS, type RetailSortOption } from "@/lib/retailProductQuery";
 
@@ -118,13 +118,11 @@ export function RetailFilterPanel({
       onApply={onApply}
       onReset={onReset}
     >
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {/* Sort */}
           <div className="sm:col-span-2 lg:col-span-3">
-            <p className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">
-              Trier par
-            </p>
-            <div className="flex flex-wrap gap-1">
+            <FilterSectionLabel>Trier par</FilterSectionLabel>
+            <div className="flex flex-wrap gap-2">
               {sortOptions.map((opt) => (
                 <Chip
                   key={opt.value}
@@ -139,10 +137,8 @@ export function RetailFilterPanel({
 
           {/* Type */}
           <div>
-            <p className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">
-              Type de produit
-            </p>
-            <div className="flex flex-wrap gap-1">
+            <FilterSectionLabel>Type de produit</FilterSectionLabel>
+            <div className="flex flex-wrap gap-2">
               {matchedOptions.map((opt) => (
                 <Chip
                   key={opt.label}
@@ -157,9 +153,7 @@ export function RetailFilterPanel({
 
           {/* Price */}
           <div>
-            <p className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">
-              Prix (DT)
-            </p>
+            <FilterSectionLabel>Prix (DT)</FilterSectionLabel>
             <div className="flex items-center gap-2">
               <input
                 type="number"
@@ -167,7 +161,7 @@ export function RetailFilterPanel({
                 placeholder={String(priceBounds.min)}
                 value={draft.minPrice}
                 onChange={(e) => onChange({ minPrice: e.target.value })}
-                className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-brand-gold/50 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-brand-gold/50 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
               />
               <span className="text-slate-400">—</span>
               <input
@@ -176,11 +170,11 @@ export function RetailFilterPanel({
                 placeholder={String(priceBounds.max)}
                 value={draft.maxPrice}
                 onChange={(e) => onChange({ maxPrice: e.target.value })}
-                className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-brand-gold/50 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-brand-gold/50 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
               />
             </div>
             {priceBounds.max > 0 && (
-              <p className="mt-1 text-[10px] text-slate-400 dark:text-white/35">
+              <p className="mt-2 text-xs text-slate-400 dark:text-white/35">
                 {priceBounds.min.toLocaleString("fr-FR")} – {priceBounds.max.toLocaleString("fr-FR")} DT
               </p>
             )}
@@ -188,10 +182,8 @@ export function RetailFilterPanel({
 
           {/* Categories */}
           <div className="sm:col-span-2 lg:col-span-1">
-            <p className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">
-              Catégorie
-            </p>
-            <div className="flex max-h-24 flex-wrap gap-1 overflow-y-auto">
+            <FilterSectionLabel>Catégorie</FilterSectionLabel>
+            <div className="flex max-h-36 flex-wrap gap-2 overflow-y-auto pr-1">
               <Chip active={!draft.cat} onClick={() => onChange({ cat: "" })}>
                 Toutes
               </Chip>
@@ -209,10 +201,8 @@ export function RetailFilterPanel({
 
           {/* Brands */}
           <div className="sm:col-span-2">
-            <p className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">
-              Marque
-            </p>
-            <div className="flex max-h-24 flex-wrap gap-1 overflow-y-auto">
+            <FilterSectionLabel>Marque</FilterSectionLabel>
+            <div className="flex max-h-36 flex-wrap gap-2 overflow-y-auto pr-1">
               <Chip active={!draft.brand} onClick={() => onChange({ brand: "" })}>
                 Toutes
               </Chip>
@@ -234,10 +224,8 @@ export function RetailFilterPanel({
 
           {/* Shops */}
           <div className="sm:col-span-2">
-            <p className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">
-              Enseigne
-            </p>
-            <div className="flex max-h-24 flex-wrap gap-1 overflow-y-auto">
+            <FilterSectionLabel>Enseigne</FilterSectionLabel>
+            <div className="flex max-h-36 flex-wrap gap-2 overflow-y-auto pr-1">
               <Chip active={!draft.shop} onClick={() => onChange({ shop: "" })}>
                 Toutes
               </Chip>
@@ -258,10 +246,8 @@ export function RetailFilterPanel({
             Object.entries(facets.specs).map(([id, group]) =>
               group.values.length > 0 ? (
                 <div key={id} className="sm:col-span-2 lg:col-span-1">
-                  <p className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">
-                    {group.label}
-                  </p>
-                  <div className="flex flex-wrap gap-1">
+                  <FilterSectionLabel>{group.label}</FilterSectionLabel>
+                  <div className="flex flex-wrap gap-2">
                     <Chip
                       active={
                         (id === "ram" && !draft.specRam) ||

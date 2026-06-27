@@ -199,13 +199,5 @@
       { "id": "best_sellers", "nom": "Meilleures ventes" },
       { "id": "promotions_deals", "nom": "Promotions et offres" }
     ]
-  },
-  {
-    "id": "other",
-    "nom": "Autre",
-    "sous_categories": [
-      { "id": "uncategorized", "nom": "Non catégorisé" },
-      { "id": "ambiguous_generic_category", "nom": "Catégorie générique ambiguë" }
-    ]
   }
 ]
