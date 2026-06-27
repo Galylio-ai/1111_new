@@ -30,12 +30,25 @@ function hrefFor(p: SearchResult): string {
   return `/retail/${slug}`;
 }
 
-export function SearchModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [query, setQuery] = useState("");
+export function SearchModal({
+  open,
+  onClose,
+  initialQuery = "",
+}: {
+  open: boolean;
+  onClose: () => void;
+  initialQuery?: string;
+}) {
+  const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  // Sync query when opened from hero chips / prefilled search
+  useEffect(() => {
+    if (open) setQuery(initialQuery);
+  }, [open, initialQuery]);
 
   // Focus the input and lock body scroll when opened
   useEffect(() => {
@@ -105,7 +118,7 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Rechercher un produit, une marque, un magasin…"
+            placeholder="Rechercher par titre, marque ou référence SKU…"
             className="min-w-0 flex-1 bg-transparent text-lg text-slate-900 placeholder:text-slate-400 focus:outline-none sm:text-2xl dark:text-white dark:placeholder:text-white/40"
           />
           {query && (

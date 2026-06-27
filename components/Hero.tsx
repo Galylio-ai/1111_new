@@ -57,6 +57,12 @@ export function Hero() {
   const [data, setData]             = useState<MarketData>(FALLBACK);
   const [grocery, setGrocery]       = useState<GroceryCrossingPayload>(FALLBACK_GROCERY);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchSeed, setSearchSeed] = useState("");
+
+  const openSearch = (seed = "") => {
+    setSearchSeed(seed);
+    setSearchOpen(true);
+  };
 
   useEffect(() => {
     fetch("/api/market-index")
@@ -81,7 +87,7 @@ export function Hero() {
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        setSearchOpen(true);
+        openSearch();
       }
     }
     window.addEventListener("keydown", onKey);
@@ -140,12 +146,12 @@ export function Hero() {
 
               <button
                 type="button"
-                onClick={() => setSearchOpen(true)}
+                onClick={() => openSearch()}
                 className="group mt-2 md:mt-4 flex w-full items-center gap-1 sm:gap-2 rounded-2xl border border-slate-300 bg-white p-1 sm:p-1.5 text-left shadow-inner transition hover:border-brand-gold/50 hover:shadow-[0_0_0_3px_rgba(246,196,83,0.12)] dark:border-bg-border dark:bg-bg-900 dark:hover:border-brand-gold/40"
               >
                 <Search className="ml-1 h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 shrink-0 text-slate-400 transition group-hover:text-brand-gold dark:text-white/50" />
                 <span className="min-w-0 flex-1 truncate px-1 py-1 sm:py-2 text-[11px] sm:text-xs md:text-sm text-slate-400 dark:text-white/40">
-                  Rechercher un produit, marque…
+                  Titre, marque ou référence SKU…
                 </span>
                 <kbd className="mr-1 hidden shrink-0 rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 sm:inline-block dark:border-white/10 dark:bg-white/5 dark:text-white/50">
                   ⌘K
@@ -155,9 +161,14 @@ export function Hero() {
 
               <div className="mt-2 md:mt-3 flex flex-wrap justify-start gap-1 sm:gap-1.5 md:gap-2">
                 {tags.map((t) => (
-                  <Link key={t} href="/categories" className="chip">
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => openSearch(t)}
+                    className="chip"
+                  >
                     {t}
-                  </Link>
+                  </button>
                 ))}
               </div>
             </div>
@@ -225,7 +236,11 @@ export function Hero() {
         </div>
       </div>
 
-      <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
+      <SearchModal
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        initialQuery={searchSeed}
+      />
     </section>
   );
 }
