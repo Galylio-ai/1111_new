@@ -47,9 +47,9 @@ const TOP_SHORT_LABELS: Record<string, string> = {
   gaming_consoles: "Gaming",
   home_appliances: "Électroménager",
   tv_audio_photo: "TV & Son",
-  office_printing_school: "Bureau",
-  home_garden_diy: "Maison",
-  energy_power: "Énergie",
+  office_printing_school: "Imprimante et Bureau",
+  home_garden_diy: "Jardinage",
+  energy_power: "Onduleur",
 };
 
 export type NavRetailTop = RetailTopCategory & {
@@ -123,21 +123,21 @@ export const RETAIL_PAGE_CARDS = [
   },
   {
     topId: "office_printing_school",
-    fr: "Bureau",
-    ar: "المكتب",
-    img: "/categories/bureau.jpg",
+    fr: "Imprimante et Bureau",
+    ar: "طابعة ومكتب",
+    img: "/categories/imprimante-bureau.jpg",
   },
   {
     topId: "home_garden_diy",
-    fr: "Maison",
-    ar: "المنزل",
-    img: "/categories/maison.jpg",
+    fr: "Jardinage",
+    ar: "البستنة",
+    img: "/categories/jardinage.jpg",
   },
   {
     topId: "energy_power",
-    fr: "Énergie",
-    ar: "الطاقة",
-    img: "/categories/energie.jpg",
+    fr: "Onduleur",
+    ar: "أوندولور",
+    img: "/categories/onduleur.jpg",
   },
 ] as const;
 

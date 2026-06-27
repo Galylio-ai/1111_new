@@ -95,25 +95,25 @@ export function EssentialBasketDetail() {
 
   return (
     <div className="min-w-0 space-y-5 sm:space-y-6">
-      <div className="relative overflow-hidden rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950/90 via-slate-950/95 to-slate-950 p-5 sm:p-8">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-400/80">
+      <div className="relative overflow-hidden rounded-2xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50/90 via-white to-slate-50 p-5 sm:p-8 dark:border-emerald-500/20 dark:from-emerald-950/90 dark:via-slate-950/95 dark:to-slate-950">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-400/80">
           Grande distribution · Panier essentiel
         </p>
-        <h2 className="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl">
+        <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl dark:text-white">
           Quel supermarché pour un panier de base ?
         </h2>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/65">
-          Comparaison <strong className="text-white/90">stricte</strong> : les mêmes{" "}
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-white/65">
+          Comparaison <strong className="text-slate-900 dark:text-white/90">stricte</strong> : les mêmes{" "}
           {fiveShop.productCount} produits, disponibles simultanément chez Carrefour, Carrefour Market,
           Carrefour Express, Monoprix et Géant. Le total est la somme des prix affichés en ligne.
         </p>
         {leader && (
-          <p className="mt-3 text-sm font-semibold text-emerald-300">
+          <p className="mt-3 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
             {shopDisplayName(leader.shop)} en tête à {fmtDt(leader.total)} DT — économie jusqu&apos;à{" "}
             {fmtDt(fiveShop.maxSavings)} DT vs l&apos;enseigne la plus chère.
           </p>
         )}
-        {updated && <p className="mt-2 text-[11px] text-white/40">Dernière analyse · {updated}</p>}
+        {updated && <p className="mt-2 text-[11px] text-slate-400 dark:text-white/40">Dernière analyse · {updated}</p>}
       </div>
 
       <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-4">
@@ -158,30 +158,6 @@ export function EssentialBasketDetail() {
         </h3>
         <ProductTable rows={fiveShop.rows} shops={fiveShop.shops} />
       </div>
-
-      {fiveShop.excludedNotes.length > 0 && (
-        <div className="rounded-2xl border border-amber-200/80 bg-amber-50/50 p-5 dark:border-amber-400/15 dark:bg-amber-500/[0.06]">
-          <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
-            <Info className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-            Produits exclus du panier strict
-          </h3>
-          <p className="mt-1 text-xs text-slate-600 dark:text-white/55">
-            Ces familles n&apos;ont pas pu être comparées sur le même produit dans les 5 enseignes.
-          </p>
-          <ul className="mt-3 space-y-2">
-            {fiveShop.excludedNotes.map((note) => (
-              <li
-                key={note.category}
-                className="rounded-lg border border-amber-200/60 bg-white/80 px-3 py-2 text-xs dark:border-amber-400/10 dark:bg-white/[0.03]"
-              >
-                <span className="font-bold text-amber-800 dark:text-amber-300">{note.category}</span>
-                <span className="text-slate-500 dark:text-white/45"> · {note.status}</span>
-                <p className="mt-1 leading-relaxed text-slate-600 dark:text-white/60">{note.note}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
 
       <div className="rounded-2xl border border-slate-200 bg-white dark:border-white/[0.08] dark:bg-bg-800">
         <div className="border-b border-slate-200 px-5 py-4 dark:border-white/[0.06]">

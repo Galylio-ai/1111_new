@@ -16,6 +16,8 @@ export type SearchProduct = {
 
 const SKU_SPEC_KEYS = ["gtin", "sku", "reference", "normalized_sku", "ean", "barcode"];
 
+export { SKU_SPEC_KEYS };
+
 export function normalizeSearchText(q: string): string {
   return q.trim().replace(/\s+/g, " ");
 }

@@ -31,7 +31,7 @@ function RankingRow({ row }: { row: ShopRankingRow }) {
     <li
       className={`grid grid-cols-[1fr_5rem_5rem] items-center gap-x-3 px-1 py-2 text-sm transition ${
         row.isCheapest
-          ? "rounded-lg bg-emerald-500/10"
+          ? "rounded-lg bg-emerald-50 ring-1 ring-emerald-200/60 dark:bg-emerald-500/10 dark:ring-transparent"
           : "hover:bg-slate-50 dark:hover:bg-white/[0.03]"
       }`}
     >

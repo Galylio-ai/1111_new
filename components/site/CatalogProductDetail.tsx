@@ -508,7 +508,7 @@ export function CatalogProductDetail({
             </div>
 
             {/* Description + caractéristiques */}
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2">
               <div className="rounded-2xl border border-bg-border bg-bg-card p-5 shadow-card sm:p-6">
                 <h2 className="section-title mb-4 flex items-center gap-2">
                   <FileText className="h-4 w-4 shrink-0 text-brand-gold" />

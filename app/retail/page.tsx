@@ -1,105 +1,21 @@
 "use client";
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowRight, BadgeCheck, ChevronDown, ChevronRight, Loader2, Monitor, Search, Store, Tag, X,
+  ArrowRight, BadgeCheck, ChevronRight, Loader2, Monitor, Search, Store, Tag, X,
 } from "lucide-react";
-
-/* ── Custom searchable dropdown ──────────────────────────────────────────── */
-function Dropdown({
-  value, onChange, options, placeholder,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  options: { value: string; label: string }[];
-  placeholder: string;
-}) {
-  const [open, setOpen]       = useState(false);
-  const [search, setSearch]   = useState("");
-  const ref                   = useRef<HTMLDivElement>(null);
-  const inputRef              = useRef<HTMLInputElement>(null);
-  const selected              = options.find(o => o.value === value);
-  const filtered              = search.trim()
-    ? options.filter(o => o.label.toLowerCase().includes(search.toLowerCase()))
-    : options;
-
-  useEffect(() => {
-    function handler(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false); setSearch("");
-      }
-    }
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  useEffect(() => {
-    if (open) setTimeout(() => inputRef.current?.focus(), 50);
-    else setSearch("");
-  }, [open]);
-
-  return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen(o => !o)}
-        className="flex h-[42px] min-w-[170px] items-center justify-between gap-2 rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition hover:border-brand-gold/40 dark:border-white/10 dark:bg-white/[0.06] dark:text-white"
-      >
-        <span className={`truncate max-w-[140px] ${selected ? "" : "text-slate-400 dark:text-white/35"}`}>
-          {selected ? selected.label : placeholder}
-        </span>
-        <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform text-slate-400 dark:text-white/40 ${open ? "rotate-180" : ""}`} />
-      </button>
-
-      {open && (
-        <div className="absolute left-0 top-[46px] z-50 w-64 rounded-xl border border-slate-200 bg-white shadow-xl dark:border-white/10 dark:bg-[#0f1422]">
-          {/* search input */}
-          <div className="p-2 border-b border-slate-100 dark:border-white/[0.06]">
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400 dark:text-white/30" />
-              <input
-                ref={inputRef}
-                type="text"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Rechercher…"
-                className="w-full rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-7 pr-3 text-xs text-slate-700 outline-none placeholder:text-slate-400 focus:border-brand-gold/40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/30"
-              />
-            </div>
-          </div>
-          {/* list */}
-          <div className="max-h-56 overflow-y-auto">
-            <button
-              type="button"
-              onClick={() => { onChange(""); setOpen(false); setSearch(""); }}
-              className={`w-full px-4 py-2 text-left text-sm transition hover:bg-slate-50 dark:hover:bg-white/[0.06] ${!value ? "font-bold text-brand-gold" : "text-slate-500 dark:text-white/50"}`}
-            >
-              {placeholder}
-            </button>
-            {filtered.length === 0 && (
-              <p className="px-4 py-3 text-xs text-slate-400 dark:text-white/30">Aucun résultat</p>
-            )}
-            {filtered.map(o => (
-              <button
-                key={o.value}
-                type="button"
-                onClick={() => { onChange(o.value); setOpen(false); setSearch(""); }}
-                className={`w-full px-4 py-2 text-left text-sm transition hover:bg-slate-50 dark:hover:bg-white/[0.06] ${value === o.value ? "font-bold text-brand-gold bg-brand-gold/5" : "text-slate-700 dark:text-white/80"}`}
-              >
-                {o.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/site/Reveal";
+import {
+  RetailFilterButton,
+  RetailFilterPanel,
+  RetailSortSelect,
+  type RetailFilterDraft,
+} from "@/components/RetailFilterPanel";
 import { RETAIL_PAGE_CARDS, retailPageCardSlug } from "@/lib/retailCategories";
+import { countActiveRetailFilters, parseRetailListFilters, type RetailSortOption } from "@/lib/retailProductQuery";
 
 type Product = {
   name: string;
@@ -175,10 +91,20 @@ function RetailPageInner() {
   const sp = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const scrollOnPageChange = useRef(false);
 
   const catFromUrl = sp.get("cat") ?? "";
   const shopFromUrl = sp.get("shop") ?? "";
   const qFromUrl = sp.get("q") ?? "";
+  const brandFromUrl = sp.get("brand") ?? "";
+  const minFromUrl = sp.get("min") ?? "";
+  const maxFromUrl = sp.get("max") ?? "";
+  const specRamFromUrl = sp.get("spec_ram") ?? "";
+  const specStorageFromUrl = sp.get("spec_storage") ?? "";
+  const specScreenFromUrl = sp.get("spec_screen") ?? "";
+  const matchedFromUrl = sp.get("matched") ?? "";
+  const sortFromUrl = parseRetailListFilters(sp).sort;
 
   const [products, setProducts]   = useState<Product[]>([]);
   const [total, setTotal]         = useState(0);
@@ -187,13 +113,26 @@ function RetailPageInner() {
   const [page, setPage]           = useState(0);
   const [loading, setLoading]     = useState(false);
   const [search, setSearch] = useState(qFromUrl);
-  // "all" | "matched" | "catalog"
-  const [viewMode, setViewMode] = useState<"all" | "matched" | "catalog">("all");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filterDraft, setFilterDraft] = useState<RetailFilterDraft>({
+    cat: "",
+    shop: "",
+    brand: "",
+    minPrice: "",
+    maxPrice: "",
+    specRam: "",
+    specStorage: "",
+    specScreen: "",
+    matched: "",
+    sort: "price_asc",
+  });
   const [dynShops, setDynShops]     = useState<{ key: string; name: string }[]>([]);
   const [dynCats, setDynCats]       = useState<{ id: number; name: string; slug: string }[]>([]);
 
+  const activeFilterCount = countActiveRetailFilters(parseRetailListFilters(sp));
+
   const replaceParams = useCallback(
-    (patch: { cat?: string | null; shop?: string | null; q?: string | null }) => {
+    (patch: Record<string, string | null | undefined>) => {
       const params = new URLSearchParams(sp.toString());
       for (const [key, val] of Object.entries(patch)) {
         if (val === null || val === undefined || val === "") params.delete(key);
@@ -205,6 +144,27 @@ function RetailPageInner() {
     [router, pathname, sp],
   );
 
+  const syncDraftFromUrl = useCallback(() => {
+    setFilterDraft({
+      cat: catFromUrl,
+      shop: shopFromUrl,
+      brand: brandFromUrl,
+      minPrice: minFromUrl,
+      maxPrice: maxFromUrl,
+      specRam: specRamFromUrl,
+      specStorage: specStorageFromUrl,
+      specScreen: specScreenFromUrl,
+      matched:
+        matchedFromUrl === "true" || matchedFromUrl === "false"
+          ? matchedFromUrl
+          : "",
+      sort: sortFromUrl,
+    });
+  }, [
+    catFromUrl, shopFromUrl, brandFromUrl, minFromUrl, maxFromUrl,
+    specRamFromUrl, specStorageFromUrl, specScreenFromUrl, matchedFromUrl, sortFromUrl,
+  ]);
+
   const setActiveCat = useCallback(
     (cat: string) => {
       setPage(0);
@@ -213,28 +173,107 @@ function RetailPageInner() {
     [replaceParams],
   );
 
-  const setActiveShop = useCallback(
-    (shop: string) => {
+  const openFilters = () => {
+    syncDraftFromUrl();
+    setFiltersOpen(true);
+  };
+
+  const applyFilters = () => {
+    setPage(0);
+    replaceParams({
+      cat: filterDraft.cat || null,
+      shop: filterDraft.shop || null,
+      brand: filterDraft.brand || null,
+      min: filterDraft.minPrice || null,
+      max: filterDraft.maxPrice || null,
+      spec_ram: filterDraft.specRam || null,
+      spec_storage: filterDraft.specStorage || null,
+      spec_screen: filterDraft.specScreen || null,
+      matched: filterDraft.matched || null,
+      sort: filterDraft.sort === "price_asc" ? null : filterDraft.sort,
+    });
+    setFiltersOpen(false);
+  };
+
+  const setSort = useCallback(
+    (sort: RetailSortOption) => {
       setPage(0);
-      replaceParams({ shop: shop || null });
+      replaceParams({ sort: sort === "price_asc" ? null : sort });
     },
     [replaceParams],
   );
 
   const resetFilters = useCallback(() => {
     setPage(0);
-    replaceParams({ cat: null, shop: null });
+    setFilterDraft({
+      cat: "",
+      shop: "",
+      brand: "",
+      minPrice: "",
+      maxPrice: "",
+      specRam: "",
+      specStorage: "",
+      specScreen: "",
+      matched: "",
+      sort: "price_asc",
+    });
+    replaceParams({
+      cat: null,
+      shop: null,
+      brand: null,
+      min: null,
+      max: null,
+      spec_ram: null,
+      spec_storage: null,
+      spec_screen: null,
+      matched: null,
+      sort: null,
+    });
   }, [replaceParams]);
+
+  const goToPage = useCallback((idx: number) => {
+    scrollOnPageChange.current = true;
+    setPage(idx);
+  }, []);
 
   // Sync search input when URL changes (mega menu, back/forward, shared links)
   useEffect(() => {
     setSearch(qFromUrl);
   }, [qFromUrl]);
 
-  // Reset pagination when filters change
+  const queryString = sp.toString();
+  const filterRef = useRef(queryString);
+
+  const fetchProducts = useCallback(async (p: number, qs: string) => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams(qs);
+      params.set("page", String(p));
+      params.set("limit", String(LIMIT));
+      const res  = await fetch(`/api/retail-products?${params}`);
+      const data = await res.json();
+      setProducts(data.items);
+      setTotal(data.total);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    setPage(0);
-  }, [catFromUrl, shopFromUrl, qFromUrl, viewMode]);
+    let p = page;
+    if (filterRef.current !== queryString) {
+      filterRef.current = queryString;
+      p = 0;
+      if (page !== 0) setPage(0);
+    }
+    fetchProducts(p, queryString);
+  }, [page, queryString, fetchProducts]);
+
+  useEffect(() => {
+    if (!scrollOnPageChange.current) return;
+    scrollOnPageChange.current = false;
+    toolbarRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [page]);
 
   useEffect(() => {
     fetch("/api/retail-products?limit=1")
@@ -248,28 +287,6 @@ function RetailPageInner() {
       .catch(() => {});
   }, []);
 
-  const fetchProducts = useCallback(async (p: number, cat: string, q: string, shop: string, mode: "all" | "matched" | "catalog") => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({ page: String(p), limit: String(LIMIT) });
-      if (cat)  params.set("cat", cat);
-      if (q)    params.set("q", q);
-      if (shop) params.set("shop", shop);
-      if (mode === "matched") params.set("matched", "true");
-      if (mode === "catalog") params.set("matched", "false");
-      const res  = await fetch(`/api/retail-products?${params}`);
-      const data = await res.json();
-      setProducts(data.items);
-      setTotal(data.total);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchProducts(page, catFromUrl, qFromUrl, shopFromUrl, viewMode);
-  }, [page, catFromUrl, qFromUrl, shopFromUrl, viewMode, fetchProducts]);
-
   useEffect(() => {
     const t = setTimeout(() => {
       if (search.trim() === qFromUrl) return;
@@ -279,18 +296,30 @@ function RetailPageInner() {
   }, [search, qFromUrl, replaceParams]);
 
   const totalPages = Math.ceil(total / LIMIT);
-  const shopOptions = dynShops.length > 0
-    ? dynShops.map(s => ({ value: s.key, label: s.name }))
-    : shops.map(s => ({ value: s.key, label: s.name }));
-  const catOptions = dynCats.map(c => ({ value: c.slug, label: c.name }));
+
+  const facetQuery = useMemo(() => {
+    const p = new URLSearchParams();
+    const src = filtersOpen ? filterDraft : {
+      cat: catFromUrl,
+      shop: shopFromUrl,
+      matched: matchedFromUrl,
+    };
+    if (qFromUrl) p.set("q", qFromUrl);
+    if (src.cat) p.set("cat", src.cat);
+    if (src.shop) p.set("shop", src.shop);
+    if (src.matched) p.set("matched", src.matched);
+    return p.toString();
+  }, [filtersOpen, filterDraft, catFromUrl, shopFromUrl, qFromUrl, matchedFromUrl]);
+
+  const shopList = dynShops.length > 0 ? dynShops : shops.map((s) => ({ key: s.key, name: s.name }));
 
   return (
     <main className="min-h-screen bg-white dark:bg-[#0a0e1a]">
       <Header />
 
       {/* ── Breadcrumb ────────────────────────────────────────────────────── */}
-      <div className="mx-auto max-w-[1600px] px-4 pt-5">
-        <nav className="reveal-up mb-4 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-white/40">
+      <div className="mx-auto max-w-[1600px] px-4 pt-3 sm:pt-5">
+        <nav className="reveal-up mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-white/40 sm:mb-4 sm:text-[11px]">
           <Link href="/" className="transition hover:text-brand-gold">Accueil</Link>
           <ChevronRight className="h-3 w-3 opacity-60" />
           <span className="text-brand-gold">Magasins</span>
@@ -298,73 +327,75 @@ function RetailPageInner() {
 
         {/* ── Hero ────────────────────────────────────────────────────────── */}
         <Reveal>
-          <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50/30 p-6 sm:p-8 dark:border-white/5 dark:from-[#0f1422] dark:via-[#0f1422] dark:to-[#0f1528]">
+          <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50/30 p-4 sm:rounded-2xl sm:p-6 md:p-8 dark:border-white/5 dark:from-[#0f1422] dark:via-[#0f1422] dark:to-[#0f1528]">
             <div className="pointer-events-none absolute -left-12 -top-12 h-56 w-56 rounded-full bg-blue-500/10 blur-3xl" />
             <div className="pointer-events-none absolute right-0 top-0 h-48 w-48 rounded-full bg-brand-gold/8 blur-3xl" />
 
-            <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-              <div className="flex items-start gap-4">
-                <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-400/25 to-indigo-500/10 ring-1 ring-blue-400/30 shadow-[0_0_30px_-8px_rgba(59,130,246,0.4)] overflow-hidden">
-                  <Monitor className="h-8 w-8 text-blue-500 dark:text-blue-400" strokeWidth={1.8} />
+            <div className="relative flex flex-col gap-4 sm:gap-6 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-start gap-3 sm:gap-4">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-blue-400/25 to-indigo-500/10 ring-1 ring-blue-400/30 shadow-[0_0_30px_-8px_rgba(59,130,246,0.4)] sm:h-16 sm:w-16 sm:rounded-2xl">
+                  <Monitor className="h-6 w-6 text-blue-500 dark:text-blue-400 sm:h-8 sm:w-8" strokeWidth={1.8} />
                 </span>
                 <div>
-                  <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl dark:text-white">
+                  <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl md:text-4xl dark:text-white">
                     Magasins <span className="gradient-text-gold">Tunisie</span>
                   </h1>
-                  <p className="mt-1 font-arabic text-base text-slate-500 dark:text-white/50" dir="rtl">
+                  <p className="mt-0.5 font-arabic text-sm text-slate-500 dark:text-white/50 sm:mt-1 sm:text-base" dir="rtl">
                     التجزئة — قارن الأسعار على المنتجات التقنية والمنزلية
                   </p>
-                  <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-600 dark:text-white/65">
+                  <p className="mt-1.5 max-w-xl text-xs leading-relaxed text-slate-600 dark:text-white/65 sm:mt-2 sm:text-sm">
                     Comparez les prix de <span className="font-bold text-slate-900 dark:text-white">{totalAll > 0 ? totalAll.toLocaleString("fr-FR") : "…"}</span> produits tech & électroménager
                     sur <span className="font-bold text-slate-900 dark:text-white">{shopCount > 0 ? `${shopCount}+` : "…"} enseignes</span> tunisiennes.
                   </p>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2 shrink-0">
+              <div className="flex gap-2 shrink-0 sm:flex-wrap">
                 {[
                   { label: "Produits",   value: totalAll > 0 ? totalAll.toLocaleString("fr-FR") : "…", cls: "border-brand-gold/25 bg-brand-gold/10 text-brand-gold" },
                   { label: "Enseignes",  value: shopCount > 0 ? String(shopCount) : "…",               cls: "border-sky-500/25 bg-sky-500/10 text-sky-600 dark:text-sky-300" },
                   { label: "Catégories", value: dynCats.length > 0 ? String(dynCats.length) : "…",      cls: "border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300" },
                 ].map((c) => (
-                  <div key={c.label} className={`rounded-xl border px-4 py-2.5 ${c.cls}`}>
-                    <div className="text-xl font-black tabular-nums leading-none">{c.value}</div>
-                    <div className="mt-0.5 text-[10px] uppercase tracking-wider opacity-80">{c.label}</div>
+                  <div key={c.label} className={`flex-1 rounded-lg border px-2.5 py-1.5 sm:flex-none sm:rounded-xl sm:px-4 sm:py-2.5 ${c.cls}`}>
+                    <div className="text-base font-black tabular-nums leading-none sm:text-xl">{c.value}</div>
+                    <div className="mt-0.5 text-[9px] uppercase tracking-wider opacity-80 sm:text-[10px]">{c.label}</div>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="mt-6 h-px w-full bg-gradient-to-r from-transparent via-brand-gold/35 to-transparent" />
+            <div className="mt-4 h-px w-full bg-gradient-to-r from-transparent via-brand-gold/35 to-transparent sm:mt-6" />
           </div>
         </Reveal>
       </div>
 
       {/* ── Categories ────────────────────────────────────────────────────── */}
-      <section className="mx-auto mt-10 max-w-[1600px] px-4">
+      <section className="mx-auto mt-4 max-w-[1600px] px-4 sm:mt-8">
         <Reveal>
-          <h2 className="mb-5 text-lg font-black text-slate-900 dark:text-white">
-            Catégories <span className="gradient-text-gold">magasins</span>
-          </h2>
+          <div className="mb-2.5 flex items-center justify-between sm:mb-4">
+            <h2 className="text-base font-black text-slate-900 sm:text-lg dark:text-white">
+              Catégories <span className="gradient-text-gold">magasins</span>
+            </h2>
+            <span className="text-[10px] font-medium text-slate-400 dark:text-white/35 sm:hidden">Glisser →</span>
+          </div>
         </Reveal>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="-mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:snap-none sm:grid-cols-4 sm:gap-3 sm:overflow-visible sm:px-0">
           {categories.map((cat, i) => (
-            <Reveal key={cat.id} delay={i * 0.05}>
+            <Reveal key={cat.id} delay={i * 0.05} className="shrink-0 snap-start sm:shrink sm:w-auto">
               <button
                 type="button"
                 onClick={() => setActiveCat(isCatFilterActive(cat.id, catFromUrl) ? "" : cat.id)}
-                className={`group relative w-full overflow-hidden rounded-2xl border transition hover:-translate-y-0.5 ${
+                className={`group relative w-[7.25rem] overflow-hidden rounded-xl border transition active:scale-[0.98] sm:w-full sm:rounded-2xl sm:hover:-translate-y-0.5 ${
                   isCatFilterActive(cat.id, catFromUrl)
-                    ? "border-brand-gold/60 shadow-[0_0_16px_-4px_rgba(246,196,83,0.5)]"
+                    ? "border-brand-gold/60 shadow-[0_0_12px_-4px_rgba(246,196,83,0.5)]"
                     : "border-slate-200 dark:border-white/[0.06]"
                 }`}
               >
-                <div className="relative h-40 w-full overflow-hidden bg-slate-100 dark:bg-white/[0.04]">
+                <div className="relative h-[5rem] w-full overflow-hidden bg-slate-100 dark:bg-white/[0.04] sm:h-32 md:h-36">
                   <img src={cat.img} alt={cat.fr} className="h-full w-full object-cover transition duration-500 group-hover:scale-110" loading="lazy" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                  {isCatFilterActive(cat.id, catFromUrl) && <div className="absolute inset-0 ring-2 ring-inset ring-brand-gold/70 rounded-2xl" />}
-                  <div className="absolute bottom-3 left-0 right-0 px-3">
-                    <div className="text-sm font-black text-white leading-tight drop-shadow">{cat.fr}</div>
-                    <div className="font-arabic text-[11px] text-white/60 mt-0.5" dir="rtl">{cat.ar}</div>
-                    {cat.count != null && <div className="mt-1 text-[10px] text-white/50 tabular-nums">{(cat.count as number).toLocaleString("fr-FR")} produits</div>}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
+                  {isCatFilterActive(cat.id, catFromUrl) && <div className="absolute inset-0 rounded-xl ring-2 ring-inset ring-brand-gold/70 sm:rounded-2xl" />}
+                  <div className="absolute bottom-1.5 left-0 right-0 px-1.5 sm:bottom-3 sm:px-3">
+                    <div className="line-clamp-2 text-[9px] font-black leading-tight text-white drop-shadow sm:text-sm">{cat.fr}</div>
+                    <div className="font-arabic hidden text-[9px] text-white/60 sm:mt-0.5 sm:block sm:text-[11px]" dir="rtl">{cat.ar}</div>
                   </div>
                 </div>
               </button>
@@ -374,17 +405,29 @@ function RetailPageInner() {
       </section>
 
       {/* ── Search + filters ──────────────────────────────────────────────── */}
-      <section className="mx-auto mt-8 max-w-[1600px] px-4">
-        <div className="flex flex-wrap items-center gap-3">
-          {/* search */}
-          <div className="relative flex-1 min-w-[180px]">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-white/30" />
+      <section ref={toolbarRef} className="mx-auto mt-4 max-w-[1600px] scroll-mt-20 px-4 sm:mt-6">
+        <RetailFilterPanel
+          open={filtersOpen}
+          onClose={() => setFiltersOpen(false)}
+          draft={filterDraft}
+          onChange={(patch) => setFilterDraft((d) => ({ ...d, ...patch }))}
+          onApply={applyFilters}
+          onReset={resetFilters}
+          activeCount={activeFilterCount}
+          shops={shopList}
+          facetQuery={facetQuery}
+          hasSearch={Boolean(qFromUrl)}
+        />
+
+        <div className="flex items-center gap-2.5">
+          <div className="relative min-w-0 flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400 dark:text-white/30 sm:h-4 sm:w-4" />
             <input
               type="search"
-              placeholder="Rechercher un produit, marque ou référence…"
+              placeholder="Titre, SKU ou référence produit…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-9 pr-9 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-brand-gold/50 focus:ring-2 focus:ring-brand-gold/20 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/30"
+              className="w-full rounded-xl border border-slate-300 bg-white py-2 pl-8 pr-8 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-brand-gold/50 focus:ring-2 focus:ring-brand-gold/20 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/30 sm:py-2.5 sm:pl-9 sm:pr-9"
             />
             {search && (
               <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-white/30 dark:hover:text-white/70">
@@ -393,59 +436,35 @@ function RetailPageInner() {
             )}
           </div>
 
-          {/* Catalogue / Similaires toggle */}
-          <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-white/10 dark:bg-white/[0.04] shrink-0">
-            {([
-              { key: "all",     label: "Tous" },
-              { key: "catalog", label: "Catalogue" },
-              { key: "matched", label: "Similaires", icon: true },
-            ] as const).map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => setViewMode(tab.key)}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                  viewMode === tab.key
-                    ? "bg-white text-slate-900 shadow dark:bg-white/10 dark:text-white"
-                    : "text-slate-500 hover:text-slate-700 dark:text-white/40 dark:hover:text-white/70"
-                }`}
-              >
-                {"icon" in tab && <Tag className="h-3 w-3 opacity-70" />}
-                {tab.label}
-              </button>
-            ))}
-          </div>
+          <RetailFilterButton onClick={openFilters} activeCount={activeFilterCount} />
 
-          {/* category dropdown */}
-          <Dropdown
-            value={catFromUrl}
-            onChange={setActiveCat}
-            placeholder="Toutes catégories"
-            options={catOptions}
+          <RetailSortSelect
+            value={sortFromUrl}
+            onChange={setSort}
+            hasSearch={Boolean(qFromUrl)}
+            className="hidden shrink-0 sm:block"
           />
 
-          {/* shop dropdown */}
-          <Dropdown
-            value={shopFromUrl}
-            onChange={setActiveShop}
-            placeholder="Tous les magasins"
-            options={shopOptions}
-          />
-
-          {/* active filters pills */}
-          {(catFromUrl || shopFromUrl) && (
-            <button
-              type="button"
-              onClick={resetFilters}
-              className="flex items-center gap-1.5 rounded-xl border border-slate-300 bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-200 dark:border-white/10 dark:bg-white/[0.06] dark:text-white/60 dark:hover:bg-white/[0.1]"
-            >
-              Réinitialiser <X className="h-3 w-3" />
-            </button>
-          )}
-
-          <span className="ml-auto text-sm text-slate-500 dark:text-white/40 shrink-0 tabular-nums">
+          <span className="hidden text-sm text-slate-500 dark:text-white/40 shrink-0 tabular-nums lg:inline">
             {total.toLocaleString("fr-FR")} produit{total > 1 ? "s" : ""}
           </span>
         </div>
+
+        <div className="mt-2 flex items-center justify-between gap-2 sm:hidden">
+          <RetailSortSelect
+            value={sortFromUrl}
+            onChange={setSort}
+            hasSearch={Boolean(qFromUrl)}
+            className="min-w-0 flex-1"
+          />
+          <span className="text-[10px] text-slate-400 dark:text-white/35 shrink-0 tabular-nums">
+            {total.toLocaleString("fr-FR")} produit{total > 1 ? "s" : ""}
+          </span>
+        </div>
+
+        <p className="mt-1.5 hidden text-[10px] text-slate-400 dark:text-white/35 sm:block lg:hidden tabular-nums">
+          {total.toLocaleString("fr-FR")} produit{total > 1 ? "s" : ""}
+        </p>
       </section>
 
       {/* ── Products grid ─────────────────────────────────────────────────── */}
@@ -556,21 +575,21 @@ function RetailPageInner() {
         {/* ── Pagination ──────────────────────────────────────────────────── */}
         {!loading && totalPages > 1 && (
           <div className="mt-10 flex items-center justify-center gap-2 flex-wrap">
-            <button onClick={() => setPage(0)} disabled={page === 0} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-brand-gold/40 disabled:opacity-40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">«</button>
-            <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-brand-gold/40 disabled:opacity-40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">← Précédent</button>
+            <button onClick={() => goToPage(0)} disabled={page === 0} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-brand-gold/40 disabled:opacity-40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">«</button>
+            <button onClick={() => goToPage(Math.max(0, page - 1))} disabled={page === 0} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-brand-gold/40 disabled:opacity-40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">← Précédent</button>
 
             {Array.from({ length: totalPages }).map((_, idx) => {
               if (idx !== 0 && idx !== totalPages - 1 && Math.abs(idx - page) > 2) return null;
               if (Math.abs(idx - page) === 3) return <span key={idx} className="text-slate-400 dark:text-white/30">…</span>;
               return (
-                <button key={idx} onClick={() => setPage(idx)} className={`h-9 w-9 rounded-xl text-sm font-bold transition ${page === idx ? "bg-brand-gold text-black shadow" : "border border-slate-200 bg-white text-slate-700 hover:border-brand-gold/40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"}`}>
+                <button key={idx} onClick={() => goToPage(idx)} className={`h-9 w-9 rounded-xl text-sm font-bold transition ${page === idx ? "bg-brand-gold text-black shadow" : "border border-slate-200 bg-white text-slate-700 hover:border-brand-gold/40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"}`}>
                   {idx + 1}
                 </button>
               );
             })}
 
-            <button onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page === totalPages - 1} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-brand-gold/40 disabled:opacity-40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">Suivant →</button>
-            <button onClick={() => setPage(totalPages - 1)} disabled={page === totalPages - 1} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-brand-gold/40 disabled:opacity-40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">»</button>
+            <button onClick={() => goToPage(Math.min(totalPages - 1, page + 1))} disabled={page === totalPages - 1} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-brand-gold/40 disabled:opacity-40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">Suivant →</button>
+            <button onClick={() => goToPage(totalPages - 1)} disabled={page === totalPages - 1} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-brand-gold/40 disabled:opacity-40 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">»</button>
 
             <span className="ml-2 text-xs text-slate-400 dark:text-white/40 tabular-nums">Page {page + 1} / {totalPages}</span>
           </div>
