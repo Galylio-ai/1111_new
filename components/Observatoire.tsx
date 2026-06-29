@@ -91,19 +91,16 @@ export function Observatoire() {
           data-home-card=""
           className="group relative block overflow-hidden rounded-2xl border border-red-500/40 shadow-card transition hover:border-red-400/70 hover:shadow-[0_0_32px_-8px_rgba(239,68,68,0.55)]"
         >
-          <img
-            src="/banner2.png"
-            alt="1111.tn · Mobile · COMPAREZ"
+          <video
+            src="/biobalance.mp4"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            aria-label="1111.tn · Mobile · COMPAREZ"
             className="block h-full w-full object-cover object-center transition duration-700 group-hover:scale-[1.015]"
           />
-
-          {/* Edge gradient so the CTA reads regardless of the artwork */}
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-1/3 bg-gradient-to-l from-black/35 via-black/10 to-transparent" />
-
-          {/* Floating CTA */}
-          <div className="pointer-events-none absolute right-4 top-1/2 hidden -translate-y-1/2 md:block">
-            <span className="btn-gold pointer-events-auto shadow-lg">Téléchargez →</span>
-          </div>
 
           {/* Hover shimmer sweep */}
           <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-1000 group-hover:translate-x-full" />

@@ -5,10 +5,8 @@ import { useEffect, useState } from "react";
 const PLAY_STORE_URL =
   "https://play.google.com/store/apps/details?id=com.tn_1111.tn_1111&hl=en&pli=1";
 
-type Slide = { src: string; href: string; alt: string; type?: "image" | "video" };
-
-const SLIDES: Slide[] = [
-  { src: "/biobalance.mp4",     href: "/promotions", alt: "1111.tn · Téléchargez l'application", type: "video" },
+const SLIDES = [
+  { src: "/banner.png",         href: "/promotions", alt: "1111.tn · Téléchargez l'application" },
   { src: "/Banner-electro.png", href: "/retail",     alt: "Electroménager · Comparez les prix" },
   { src: "/banner-clim.png?v=20260624", href: "/retail", alt: "Climatiseurs · Meilleures offres" },
 ];
@@ -63,26 +61,13 @@ export function PromoBanner() {
                 tabIndex={isActive ? 0 : -1}
                 aria-hidden={!isActive}
               >
-                {slide.type === "video" ? (
-                  <video
-                    src={slide.src}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    preload="auto"
-                    aria-label={slide.alt}
-                    className="block h-full w-full object-cover"
-                  />
-                ) : (
-                  <img
-                    src={slide.src}
-                    alt={slide.alt}
-                    className={`block h-full w-full object-cover transition-transform duration-[6000ms] ease-out ${
-                      isActive ? "scale-105" : "scale-100"
-                    }`}
-                  />
-                )}
+                <img
+                  src={slide.src}
+                  alt={slide.alt}
+                  className={`block h-full w-full object-cover transition-transform duration-[6000ms] ease-out ${
+                    isActive ? "scale-105" : "scale-100"
+                  }`}
+                />
                 {/* Soft vignette on active slide for legibility */}
                 <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/5 via-transparent to-black/15" />
               </Link>
