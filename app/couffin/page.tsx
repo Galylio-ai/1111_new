@@ -144,9 +144,14 @@ export default function CouffinPage() {
             <div className="pointer-events-none absolute -right-12 -bottom-10 h-60 w-60 rounded-full bg-emerald-500/10 blur-3xl" />
             <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
               <div className="flex items-start gap-5">
-                <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-gold/30 to-amber-400/10 ring-1 ring-brand-gold/30">
-                  <ShoppingBasket className="h-8 w-8 text-brand-gold" strokeWidth={2} />
-                </span>
+                <div className="relative shrink-0">
+                  <div className="absolute inset-0 -z-10 rounded-2xl bg-brand-gold/25 blur-2xl" />
+                  <img
+                    src="/couffin.png"
+                    alt="Couffin Tounsi"
+                    className="h-20 w-20 rounded-2xl object-cover shadow-[0_8px_32px_-8px_rgba(246,196,83,0.5)] ring-1 ring-brand-gold/30 animate-[float_3s_ease-in-out_infinite]"
+                  />
+                </div>
                 <div>
                   <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl dark:text-white">
                     Couffin <span className="gradient-text-gold">Tounsi</span>

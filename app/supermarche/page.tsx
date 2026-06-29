@@ -226,6 +226,7 @@ export default function SupermarchePage() {
           title="Enseignes"
           titleAccent="supermarché"
           variant="shop"
+          autoScroll
           activeId={activeShop}
           onSelect={(id) => { setPage(0); setActiveShop(id); }}
           items={shops.map((s) => ({

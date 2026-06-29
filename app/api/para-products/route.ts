@@ -192,20 +192,29 @@ export async function GET(req: NextRequest) {
   const minPrice = minRaw != null && minRaw !== "" ? parseFloat(minRaw) : null;
   const maxPrice = maxRaw != null && maxRaw !== "" ? parseFloat(maxRaw) : null;
 
+  const similar = searchParams.get("similar") === "1";
+
   if (q) {
     const db = await searchParaFromDb(q, cat, shop, minPrice, maxPrice, sort, page, limit);
     if (db) {
-      const urls = await fetchBestUrls(db.items.map((p) => p.name));
-      const items: ProductWithUrl[] = db.items.map((p) => ({
+      let dbItems = db.items;
+      let dbTotal = db.total;
+      if (similar) {
+        dbItems = dbItems.filter((p) => p.shopNames.length >= 2);
+        dbTotal = dbItems.length;
+      }
+      const urls = await fetchBestUrls(dbItems.map((p) => p.name));
+      const items: ProductWithUrl[] = dbItems.map((p) => ({
         ...p,
         bestUrl: urls.get(p.name.toLowerCase()) ?? null,
       }));
-      return NextResponse.json({ total: db.total, page, limit, items });
+      return NextResponse.json({ total: dbTotal, page, limit, items });
     }
   }
 
   let data = loadData();
 
+  if (similar) data = data.filter((p) => p.shopNames.length >= 2);
   if (cat) data = data.filter((p) => p.category.toLowerCase().includes(cat));
   if (shop) data = data.filter((p) => p.shopNames.some((s) => s.toLowerCase().includes(shop)));
   if (q) {

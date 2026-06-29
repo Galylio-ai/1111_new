@@ -336,7 +336,7 @@ export function RetailFilterButton({
     <button
       type="button"
       onClick={onClick}
-      className="relative flex shrink-0 items-center gap-2 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:border-brand-gold/40 dark:border-white/10 dark:bg-white/[0.06] dark:text-white"
+      className="relative flex shrink-0 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-bold text-slate-700 transition-all duration-200 hover:border-brand-gold/30 hover:text-brand-gold dark:border-white/10 dark:bg-white/[0.06] dark:text-white/80 dark:hover:border-brand-gold/30"
     >
       <SlidersHorizontal className="h-4 w-4" />
       Filtres

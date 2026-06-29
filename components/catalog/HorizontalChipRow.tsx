@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef } from "react";
+
 export type ChipItem = {
   id: string;
   label: string;
@@ -14,6 +16,7 @@ export function HorizontalChipRow({
   activeId,
   onSelect,
   variant = "category",
+  autoScroll = false,
 }: {
   title: string;
   titleAccent?: string;
@@ -21,8 +24,49 @@ export function HorizontalChipRow({
   activeId: string;
   onSelect: (id: string) => void;
   variant?: "category" | "shop";
+  autoScroll?: boolean;
 }) {
   const isShop = variant === "shop";
+  const rowRef = useRef<HTMLDivElement>(null);
+  const isPaused = useRef(false);
+
+  useEffect(() => {
+    if (!autoScroll) return;
+    const el = rowRef.current;
+    if (!el) return;
+
+    let frame: number;
+    let speed = 0.6; // px per frame
+
+    const step = () => {
+      if (!isPaused.current && el) {
+        el.scrollLeft += speed;
+        // reset to start when near end
+        if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 2) {
+          el.scrollLeft = 0;
+        }
+      }
+      frame = requestAnimationFrame(step);
+    };
+
+    frame = requestAnimationFrame(step);
+
+    const pause = () => { isPaused.current = true; };
+    const resume = () => { isPaused.current = false; };
+
+    el.addEventListener("mouseenter", pause);
+    el.addEventListener("mouseleave", resume);
+    el.addEventListener("touchstart", pause, { passive: true });
+    el.addEventListener("touchend", resume);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      el.removeEventListener("mouseenter", pause);
+      el.removeEventListener("mouseleave", resume);
+      el.removeEventListener("touchstart", pause);
+      el.removeEventListener("touchend", resume);
+    };
+  }, [autoScroll]);
 
   return (
     <section className="mx-auto max-w-[1600px] px-4">
@@ -33,7 +77,10 @@ export function HorizontalChipRow({
         </h2>
         <span className="text-[10px] font-medium text-slate-400 dark:text-white/35">Glisser →</span>
       </div>
-      <div className="-mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0">
+      <div
+        ref={rowRef}
+        className="-mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0"
+      >
         <button
           type="button"
           onClick={() => onSelect("")}
@@ -56,11 +103,11 @@ export function HorizontalChipRow({
                 active
                   ? "border-brand-gold/60 shadow-[0_0_12px_-4px_rgba(246,196,83,0.45)]"
                   : "border-slate-200 dark:border-white/[0.08]"
-              } ${isShop ? "w-[6.5rem] bg-slate-50 dark:bg-white/[0.03]" : "relative w-[7rem]"}`}
+              } ${isShop ? "w-[6.5rem] lg:w-[8.5rem] bg-slate-50 dark:bg-white/[0.03]" : "relative w-[7rem] lg:w-[9rem]"}`}
             >
               {isShop ? (
                 <>
-                  <div className="flex h-[3.25rem] items-center justify-center bg-white p-1.5 dark:bg-white/[0.06]">
+                  <div className="flex h-[3.25rem] lg:h-[4.5rem] items-center justify-center bg-white p-1.5 dark:bg-white">
                     {item.image ? (
                       <img
                         src={item.image}
@@ -83,7 +130,7 @@ export function HorizontalChipRow({
                 </>
               ) : (
                 <>
-                  <div className="relative h-[4.25rem] w-full overflow-hidden bg-slate-100 dark:bg-white/[0.04]">
+                  <div className="relative h-[4.25rem] w-full overflow-hidden bg-slate-100 lg:h-[6rem] dark:bg-white/[0.04]">
                     {item.image ? (
                       <img
                         src={item.image}
@@ -98,7 +145,7 @@ export function HorizontalChipRow({
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                     <div className="absolute bottom-1.5 left-1.5 right-1.5">
-                      <div className="line-clamp-2 text-[9px] font-black leading-tight text-white drop-shadow sm:text-[10px]">
+                      <div className="line-clamp-2 text-[9px] font-black leading-tight text-white drop-shadow sm:text-[10px] lg:text-[11px]">
                         {item.label}
                       </div>
                     </div>

@@ -374,6 +374,7 @@ function RetailPageInner() {
           title="Catégories"
           titleAccent="magasins"
           activeId={categories.find((c) => isCatFilterActive(c.id, catFromUrl))?.id ?? ""}
+          autoScroll
           onSelect={(id) => setActiveCat(isCatFilterActive(id, catFromUrl) ? "" : id)}
           items={categories.map((cat) => ({
             id: cat.id,
@@ -383,8 +384,30 @@ function RetailPageInner() {
         />
       </section>
 
+      {/* ── Catalogue / Similaires toggle ────────────────────────────────── */}
+      <div className="mx-auto mt-4 max-w-[1600px] px-4 sm:mt-5">
+        <div className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1 dark:border-white/[0.08] dark:bg-white/[0.04]">
+          {[
+            { key: "",     label: "Catalogue complet" },
+            { key: "true", label: "Produits similaires" },
+          ].map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => { setPage(0); replaceParams({ matched: key || null }); }}
+              className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
+                matchedFromUrl === key
+                  ? "bg-white text-slate-900 shadow-sm dark:bg-white/[0.1] dark:text-white"
+                  : "text-slate-500 hover:text-slate-700 dark:text-white/45 dark:hover:text-white/70"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* ── Search + filters ──────────────────────────────────────────────── */}
-      <section ref={toolbarRef} className="mx-auto mt-4 max-w-[1600px] scroll-mt-20 px-4 sm:mt-6">
+      <section ref={toolbarRef} className="mx-auto mt-4 max-w-[1600px] scroll-mt-20 px-4 sm:mt-4">
         <RetailFilterPanel
           open={filtersOpen}
           onClose={() => setFiltersOpen(false)}
@@ -399,17 +422,18 @@ function RetailPageInner() {
         />
 
         <div className="flex items-center gap-2.5">
-          <div className="relative min-w-0 flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400 dark:text-white/30 sm:h-4 sm:w-4" />
+          <div className="group relative min-w-0 flex-1">
+            <div className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 group-focus-within:opacity-100 [box-shadow:0_0_0_3px_rgba(246,196,83,0.18),0_4px_24px_-4px_rgba(246,196,83,0.25)]" />
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400 transition-colors duration-200 group-focus-within:text-brand-gold dark:text-white/30" />
             <input
               type="search"
-              placeholder="Titre, SKU ou référence produit…"
+              placeholder="Rechercher un produit, marque ou référence…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 bg-white py-2 pl-8 pr-8 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-brand-gold/50 focus:ring-2 focus:ring-brand-gold/20 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/30 sm:py-2.5 sm:pl-9 sm:pr-9"
+              className="w-full rounded-2xl border border-slate-200 bg-white py-3.5 pl-11 pr-10 text-sm font-medium text-slate-900 placeholder:text-slate-400 outline-none transition-all duration-200 focus:border-brand-gold/50 dark:border-white/10 dark:bg-white/[0.06] dark:text-white dark:placeholder:text-white/30 dark:focus:border-brand-gold/40 sm:text-base"
             />
             {search && (
-              <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-white/30 dark:hover:text-white/70">
+              <button onClick={() => setSearch("")} className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-slate-400 transition hover:text-slate-700 dark:text-white/30 dark:hover:text-white/70">
                 <X className="h-4 w-4" />
               </button>
             )}

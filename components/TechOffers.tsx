@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { PriceRankingCard } from "@/components/PriceRankingCard";
 import { PRICE_RANKING_CATALOG } from "@/lib/priceRankings";
 
@@ -35,6 +36,11 @@ const SKELETON = (
 export function TechOffers() {
   const [scopes, setScopes] = useState<ScopePayload[]>([]);
   const [loading, setLoading] = useState(true);
+  const [canLeft, setCanLeft] = useState(false);
+  const [canRight, setCanRight] = useState(true);
+  const rowRef = useRef<HTMLDivElement>(null);
+  const isPaused = useRef(false);
+  const autoRef = useRef<number | null>(null);
 
   useEffect(() => {
     fetch("/api/stats/price-rankings?featured=1")
@@ -45,6 +51,64 @@ export function TechOffers() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  const updateArrows = () => {
+    const el = rowRef.current;
+    if (!el) return;
+    setCanLeft(el.scrollLeft > 4);
+    setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  };
+
+  useEffect(() => {
+    const el = rowRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", updateArrows, { passive: true });
+    updateArrows();
+    return () => el.removeEventListener("scroll", updateArrows);
+  }, [loading]);
+
+  // Auto-scroll
+  useEffect(() => {
+    if (loading) return;
+    const el = rowRef.current;
+    if (!el) return;
+
+    const SPEED = 0.5;
+    const step = () => {
+      if (!isPaused.current && el) {
+        el.scrollLeft += SPEED;
+        if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 2) {
+          el.scrollLeft = 0;
+        }
+        updateArrows();
+      }
+      autoRef.current = requestAnimationFrame(step);
+    };
+    autoRef.current = requestAnimationFrame(step);
+
+    const pause = () => { isPaused.current = true; };
+    const resume = () => { isPaused.current = false; };
+    el.addEventListener("mouseenter", pause);
+    el.addEventListener("mouseleave", resume);
+    el.addEventListener("touchstart", pause, { passive: true });
+    el.addEventListener("touchend", resume);
+
+    return () => {
+      if (autoRef.current) cancelAnimationFrame(autoRef.current);
+      el.removeEventListener("mouseenter", pause);
+      el.removeEventListener("mouseleave", resume);
+      el.removeEventListener("touchstart", pause);
+      el.removeEventListener("touchend", resume);
+    };
+  }, [loading]);
+
+  const scroll = (dir: "left" | "right") => {
+    const el = rowRef.current;
+    if (!el) return;
+    isPaused.current = true;
+    el.scrollBy({ left: dir === "left" ? -360 : 360, behavior: "smooth" });
+    setTimeout(() => { isPaused.current = false; }, 1200);
+  };
 
   const catalogOrder = PRICE_RANKING_CATALOG.map((c) => c.scopeId);
   const cards = catalogOrder
@@ -74,7 +138,23 @@ export function TechOffers() {
             )}
           </p>
         </div>
-        <span className="text-[10px] font-medium text-slate-400 dark:text-white/35">Glisser →</span>
+        {/* Arrow buttons — hidden on mobile */}
+        <div className="hidden items-center gap-2 sm:flex">
+          <button
+            onClick={() => scroll("left")}
+            disabled={!canLeft}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-brand-gold/50 hover:text-brand-gold disabled:opacity-30 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/60"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => scroll("right")}
+            disabled={!canRight}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-brand-gold/50 hover:text-brand-gold disabled:opacity-30 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/60"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -90,7 +170,7 @@ export function TechOffers() {
           Classements en cours de chargement. Vérifiez que les données sont importées dans la base retail.
         </div>
       ) : (
-        <div className={scrollRowClass}>
+        <div ref={rowRef} className={scrollRowClass}>
           {cards.map(({ catalog, scope }) => (
             <div key={catalog.slug} className={cardWrapClass}>
               <PriceRankingCard

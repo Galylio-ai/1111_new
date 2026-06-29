@@ -88,6 +88,7 @@ function ParapharmacyPageInner() {
   const [sort, setSort]             = useState<CatalogSortOption>(DEFAULT_CATALOG_SORT);
   const [minPrice, setMinPrice]     = useState("");
   const [maxPrice, setMaxPrice]     = useState("");
+  const [similar, setSimilar]       = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filterDraft, setFilterDraft] = useState<SimpleCatalogFilterDraft>({
     shop: sp?.get("shop") ?? "",
@@ -115,6 +116,7 @@ function ParapharmacyPageInner() {
     sortOpt: CatalogSortOption,
     min: string,
     max: string,
+    sim: boolean,
   ) => {
     setLoading(true);
     try {
@@ -124,6 +126,7 @@ function ParapharmacyPageInner() {
       if (shop) params.set("shop", shop);
       if (min) params.set("min", min);
       if (max) params.set("max", max);
+      if (sim) params.set("similar", "1");
       const res  = await fetch(`/api/para-products?${params}`);
       const data = await res.json();
       setProducts(data.items);
@@ -133,16 +136,16 @@ function ParapharmacyPageInner() {
     }
   }, []);
 
-  useEffect(() => { fetchProducts(0, "", "", "", DEFAULT_CATALOG_SORT, "", ""); }, [fetchProducts]);
+  useEffect(() => { fetchProducts(0, "", "", "", DEFAULT_CATALOG_SORT, "", "", false); }, [fetchProducts]);
 
   useEffect(() => {
     setPage(0);
-    fetchProducts(0, activeCat, query, activeShop, sort, minPrice, maxPrice);
-  }, [activeCat, activeShop, query, sort, minPrice, maxPrice, fetchProducts]);
+    fetchProducts(0, activeCat, query, activeShop, sort, minPrice, maxPrice, similar);
+  }, [activeCat, activeShop, query, sort, minPrice, maxPrice, similar, fetchProducts]);
 
   useEffect(() => {
     if (page === 0) return;
-    fetchProducts(page, activeCat, query, activeShop, sort, minPrice, maxPrice);
+    fetchProducts(page, activeCat, query, activeShop, sort, minPrice, maxPrice, similar);
   }, [page]); // eslint-disable-line
 
   useEffect(() => {
@@ -261,6 +264,7 @@ function ParapharmacyPageInner() {
           title="Catégories"
           titleAccent="para"
           activeId={activeCat}
+          autoScroll
           onSelect={(id) => { setPage(0); setActiveCat(id); }}
           items={categories.map((c) => ({
             id: c.id,
@@ -284,8 +288,30 @@ function ParapharmacyPageInner() {
         categories={categories.map((c) => ({ id: c.id, label: c.fr }))}
       />
 
+      {/* ── Catalogue / Similaires toggle ────────────────────────────────── */}
+      <div className="mx-auto mt-4 max-w-[1600px] px-4 sm:mt-5">
+        <div className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1 dark:border-white/[0.08] dark:bg-white/[0.04]">
+          {[
+            { key: false, label: "Catalogue complet" },
+            { key: true,  label: "Produits similaires" },
+          ].map(({ key, label }) => (
+            <button
+              key={String(key)}
+              onClick={() => { setSimilar(key); setPage(0); }}
+              className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
+                similar === key
+                  ? "bg-white text-slate-900 shadow-sm dark:bg-white/[0.1] dark:text-white"
+                  : "text-slate-500 hover:text-slate-700 dark:text-white/45 dark:hover:text-white/70"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* ── Search + filters bar ──────────────────────────────────────────── */}
-      <section ref={toolbarRef} className="mx-auto mt-4 max-w-[1600px] scroll-mt-20 sm:mt-6">
+      <section ref={toolbarRef} className="mx-auto mt-4 max-w-[1600px] scroll-mt-20 sm:mt-4">
         <CatalogListToolbar
           search={search}
           onSearchChange={setSearch}
