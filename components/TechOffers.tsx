@@ -71,16 +71,19 @@ export function TechOffers() {
   useEffect(() => {
     if (loading) return;
     const el = rowRef.current;
-    if (!el) return;
+    if (!el || el.scrollWidth <= el.clientWidth + 2) return;
 
     const SPEED = 0.5;
+    let pos = el.scrollLeft;
     const step = () => {
       if (!isPaused.current && el) {
-        el.scrollLeft += SPEED;
-        if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 2) {
-          el.scrollLeft = 0;
-        }
+        pos += SPEED;
+        const max = el.scrollWidth - el.clientWidth;
+        if (pos >= max - 1) pos = 0;
+        el.scrollLeft = pos;
         updateArrows();
+      } else if (el) {
+        pos = el.scrollLeft;
       }
       autoRef.current = requestAnimationFrame(step);
     };
@@ -123,7 +126,7 @@ export function TechOffers() {
   const totalProducts = scopes.reduce((a, s) => a + (s.matched_products ?? 0), 0);
 
   const scrollRowClass =
-    "-mx-3 flex snap-x snap-mandatory gap-4 overflow-x-auto px-3 pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0";
+    "-mx-3 flex gap-4 overflow-x-auto px-3 pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0";
   const cardWrapClass = "w-[min(88vw,20rem)] shrink-0 snap-start sm:w-[19rem] lg:w-[21rem]";
 
   return (

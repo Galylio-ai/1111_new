@@ -33,18 +33,21 @@ export function HorizontalChipRow({
   useEffect(() => {
     if (!autoScroll) return;
     const el = rowRef.current;
-    if (!el) return;
+    if (!el || el.scrollWidth <= el.clientWidth + 2) return;
 
     let frame: number;
-    let speed = 0.6; // px per frame
+    let pos = el.scrollLeft;
+    const speed = 0.5; // px per frame
 
     const step = () => {
       if (!isPaused.current && el) {
-        el.scrollLeft += speed;
-        // reset to start when near end
-        if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 2) {
-          el.scrollLeft = 0;
-        }
+        pos += speed;
+        const max = el.scrollWidth - el.clientWidth;
+        if (pos >= max - 1) pos = 0;
+        el.scrollLeft = pos;
+      } else if (el) {
+        // sync internal position if user scrolled manually
+        pos = el.scrollLeft;
       }
       frame = requestAnimationFrame(step);
     };
@@ -66,7 +69,7 @@ export function HorizontalChipRow({
       el.removeEventListener("touchstart", pause);
       el.removeEventListener("touchend", resume);
     };
-  }, [autoScroll]);
+  }, [autoScroll, items.length]);
 
   return (
     <section className="mx-auto max-w-[1600px] px-4">
@@ -79,7 +82,9 @@ export function HorizontalChipRow({
       </div>
       <div
         ref={rowRef}
-        className="-mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0"
+        className={`-mx-4 flex gap-2 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0 ${
+          autoScroll ? "scroll-auto" : "snap-x snap-mandatory"
+        }`}
       >
         <button
           type="button"
