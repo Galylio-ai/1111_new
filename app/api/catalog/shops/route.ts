@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { catalogPool } from "@/lib/db";
+import { localShopLogo } from "@/lib/shopLogos";
 
 export const revalidate = 300;
 
@@ -28,7 +29,7 @@ export async function GET() {
       slug: r.slug,
       key: r.shop_key,
       name: r.name,
-      logo: r.logo_url,
+      logo: r.logo_url || localShopLogo(r.slug, r.shop_key),
       count: r.product_count,
       categories: (r.top_categories ?? []).slice(0, 4),
     }));

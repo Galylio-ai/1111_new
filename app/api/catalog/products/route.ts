@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { catalogPool } from "@/lib/db";
 import { appendCatalogShopSearch, normalizeSearchText } from "@/lib/productSearch";
+import { localShopLogo } from "@/lib/shopLogos";
 
 // Pulls the last valid image URL out of a possibly-corrupted string.
 // The migration imported some rows where the scraper concatenated two URLs with
@@ -36,8 +37,8 @@ export async function GET(req: NextRequest) {
 
   try {
     const pool = catalogPool();
-    const shopRes = await pool.query<{ id: number; name: string; logo_url: string | null }>(
-      `SELECT id, name, logo_url FROM shops WHERE slug = $1 OR shop_key = $1 LIMIT 1`,
+    const shopRes = await pool.query<{ id: number; name: string; slug: string; shop_key: string; logo_url: string | null }>(
+      `SELECT id, name, slug, shop_key, logo_url FROM shops WHERE slug = $1 OR shop_key = $1 LIMIT 1`,
       [shop]
     );
     if (!shopRes.rows.length) return NextResponse.json({ error: "shop not found" }, { status: 404 });
@@ -109,7 +110,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       shop: shopRes.rows[0].name,
-      logo: shopRes.rows[0].logo_url,
+      logo: shopRes.rows[0].logo_url || localShopLogo(shopRes.rows[0].slug, shopRes.rows[0].shop_key),
       total: parseInt(countRes.rows[0].total, 10),
       page, limit, items,
       categories: catsRes.rows.map(c => ({ name: sanitizeText(c.top_category), count: parseInt(c.n, 10) })),
