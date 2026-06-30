@@ -61,8 +61,11 @@ export async function GET(req: NextRequest) {
       pool.query<{ total: string }>(`SELECT COUNT(*) AS total FROM products p ${whereSql}`, params),
       pool.query(
         `SELECT p.slug, p.name, p.brand, p.image, p.price, p.old_price, p.available,
-                p.top_category, p.low_category
-         FROM products p ${whereSql}
+                p.top_category, p.low_category,
+                pd.images AS extra_images
+         FROM products p
+         LEFT JOIN product_details pd ON pd.product_id = p.id
+         ${whereSql}
          ORDER BY ${orderSql}
          LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
         [...params, limit, page * limit]
@@ -78,11 +81,24 @@ export async function GET(req: NextRequest) {
     const items = itemsRes.rows.map(r => {
       const price = r.price != null ? parseFloat(r.price) : null;
       const old   = r.old_price != null ? parseFloat(r.old_price) : null;
+      const primary = sanitizeImage(r.image);
+      const extras = Array.isArray(r.extra_images)
+        ? r.extra_images.map((x: string) => sanitizeImage(x)).filter(Boolean)
+        : [];
+      // Merge into a deduped list, primary first
+      const seen = new Set<string>();
+      const images: string[] = [];
+      if (primary) { images.push(primary); seen.add(primary); }
+      for (const u of extras) {
+        if (u && !seen.has(u)) { images.push(u); seen.add(u); }
+      }
       return {
         slug: r.slug,
         name: sanitizeText(r.name),
         brand: sanitizeText(r.brand),
-        img: sanitizeImage(r.image),
+        img: images[0] ?? "",
+        img2: images[1] ?? null,
+        images,
         price,
         oldPrice: old,
         available: r.available,

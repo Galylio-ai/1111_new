@@ -11,6 +11,8 @@ type Product = {
   name: string;
   brand: string;
   img: string;
+  img2?: string | null;
+  images?: string[];
   price: number | null;
   oldPrice: number | null;
   available: boolean | null;
@@ -196,10 +198,18 @@ function ShopCatalogInner() {
                   <span className="absolute text-4xl opacity-60">🛍️</span>
                   {p.img && (
                     <img src={p.img} alt={p.name}
-                      className="relative z-10 h-full w-full object-contain p-2 transition duration-500 group-hover:scale-105"
+                      className={`relative z-10 h-full w-full object-contain p-2 transition-all duration-500 group-hover:scale-105 ${p.img2 ? "group-hover:opacity-0" : ""}`}
                       loading="lazy"
                       referrerPolicy="no-referrer"
                       onError={e => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }}
+                    />
+                  )}
+                  {p.img2 && (
+                    <img src={p.img2} alt=""
+                      className="absolute inset-0 z-20 h-full w-full object-contain p-2 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                      loading="lazy"
+                      referrerPolicy="no-referrer"
+                      onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                     />
                   )}
                 </div>
