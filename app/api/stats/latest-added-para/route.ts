@@ -13,8 +13,8 @@ const SQL = `
              SELECT image_url FROM product_images
              WHERE product_id = p.id
                AND ${productCoverImageFilterSql()}
-               AND image_url NOT ILIKE 'https://pharmashop.tn/%'
-               AND image_url NOT ILIKE 'https://www.pharmashop.tn/%'
+               AND image_url NOT ILIKE '%pharmashop.tn%'
+               AND image_url NOT ILIKE '%pharma-shop.tn%'
              ORDER BY ${productCoverImageOrderSql()}
              LIMIT 1
            ) AS image
@@ -23,7 +23,7 @@ const SQL = `
       AND p.name NOT ILIKE 'anthelios%'
       AND p.name NOT ILIKE 'uriage eau thermale gelee d''eau 40ml%'
     ORDER BY p.created_at DESC
-    LIMIT 500
+    LIMIT 1000
   )
   SELECT
     e.name,
@@ -42,6 +42,14 @@ const SQL = `
   FROM eligible e
   LEFT JOIN brands b ON b.id = e.brand_id
   WHERE e.image IS NOT NULL
+    AND e.image ~* '^https?://'
+    AND length(e.image) > 20
+    AND EXISTS (
+      SELECT 1 FROM shop_prices sp
+      JOIN shops s ON s.id = sp.shop_id
+      WHERE sp.product_id = e.id
+        AND s.slug NOT IN ('pharmashop', 'pharma-shop')
+    )
   ORDER BY e.created_at DESC
   LIMIT 1
 `;
