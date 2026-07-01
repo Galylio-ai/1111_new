@@ -355,6 +355,17 @@ export default function CouffinPage() {
               ) : (
                 <div className="space-y-3">
 
+                  {/* ── Coverage warning (no shop has everything) ── */}
+                  {winner && winner.covered < winner.totalItems && (
+                    <div className="flex items-start gap-2.5 rounded-xl border border-orange-500/25 bg-orange-500/[0.07] p-3">
+                      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
+                      <div className="text-[12px] leading-relaxed text-orange-700 dark:text-orange-300">
+                        <span className="font-bold">Aucune enseigne ne couvre tout votre couffin.</span>{" "}
+                        Le meilleur choix ci-dessous ({winner.shop}) couvre {winner.covered} article{winner.covered > 1 ? "s" : ""} sur {winner.totalItems}. Le total affiché correspond uniquement aux articles disponibles. Consultez le <span className="font-semibold">Mix optimal</span> plus bas pour combiner plusieurs enseignes et couvrir tout votre panier.
+                      </div>
+                    </div>
+                  )}
+
                   {/* ── Winner card ── */}
                   {winner && (
                     <div className="relative overflow-hidden rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-emerald-500/[0.05] to-transparent p-4">

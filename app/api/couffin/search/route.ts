@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { alimentPool } from "@/lib/db";
 import { appendProductSearch, normalizeSearchText } from "@/lib/productSearch";
 import { productCoverImageSql } from "@/lib/productImages";
+import { isFoodProduct } from "@/lib/couffinFoodFilter";
 
 // Search supermarché products to add to the couffin.
 export async function GET(req: NextRequest) {
@@ -41,15 +42,17 @@ export async function GET(req: NextRequest) {
       [...params, limit],
     );
 
-    const items = rows.map((r) => ({
-      id: Number(r.id),
-      name: r.name,
-      brand: r.brand,
-      img: r.img ?? "",
-      minPrice: parseFloat(r.min_price) || 0,
-      maxPrice: parseFloat(r.max_price) || 0,
-      shopCount: parseInt(r.shop_count, 10) || 0,
-    }));
+    const items = rows
+      .filter((r) => isFoodProduct(r.name))
+      .map((r) => ({
+        id: Number(r.id),
+        name: r.name,
+        brand: r.brand,
+        img: r.img ?? "",
+        minPrice: parseFloat(r.min_price) || 0,
+        maxPrice: parseFloat(r.max_price) || 0,
+        shopCount: parseInt(r.shop_count, 10) || 0,
+      }));
     return NextResponse.json({ items });
   } catch (err) {
     return NextResponse.json({ error: String(err), items: [] }, { status: 500 });
