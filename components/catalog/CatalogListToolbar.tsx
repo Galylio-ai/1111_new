@@ -102,10 +102,10 @@ export function CatalogListToolbar({
         <select
           value={sort}
           onChange={(e) => onSortChange(e.target.value as CatalogSortOption)}
-          className="ml-auto rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-brand-gold/30 dark:border-white/10 dark:bg-white/[0.06] dark:text-white/80 sm:text-[11px]"
+          className="ml-auto rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-brand-gold/30 dark:border-white/10 dark:bg-[#0d1220] dark:text-white/90 sm:text-[11px]"
         >
           {CATALOG_SORT_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
+            <option key={opt.value} value={opt.value} className="bg-white text-slate-900 dark:bg-[#0d1220] dark:text-white">
               {opt.label}
             </option>
           ))}

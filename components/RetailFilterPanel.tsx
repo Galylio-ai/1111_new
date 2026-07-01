@@ -313,11 +313,11 @@ export function RetailSortSelect({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value as RetailSortOption)}
-      className={`rounded-xl border border-slate-300 bg-white py-2 pl-2.5 pr-7 text-xs font-semibold text-slate-700 outline-none transition focus:border-brand-gold/50 dark:border-white/10 dark:bg-white/[0.06] dark:text-white ${className}`}
+      className={`rounded-xl border border-slate-300 bg-white py-2 pl-2.5 pr-7 text-xs font-semibold text-slate-700 outline-none transition focus:border-brand-gold/50 dark:border-white/10 dark:bg-[#0d1220] dark:text-white ${className}`}
       aria-label="Trier les produits"
     >
       {options.map((o) => (
-        <option key={o.value} value={o.value}>
+        <option key={o.value} value={o.value} className="bg-white text-slate-900 dark:bg-[#0d1220] dark:text-white">
           {o.label}
         </option>
       ))}

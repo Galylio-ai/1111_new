@@ -43,10 +43,19 @@ const sourceTone: Record<string, string> = {
   Search: "border-purple-500/25 bg-purple-500/10 text-purple-600 dark:text-purple-300",
 };
 
+const MONTHS = [
+  { key: "mai-2026", label: "Mai 2026", available: true },
+  { key: "juin-2026", label: "Juin 2026", available: false },
+];
+
 export function RetailSitesTable({ sites, month }: { sites: RetailSite[]; month: string }) {
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<SortKey>("rank");
-  const [asc, setAsc] = useState(false);
+  const [asc, setAsc] = useState(true);
+  const [selectedMonth, setSelectedMonth] = useState<string>("mai-2026");
+
+  const activeMonth = MONTHS.find((m) => m.key === selectedMonth) ?? MONTHS[0];
+  const showComingSoon = !activeMonth.available;
 
   // stable original rank (data is pre-sorted by visits desc)
   const ranked = useMemo(() => sites.map((s, i) => ({ ...s, rank: i + 1 })), [sites]);
@@ -72,6 +81,8 @@ export function RetailSitesTable({ sites, month }: { sites: RetailSite[]; month:
     else { setSort(key); setAsc(key === "rank"); }
   };
 
+  const monthLabel = activeMonth.label;
+
   const Th = ({ label, k, className = "" }: { label: string; k: SortKey; className?: string }) => (
     <th className={`px-3 py-3 ${className}`}>
       <button
@@ -86,21 +97,64 @@ export function RetailSitesTable({ sites, month }: { sites: RetailSite[]; month:
 
   return (
     <div>
-      {/* search */}
+      {/* search + month */}
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm sm:max-w-sm dark:border-white/10 dark:bg-bg-card">
-          <Search className="h-4 w-4 shrink-0 text-slate-400 dark:text-white/40" />
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Rechercher un site (ex. tunisianet, zara…)"
-            className="min-w-0 flex-1 bg-transparent py-1 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder:text-white/40"
-          />
+        <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm sm:max-w-sm sm:flex-1 dark:border-white/10 dark:bg-bg-card">
+            <Search className="h-4 w-4 shrink-0 text-slate-400 dark:text-white/40" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Rechercher un site (ex. tunisianet, zara…)"
+              className="min-w-0 flex-1 bg-transparent py-1 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder:text-white/40"
+            />
+          </div>
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm outline-none transition focus:border-brand-gold/50 dark:border-white/10 dark:bg-bg-card dark:text-white [&>option]:bg-white [&>option]:text-slate-900 dark:[&>option]:bg-[#0d1220] dark:[&>option]:text-white"
+          >
+            {MONTHS.map((m) => (
+              <option key={m.key} value={m.key}>
+                {m.label}{m.available ? "" : " · Bientôt"}
+              </option>
+            ))}
+          </select>
         </div>
         <span className="text-xs text-slate-500 dark:text-white/50">
-          {rows.length} site{rows.length > 1 ? "s" : ""} · données {month}
+          {showComingSoon ? "—" : `${rows.length} site${rows.length > 1 ? "s" : ""}`} · données {monthLabel}
         </span>
       </div>
+
+      {showComingSoon && (
+        <div className="relative overflow-hidden rounded-3xl border border-brand-gold/25 bg-gradient-to-br from-brand-gold/5 via-white to-amber-50/40 py-20 text-center shadow-sm dark:from-brand-gold/[0.06] dark:via-bg-card dark:to-bg-800">
+          <div className="pointer-events-none absolute inset-0 [background-image:linear-gradient(90deg,transparent,rgba(246,196,83,0.12),transparent)] [background-size:200%_100%] animate-[shimmer_2.5s_linear_infinite]" />
+          <div className="relative mx-auto flex max-w-md flex-col items-center gap-4 px-6">
+            <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-gold/25 to-amber-400/10 ring-1 ring-brand-gold/30 animate-[float_3s_ease-in-out_infinite]">
+              <span className="text-3xl">📊</span>
+            </div>
+            <h3 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+              Bientôt <span className="gradient-text-gold">disponible</span>
+            </h3>
+            <p className="text-sm leading-relaxed text-slate-600 dark:text-white/70">
+              Les données du classement pour <span className="font-bold text-brand-gold">{monthLabel}</span> seront publiées dès la fin du mois. Revenez consulter cette page très prochainement !
+            </p>
+            <div className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-brand-gold animate-bounce [animation-delay:0ms]" />
+              <span className="h-2 w-2 rounded-full bg-brand-gold animate-bounce [animation-delay:150ms]" />
+              <span className="h-2 w-2 rounded-full bg-brand-gold animate-bounce [animation-delay:300ms]" />
+            </div>
+          </div>
+          <style jsx>{`
+            @keyframes shimmer {
+              0%   { background-position: -200% 0; }
+              100% { background-position: 200% 0; }
+            }
+          `}</style>
+        </div>
+      )}
+
+      {!showComingSoon && (<>
 
       {/* ── Desktop table ── */}
       <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm md:block dark:border-white/10 dark:bg-bg-card">
@@ -205,6 +259,7 @@ export function RetailSitesTable({ sites, month }: { sites: RetailSite[]; month:
           Aucun site ne correspond à « {q} ».
         </div>
       )}
+      </>)}
     </div>
   );
 }
