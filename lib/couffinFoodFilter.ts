@@ -20,14 +20,7 @@ const NON_FOOD_PATTERNS: RegExp[] = [
   /\b(maquillage|rouge [aà] l[eè]vres|mascara|fond de teint|vernis|nail|manucure)\b/i,
   /\b(cr[eè]me visage|s[eé]rum|masque visage|contour des yeux|anti[- ]rides?)\b/i,
 
-  // Nettoyage / entretien
-  /\b(lessive|d[eé]tergent|adoucissant|assouplissant|d[eé]tach|javel|eau de javel)\b/i,
-  /\b(liquide vaisselle|tablettes? lave[- ]vaisselle|d[eé]sinfect|d[eé]tartr|anti[- ]calcaire)\b/i,
-  /\b(nettoyant|d[eé]poussi[eé]rant|cirage|cire|shampoing tapis|d[eé]bouch)\b/i,
-  /\b(insecticide|anti[- ]moustique|anti[- ]nuisible|raticide|antimites)\b/i,
-  /\b(sacs? poubelle|sacs? cong[eé]lation|film alimentaire|papier aluminium|aluminium m[eé]nager)\b/i,
-
-  // Bazar / m[eé]nager
+  // Bazar / m[eé]nager (durable goods — not consumables)
   /\b(vaisselle|assiettes?|verres?|couverts?|cuill[eè]res?|fourchettes?|couteaux? de cuisine|casseroles?|po[eê]les?|marmites?)\b/i,
   /\b(ampoules?|piles?|batterie|chargeur|adaptateur|c[aâ]ble|multiprise)\b/i,
   /\b(cintres?|balais?|serpill[iè]re|[eé]ponge|torchon|gants? m[eé]nagers?)\b/i,
@@ -44,16 +37,12 @@ const NON_FOOD_PATTERNS: RegExp[] = [
 const NON_FOOD_CATEGORY_TERMS = [
   "hygiene",
   "hygiène",
-  "entretien",
-  "nettoyage",
   "beaute",
   "beauté",
   "cosmetique",
   "cosmétique",
   "parapharmacie",
   "bazar",
-  "menage",
-  "ménage",
   "animalerie",
   "textile",
   "papeterie",
@@ -89,15 +78,9 @@ export function nonFoodSqlExclusion(pAlias = "p"): string {
   const terms = [
     "shampooing", "shampoing", "gel douche", "dentifrice", "rasoir",
     "d[eé]odorant", "deodorant",
-    "serviette hygi[eé]nique", "couches", "lingettes", "papier toilette",
-    "papier hygi[eé]nique", "essuie-tout", "essuie tout", "mouchoir",
-    "lessive", "d[eé]tergent", "adoucissant", "assouplissant", "javel",
-    "liquide vaisselle", "d[eé]sinfectant",
-    "nettoyant", "insecticide", "anti-moustique", "anti moustique",
-    "sac poubelle", "sac cong[eé]lation", "film alimentaire",
-    "papier aluminium", "aluminium m[eé]nager",
+    "serviette hygi[eé]nique", "couches", "papier toilette",
+    "papier hygi[eé]nique",
     "ampoule", "pile ", "batterie ", "chargeur", "c[aâ]ble ",
-    "balai", "serpilli[eè]re", "[eé]ponge", "torchon",
     "croquette", "liti[eè]re",
     "maquillage", "rouge [aà] l[eè]vres", "mascara", "fond de teint",
     "vernis", "parfum",
